@@ -14,7 +14,8 @@ trazar <- function(G) {
   N <- G$nodes; E <- G$edges
   cen <- c(mean(N$x), mean(N$y))
   out <- vector("list", nrow(E))
-  for (j in seq_len(nrow(E))) {
+  # Primero las curvas (covarianzas); luego las rectas pueden esquivarlas
+  for (j in order(!E$tipo %in% c("cov", "covres"))) {
     a <- as.list(N[N$id == E$from[j], ]); b <- as.list(N[N$id == E$to[j], ])
     otros <- N[!N$id %in% c(E$from[j], E$to[j]), ]
     curvo <- E$tipo[j] %in% c("cov", "covres")
@@ -44,20 +45,27 @@ trazar <- function(G) {
       p1 <- borde(a, b$x, b$y); p2 <- borde(b, a$x, a$y)
       t <- seq(0, 1, length.out = 40)
       p <- list(x = p1[1] + t * (p2[1] - p1[1]), y = p1[2] + t * (p2[2] - p1[2]))
-      # Un efecto que atraviesa otra caja se curva hacia el lado con menos cruces
-      if (E$tipo[j] %in% c("reg", "cruzada") && choca_con(p$x, p$y, otros, holgura = 0.12)) {
+      # Puntos de las flechas ya trazadas, para no encimarse con ellas
+      hechos <- Filter(Negate(is.null), out)
+      HX <- unlist(lapply(hechos, `[[`, "x")); HY <- unlist(lapply(hechos, `[[`, "y"))
+      encima <- function(q) if (!length(HX)) 0 else
+        sum(vapply(8:32, function(i) min((HX - q$x[i])^2 + (HY - q$y[i])^2) < 0.12^2, logical(1)))
+      # Un efecto que atraviesa otra caja (o corre encima de otra flecha) se curva
+      # hacia el lado con menos cruces
+      if (E$tipo[j] %in% c("reg", "cruzada") &&
+          (choca_con(p$x, p$y, otros, holgura = 0.12) || encima(p) > 3)) {
         S <- do.call(rbind, lapply(setdiff(seq_len(nrow(E)), j), function(q) {
           if (any(c(E$from[q], E$to[q]) %in% c(E$from[j], E$to[j]))) return(NULL)
           u <- N[N$id == E$from[q], ]; v <- N[N$id == E$to[q], ]; c(u$x, u$y, v$x, v$y) }))
         ncruces <- function(q) if (is.null(S)) 0 else
           sum(apply(S, 1, function(z) any(vapply(seq(1, 37, 3), function(i)
             cruza(c(q$x[i], q$y[i]), c(q$x[i + 3], q$y[i + 3]), z[1:2], z[3:4]), logical(1)))))
-        mejor <- Inf
+        mejor <- if (choca_con(p$x, p$y, otros, holgura = 0.08)) Inf else ncruces(p) + 0.4 * encima(p)
         for (k in c(0.15, 0.25, 0.35, 0.5)) for (sg in c(1, -1)) {
           ctrl <- c(mx - sg * k * dy, my + sg * k * dx)
           q <- bezier(borde(a, ctrl[1], ctrl[2]), ctrl, borde(b, ctrl[1], ctrl[2]))
           if (choca_con(q$x, q$y, otros, holgura = 0.08)) next
-          sc <- ncruces(q) + k
+          sc <- ncruces(q) + k + 0.4 * encima(q)
           if (sc < mejor) { mejor <- sc; p <- q }
         }
       }
