@@ -4,6 +4,8 @@ Title: Diagramas de Trayectorias al Estilo Clasico para Modelos 'lavaan'
 Version: 0.1.0
 Authors@R: person("Jeshua", "Moreno Valladares", email = "jeshuamv@gmail.com",
                   role = c("aut", "cre"))
+URL: https://github.com/jeshuamv/diagramaSEM
+BugReports: https://github.com/jeshuamv/diagramaSEM/issues
 Description: Dibuja diagramas de trayectorias para modelos estimados con 'lavaan'
     (analisis factorial confirmatorio de primer y segundo orden, modelos bifactor,
     analisis de trayectorias y modelos de ecuaciones estructurales) con la

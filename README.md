@@ -1,5 +1,7 @@
 # diagramaSEM
 
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+
 **Diagramas de trayectorias al estilo clásico para modelos de `lavaan`.**
 
 `diagramaSEM` dibuja con una sola línea el diagrama de cualquier modelo estimado con
@@ -41,23 +43,28 @@ pueden mostrar con `correlaciones = TRUE`.
 
 ## Instalación
 
-El paquete necesita R 4.0 o posterior y el paquete `lavaan`.
-
-**Desde el archivo `.tar.gz`** (por ejemplo, `diagramaSEM_0.1.0.tar.gz`):
+Se necesita R 4.0 o posterior. Copia y pega en la consola de R:
 
 ```r
-install.packages("lavaan")                       # si aún no lo tienes
-install.packages("ruta/a/diagramaSEM_0.1.0.tar.gz", repos = NULL, type = "source")
+install.packages("remotes")
+remotes::install_github("jeshuamv/diagramaSEM", build_vignettes = TRUE)
 ```
 
-En RStudio también puedes usar *Tools → Install Packages… → Install from: Package
-Archive File* y elegir el archivo.
-
-Solo se instala una vez. Después, en cada sesión:
+Solo se instala una vez (y otra vez cuando quieras actualizarlo). Después, en cada
+sesión:
 
 ```r
 library(diagramaSEM)
 ```
+
+<details>
+<summary>Instalar desde un archivo <code>.tar.gz</code> (sin internet)</summary>
+
+```r
+install.packages("lavaan")
+install.packages("ruta/a/diagramaSEM_0.1.0.tar.gz", repos = NULL, type = "source")
+```
+</details>
 
 ## Uso básico
 
