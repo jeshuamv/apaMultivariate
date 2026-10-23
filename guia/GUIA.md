@@ -21,8 +21,8 @@ artículos y tesis. Esta guía muestra cómo usarlo, paso a paso.
     color](#estilos-clásico-revista-y-color)
 9.  [Tablas en formato APA](#tablas-en-formato-apa): descriptivos,
     factorabilidad, cargas, confiabilidad, validez, HTMT, método común,
-    ajuste, comparación de modelos, invarianza, efectos y párrafo de
-    método
+    ajuste, comparación de modelos, invarianza, efectos, análisis de
+    trayectorias paso a paso, MANOVA y párrafo de método
 10. [Personalizar el diagrama](#personalizar-el-diagrama)
 11. [Guardar el diagrama](#guardar-el-diagrama)
 12. [Figuras para una revista](#figuras-para-una-revista)
@@ -313,23 +313,30 @@ consola, se guardan en Word con formato APA (número, título en cursiva,
 solo líneas horizontales y nota) y guardan sus valores numéricos en
 `$datos`.
 
-| Etapa       | Función                  | Qué reporta                                                         |
-|-------------|--------------------------|---------------------------------------------------------------------|
-| Datos       | `tabla_descriptivos()`   | n, M, DE, asimetría, curtosis y correlaciones                       |
-|             | `tabla_perdidos()`       | Datos perdidos por variable y casos completos                       |
-|             | `tabla_normalidad()`     | Normalidad multivariada de Mardia                                   |
-| AFE         | `tabla_factorabilidad()` | KMO, Bartlett y número de factores (Kaiser, análisis paralelo, MAP) |
-|             | `tabla_cargas()`         | Cargas, comunalidades y varianza explicada                          |
-| Medición    | `tabla_cargas()`         | Cargas estandarizadas, EE, *p* y R²                                 |
-|             | `tabla_confiabilidad()`  | Alfa (con IC), omega y correlaciones ítem-total                     |
-|             | `tabla_validez()`        | CR, AVE y criterio de Fornell-Larcker                               |
-|             | `tabla_htmt()`           | Validez discriminante HTMT                                          |
-|             | `tabla_metodo_comun()`   | Sesgo de método común (Harman y AFC de un factor)                   |
-| Ajuste      | `tabla_ajuste()`         | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos                   |
-|             | `tabla_comparacion()`    | Modelos alternativos con Δχ², ΔCFI, AIC y BIC                       |
-|             | `tabla_invarianza()`     | Invarianza configural, métrica, escalar y estricta                  |
-| Estructural | `tabla_efectos()`        | Efectos directos, indirectos (bootstrap) y totales                  |
-| Método      | `parrafo_metodo()`       | Párrafo de software y estimación con sus referencias                |
+| Etapa       | Función                    | Qué reporta                                                                   |
+|-------------|----------------------------|-------------------------------------------------------------------------------|
+| Datos       | `tabla_descriptivos()`     | n, M, DE, asimetría, curtosis y correlaciones                                 |
+|             | `tabla_perdidos()`         | Datos perdidos por variable y casos completos                                 |
+|             | `tabla_normalidad()`       | Normalidad: asimetría y curtosis con c.r. (como AMOS) y Mardia                |
+|             | `tabla_atipicos()`         | Atípicos multivariados (Mahalanobis, p1 y p2)                                 |
+| AFE         | `tabla_factorabilidad()`   | KMO, Bartlett y número de factores (Kaiser, análisis paralelo, MAP)           |
+|             | `tabla_cargas()`           | Cargas, comunalidades y varianza explicada                                    |
+| Medición    | `tabla_cargas()`           | Cargas estandarizadas, EE, *p* y R²                                           |
+|             | `tabla_confiabilidad()`    | Alfa (con IC), omega y correlaciones ítem-total                               |
+|             | `tabla_validez()`          | CR, AVE y criterio de Fornell-Larcker                                         |
+|             | `tabla_htmt()`             | Validez discriminante HTMT                                                    |
+|             | `tabla_metodo_comun()`     | Sesgo de método común (Harman y AFC de un factor)                             |
+| Ajuste      | `tabla_ajuste()`           | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos                             |
+|             | `tabla_criterios_ajuste()` | Cada índice contra criterios excelente/aceptable, e identificación del modelo |
+|             | `tabla_modificacion()`     | Índices de modificación                                                       |
+|             | `tabla_comparacion()`      | Modelos alternativos con Δχ², ΔCFI, AIC y BIC                                 |
+|             | `tabla_invarianza()`       | Invarianza configural, métrica, escalar y estricta                            |
+| Estructural | `tabla_parametros()`       | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas         |
+|             | `tabla_efectos()`          | Efectos directos, indirectos (bootstrap) y totales                            |
+|             | `tabla_hipotesis()`        | Cada hipótesis: se sostiene o se rechaza                                      |
+|             | `tabla_vif()`              | Multicolinealidad entre predictores                                           |
+| MANOVA      | `tabla_manova()`           | Pruebas multivariadas, supuestos, ANOVA de seguimiento y medias por grupo     |
+| Método      | `parrafo_metodo()`         | Párrafo de software y estimación con sus referencias                          |
 
 ### Descriptivos, datos perdidos y normalidad
 
@@ -383,22 +390,84 @@ tabla_perdidos(airquality)      # datos de ejemplo de R con datos perdidos
 ``` r
 tabla_normalidad(items)
 #> 
-#> Pruebas de normalidad multivariada
+#> Evaluación de la normalidad
+#> ─────────────────────────────────────────────────────────────────────
+#> Variable               Mín.  Máx.   Asimetría  c.r.   Curtosis  c.r. 
+#> ─────────────────────────────────────────────────────────────────────
+#> x1                     0.67  8.50     -0.26    -1.81    0.33    1.17 
+#> x2                     2.25  9.25     0.47     3.35     0.35    1.26 
+#> x3                     0.25  4.50     0.39     2.73    -0.89    -3.16
+#> x4                     0.00  6.33     0.27     1.90     0.10    0.36 
+#> x5                     1.00  7.00     -0.35    -2.49   -0.54    -1.90
+#> x6                     0.14  6.14     0.86     6.11     0.84    2.98 
+#> x7                     1.30  7.43     0.25     1.77    -0.29    -1.02
+#> x8                     3.05  10.00    0.53     3.74     1.20    4.25 
+#> x9                     2.78  9.25     0.20     1.45     0.31    1.10 
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Multivariada (Mardia)                                   4.59    2.83 
+#> ─────────────────────────────────────────────────────────────────────
+#> Nota. c.r. = razón crítica (z): asimetría/√(6/n) y curtosis/√(24/n);
+#> la curtosis es el exceso sobre la normal. En negritas, |c.r.| > 1.96
+#> (p < .05), que indica falta de normalidad; con p < .01 el límite es
+#> 2.58. Multivariada: coeficiente de curtosis de Mardia y su c.r. N =
+#> 301 casos completos. Asimetría significativa en x2, x3, x5, x6, x8.
+#> Curtosis significativa en x3, x6, x8. El c.r. multivariado indica
+#> que no hay normalidad multivariada; se recomienda un estimador
+#> robusto (MLR o MLM) o bootstrap.
+#> 
+#> Pruebas de normalidad multivariada de Mardia
 #> ─────────────────────────────────────────────────────────────
 #> Prueba                  Coeficiente  Estadístico  gl     p   
 #> ─────────────────────────────────────────────────────────────
 #> Asimetría multivariada     6.88      χ² = 344.91  165  < .001
 #> Curtosis multivariada     103.59      z = 2.83          .005 
 #> ─────────────────────────────────────────────────────────────
-#> Nota. Pruebas de Mardia (1970) con 301 casos completos y 9
-#> variables. Se rechaza la normalidad multivariada; se
-#> recomienda un estimador robusto (MLR o MLM). Univariadas:
-#> todas las variables tienen asimetría entre ±2 y curtosis
-#> entre ±7 (West et al., 1995).
+#> Nota. Pruebas de Mardia (1970) con 301 casos y 9 variables.
+#> Se rechaza la normalidad multivariada; se recomienda un
+#> estimador robusto (MLR o MLM) o bootstrap.
 ```
 
-Si la prueba de Mardia es significativa, conviene estimar el modelo con
-`estimator = "MLR"`; la nota lo indica.
+Como en AMOS, cada variable tiene su asimetría y su curtosis con la
+razón crítica (c.r. = z); un \|c.r.\| mayor que 1.96 (en la práctica, 2)
+indica falta de normalidad, y la última fila es la curtosis multivariada
+de Mardia. Si no hay normalidad multivariada, conviene estimar con
+`estimator = "MLR"` o bootstrap; la nota lo indica.
+
+Casos atípicos multivariados (distancia de Mahalanobis). Un p1 ≤ .001
+señala un atípico (Kline, 2011):
+
+``` r
+at <- tabla_atipicos(items)
+at
+#> 
+#> Casos más alejados del centroide (distancia de Mahalanobis)
+#> ─────────────────────────
+#> Fila   D²      p1     p2 
+#> ─────────────────────────
+#> 180   28.67  < .001  .199
+#> 163   28.29  < .001  .028
+#> 262   27.61   .001   .005
+#> 78    25.70   .002   .005
+#> 233   24.17   .004   .008
+#> 196   23.60   .005   .004
+#> 107   22.81   .007   .004
+#> 105   22.45   .008   .002
+#> 254   21.28   .011   .009
+#> 268   21.09   .012   .005
+#> ─────────────────────────
+#> Nota. D² = distancia de Mahalanobis al cuadrado (9
+#> variables, N = 301); p1 = P(χ²(9) ≥ D²); p2 = probabilidad
+#> de que la i-ésima D² más grande alcance ese valor. Casos
+#> ordenados de más a menos alejado. En negritas, 2 casos
+#> atípicos (p1 ≤ .001; Kline, 2011): filas 180, 163. Atípicos
+#> univariados (|z| > 3): x1 (2), x2 (1), x6 (3), x8 (2), x9
+#> (2).
+at$atipicos          # filas de los atípicos
+#> [1] 163 180
+```
+
+Si decides excluirlos, `items[-at$atipicos, ]` da los datos sin ellos;
+repórtalo y compara los resultados con y sin esos casos.
 
 ### Antes de un análisis exploratorio
 
@@ -756,6 +825,273 @@ Usa 1000 o más remuestreos para un artículo (`bootstrap = 1000`, el
 valor por omisión). Un efecto indirecto es significativo si su intervalo
 no incluye el 0; esos van en negritas en Word.
 
+### Análisis de trayectorias y SEM paso a paso
+
+El orden habitual del análisis, con el ejemplo de trayectorias de la
+guía (`fit3`, datos `swiss`):
+
+**1. Supuestos.** Normalidad (sobre todo de las variables dependientes),
+atípicos y multicolinealidad entre predictores:
+
+``` r
+tabla_normalidad(fit3)
+#> 
+#> Evaluación de la normalidad
+#> ───────────────────────────────────────────────────────────────────────
+#> Variable               Mín.    Máx.   Asimetría  c.r.   Curtosis  c.r. 
+#> ───────────────────────────────────────────────────────────────────────
+#> Examination            3.00   37.00     0.46     1.29    -0.01    -0.02
+#> Fertility              35.00  92.50     -0.47    -1.32    0.40    0.56 
+#> Education              1.00   53.00     2.34     6.56     6.54    9.15 
+#> Catholic               2.15   100.00    0.49     1.38    -1.61    -2.25
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Multivariada (Mardia)                                     2.02    1.00 
+#> ───────────────────────────────────────────────────────────────────────
+#> Nota. c.r. = razón crítica (z): asimetría/√(6/n) y curtosis/√(24/n);
+#> la curtosis es el exceso sobre la normal. En negritas, |c.r.| > 1.96
+#> (p < .05), que indica falta de normalidad; con p < .01 el límite es
+#> 2.58. Multivariada: coeficiente de curtosis de Mardia y su c.r. N = 47
+#> casos completos. Asimetría significativa en Education. Curtosis
+#> significativa en Education, Catholic. El c.r. multivariado sugiere
+#> normalidad multivariada.
+#> 
+#> Pruebas de normalidad multivariada de Mardia
+#> ────────────────────────────────────────────────────────────
+#> Prueba                  Coeficiente  Estadístico  gl    p   
+#> ────────────────────────────────────────────────────────────
+#> Asimetría multivariada     8.28      χ² = 64.83   20  < .001
+#> Curtosis multivariada      26.02      z = 1.00         .317 
+#> ────────────────────────────────────────────────────────────
+#> Nota. Pruebas de Mardia (1970) con 47 casos y 4 variables.
+#> Se rechaza la normalidad multivariada; se recomienda un
+#> estimador robusto (MLR o MLM) o bootstrap.
+tabla_vif(fit3)
+#> 
+#> Diagnóstico de multicolinealidad
+#> ───────────────────────────────────────────────────
+#> Variable dependiente  Predictor    Tolerancia  VIF 
+#> ───────────────────────────────────────────────────
+#> Fertility             Education       .51      1.98
+#>                       Examination     .51      1.95
+#>                       Catholic        .98      1.02
+#> ───────────────────────────────────────────────────
+#> Nota. VIF = factor de inflación de la varianza
+#> (1/tolerancia), calculado con las correlaciones del modelo.
+#> VIF > 5 (tolerancia < .20) indica multicolinealidad
+#> preocupante y VIF > 10, grave. Ningún predictor supera VIF
+#> = 5.
+```
+
+**2. Diagrama** estandarizado (cargas y β, R²) y no estandarizado (B, y,
+como en AMOS, la varianza de cada variable exógena y de cada error):
+
+``` r
+diagrama_sem(fit3, estandarizado = FALSE)
+```
+
+<img src="GUIA_files/figure-gfm/unnamed-chunk-34-1.png" width="100%" />
+
+**3. Ajuste e identificación.** Cada índice contra los criterios
+excelente y aceptable, con su fuente, y la identificación del modelo
+(observaciones, parámetros, gl):
+
+``` r
+tabla_criterios_ajuste(fit3)
+#> 
+#> Evaluación del ajuste del modelo
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Índice                    Valor            Excelente  Aceptable   Evaluación   Fuente                                 
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> χ²               26.66 (gl = 1, p < .001)   p > .05              No adecuado   Hair et al. (2014); Kline (2011)       
+#> χ²/gl                     26.66               ≤ 2        ≤ 3     No aceptable  Hair et al. (2014)                     
+#> RMSEA [IC 90 %]     .739 [.513, .993]        ≤ .05      ≤ .06    No aceptable  Kline (2011); Hu y Bentler (1999)      
+#> SRMR                       .156              ≤ .08      ≤ .10    No aceptable  Hu y Bentler (1999); Hair et al. (2014)
+#> CFI                        .725              ≥ .95      ≥ .90    No aceptable  Hu y Bentler (1999); Hair et al. (2014)
+#> TLI (NNFI)                -.375              ≥ .95      ≥ .90    No aceptable  Tabachnick y Fidell (2013)             
+#> GFI                        .879              ≥ .95      ≥ .90    No aceptable  Hair et al. (2014)                     
+#> PNFI                       .146                         ≥ .50    No aceptable  Mulaik et al. (1989)                   
+#> PRATIO                     .200                         ≥ .50    No aceptable  Mulaik et al. (1989)                   
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. RMSEA = error cuadrático medio de aproximación; SRMR = raíz del residuo cuadrático medio estandarizado; CFI =
+#> índice de ajuste comparativo; TLI = índice de Tucker-Lewis; GFI = índice de bondad de ajuste; PNFI = índice de ajuste
+#> normado parsimonioso; PRATIO = razón de parsimonia. La prueba χ² es sensible al tamaño de la muestra; con muestras
+#> grandes suele ser significativa aunque el ajuste sea bueno.
+#> 
+#> Identificación del modelo y tamaño de la muestra
+#> ───────────────────────────────────────────────────────────────────────────────────────
+#> Elemento                    Valor  Interpretación                                      
+#> ───────────────────────────────────────────────────────────────────────────────────────
+#> Observaciones (p)             7    Elementos no redundantes de la matriz de covarianzas
+#> Parámetros estimados (q)      6                                                        
+#> Grados de libertad (p − q)    1    Sobreidentificado                                   
+#> Tamaño de la muestra (N)     47                                                        
+#> Razón N:q                   7.8:1  Baja (< 10:1)                                       
+#> ───────────────────────────────────────────────────────────────────────────────────────
+#> Nota. gl > 0: modelo sobreidentificado (el deseable); gl = 0: exactamente identificado
+#> (χ² = 0, el ajuste no puede evaluarse); gl < 0: subidentificado (no puede estimarse).
+#> Razón N:q: se recomiendan al menos 10 casos por parámetro y, de preferencia, 20
+#> (Kline, 2011).
+```
+
+**4. Estimaciones**, agrupadas como en AMOS (pesos de regresión,
+covarianzas, varianzas), con la razón crítica (C.R.):
+
+``` r
+tabla_parametros(fit3)
+#> 
+#> Estimaciones del modelo
+#> ───────────────────────────────────────────────────────────────────────────
+#> Parámetro                                 B       EE    C.R.     p      β  
+#> ───────────────────────────────────────────────────────────────────────────
+#> Pesos de regresión                                                         
+#>    Examination ← Education               0.58    0.09   6.69   < .001  .70 
+#>    Fertility ← Education                -0.76    0.17   -4.38  < .001  -.59
+#>    Fertility ← Examination              -0.05    0.21   -0.26   .796   -.03
+#>    Fertility ← Catholic                  0.11    0.03   3.68   < .001  .36 
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Covarianzas (correlación en β)                                             
+#>    Education ↔ Catholic                 -60.39     —      —      —     -.15
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Varianzas de las variables exógenas                                        
+#>    Education                            90.49      —      —      —     1.00
+#>    Catholic                            1,702.29    —      —      —     1.00
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Varianzas de los errores (residuales)                                      
+#>    Error de Examination                 31.91    6.58   4.85   < .001  .51 
+#>    Error de Fertility                   64.93    13.39  4.85   < .001  .43 
+#> ───────────────────────────────────────────────────────────────────────────
+#> Nota. B = estimación no estandarizada; EE = error estándar; C.R. = razón
+#> crítica (B/EE); |C.R.| > 1.96 indica un parámetro significativo (p < .05);
+#> β = estimación estandarizada (en las covarianzas, la correlación; en los
+#> errores, la proporción de varianza no explicada, 1 − R²). — = parámetro
+#> fijo (por ejemplo, la carga de referencia fijada en 1). N = 47.
+```
+
+**5. Hipótesis.** Escribe cada hipótesis como una trayectoria; agrega
+`(+)` o `(-)` si predice un signo. Las de mediación (`X -> M -> Y`) se
+evalúan con el intervalo del efecto indirecto:
+
+``` r
+tabla_hipotesis(fit3, c(H1 = "Education -> Examination (+)",
+                        H2 = "Examination -> Fertility (-)",
+                        H3 = "Catholic -> Fertility (+)",
+                        H4 = "Education -> Examination -> Fertility"),
+                bootstrap = 500)
+#> 
+#> Contraste de hipótesis
+#> ──────────────────────────────────────────────────────────────────────────────────────────────
+#> Hipótesis  Trayectoria                          Efecto      β      p / IC 95 %     Decisión   
+#> ──────────────────────────────────────────────────────────────────────────────────────────────
+#> H1         Education → Examination (+)          Directo    .70        < .001       Se sostiene
+#> H2         Examination → Fertility (-)          Directo    -.03        .796        Se rechaza 
+#> H3         Catholic → Fertility (+)             Directo    .36        < .001       Se sostiene
+#> H4         Education → Examination → Fertility  Indirecto  -.02  IC [-0.52, 0.23]  Se rechaza 
+#> ──────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. β = coeficiente estandarizado. Efectos directos: se sostienen si p < .05. Efectos
+#> indirectos: se sostienen si el intervalo de confianza al 95 % (bootstrap con 500 remuestreos)
+#> no incluye el 0. Si la hipótesis indica un signo (+ o −), el efecto debe tener ese signo.
+```
+
+**6. Efectos directos, indirectos y totales** con `tabla_efectos()`
+(véase arriba).
+
+**7. Modelo alternativo.** Si quitas trayectorias no significativas o
+agregas parámetros, compara los modelos con `tabla_comparacion()`. Los
+índices de modificación muestran qué parámetro agregado mejoraría el
+ajuste; solo deben liberarse si tiene sentido teórico:
+
+``` r
+tabla_modificacion(fit, n = 5)
+#> 
+#> Índices de modificación
+#> ───────────────────────────────────────────────────────────────
+#> Parámetro               Sintaxis lavaan   IM     EPC   EPC est.
+#> ───────────────────────────────────────────────────────────────
+#> Carga de x9 en visual   visual =~ x9     36.41  0.58     .52   
+#> Covarianza x7 ↔ x8      x7 ~~ x8         34.15  0.54     .86   
+#> Carga de x7 en visual   visual =~ x7     18.63  -0.42    -.35  
+#> Covarianza x8 ↔ x9      x8 ~~ x9         14.95  -0.42    -.81  
+#> Carga de x3 en textual  textual =~ x3    9.15   -0.27    -.24  
+#> ───────────────────────────────────────────────────────────────
+#> Nota. IM = índice de modificación (disminución esperada del χ²
+#> al liberar el parámetro); EPC = cambio esperado en el
+#> parámetro (no estandarizado y estandarizado). Se muestran los
+#> IM ≥ 3.84. Liberar un parámetro solo se justifica si tiene
+#> sentido teórico; la sintaxis de lavaan para agregarlo está en
+#> la segunda columna.
+```
+
+### MANOVA de un factor
+
+¿Difieren los grupos en un conjunto de variables dependientes? La tabla
+reúne las pruebas multivariadas (Pillai, Wilks, Hotelling-Lawley y Roy,
+con η²p), los supuestos (M de Box, tamaños de grupo, normalidad por
+grupo, atípicos, multicolinealidad), los ANOVA de seguimiento con
+corrección de Bonferroni y las medias por grupo. Con los datos `iris` de
+la clase:
+
+``` r
+tabla_manova(iris, dependientes = c("Petal.Length", "Sepal.Length"), grupo = "Species")
+#> 
+#> MANOVA de un factor: pruebas multivariadas
+#> ──────────────────────────────────────────────────────────────────
+#> Prueba                     Valor      F      gl1  gl2    p     η²p
+#> ──────────────────────────────────────────────────────────────────
+#> Traza de Pillai            0.989    71.83     4   294  < .001  .49
+#> Lambda de Wilks            0.040    292.56    4   292  < .001  .80
+#> Traza de Hotelling-Lawley  23.365   846.97    4   290  < .001  .92
+#> Raíz mayor de Roy          23.334  1,715.06   2   147  < .001  .96
+#> ──────────────────────────────────────────────────────────────────
+#> Nota. F aproximada; η²p = eta cuadrada parcial (en un MANOVA de
+#> un factor coincide con la eta cuadrada). La traza de Pillai es la
+#> prueba más robusta si no se cumple la igualdad de matrices de
+#> covarianza. Variables dependientes: Petal.Length, Sepal.Length;
+#> factor: Species (3 grupos, N = 150).
+#> 
+#> Supuestos del MANOVA
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Supuesto                                        Resultado                              Criterio               Conclusión  
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Igualdad de matrices de covarianza (M de Box)   M = 59.55, χ²(6) = 58.38, p < .001     p > .001               No se cumple
+#> Razón de tamaños de grupo (mayor/menor)         1.00                                   < 1.5                  Se cumple   
+#> Normalidad multivariada por grupo (Mardia)                                                                                
+#>    setosa                                       Asimetría p = .191; curtosis p = .243  p > .05                Se cumple   
+#>    versicolor                                   Asimetría p = .156; curtosis p = .445  p > .05                Se cumple   
+#>    virginica                                    Asimetría p = .426; curtosis p = .597  p > .05                Se cumple   
+#> Atípicos multivariados por grupo (Mahalanobis)  Ninguno                                D² > 13.82 (p < .001)  Se cumple   
+#> Multicolinealidad entre variables dependientes  |r| máxima = .87                       < .90                  Se cumple   
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. La M de Box es muy sensible a la falta de normalidad, por eso se evalúa con α = .001. Si no se cumple la igualdad
+#> de matrices de covarianza, use la traza de Pillai, procure grupos de tamaño similar y un nivel de significancia más
+#> estricto. La linealidad entre pares de variables dependientes se revisa con diagramas de dispersión; la independencia de
+#> las observaciones, con el diseño del estudio.
+#> 
+#> ANOVA univariados de seguimiento
+#> ─────────────────────────────────────────────
+#> Variable         F      gl1  gl2    p     η²p
+#> ─────────────────────────────────────────────
+#> Petal.Length  1,180.16   2   147  < .001  .94
+#> Sepal.Length   119.26    2   147  < .001  .62
+#> ─────────────────────────────────────────────
+#> Nota. η²p = eta cuadrada parcial. Con la corrección de
+#> Bonferroni, cada ANOVA se evalúa con α = .05/2 = .025; en
+#> negritas, los significativos.
+#> 
+#> Medias (desviaciones estándar) por grupo
+#> ───────────────────────────────────────────────────
+#> Variable        setosa     versicolor    virginica 
+#> ───────────────────────────────────────────────────
+#> Petal.Length  1.46 (0.17)  4.26 (0.47)  5.55 (0.55)
+#> Sepal.Length  5.01 (0.35)  5.94 (0.52)  6.59 (0.64)
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> n                 50           50           50     
+#> ───────────────────────────────────────────────────
+#> Nota. Valores: M (DE).
+```
+
+Si la M de Box es significativa (p \< .001), reporta la traza de Pillai,
+que es la más robusta.
+
 ### Párrafo de método
 
 Redacta el párrafo de análisis de datos (software, versiones, estimador,
@@ -767,7 +1103,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 #> 
 #> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
 #> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
-#> Jorgensen et al., 2022) y diagramaSEM (versión 0.4.0; Moreno Valladares, 2026).
+#> Jorgensen et al., 2022) y diagramaSEM (versión 0.5.0; Moreno Valladares, 2026).
 #> El análisis factorial confirmatorio se estimó con una muestra de 301
 #> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
 #> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
@@ -788,7 +1124,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 #>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
 #> 
 #> Moreno Valladares, J. (2026). diagramaSEM: Diagramas de trayectorias y tablas
-#>     APA para modelos lavaan y psych (Paquete de R, versión 0.4.0).
+#>     APA para modelos lavaan y psych (Paquete de R, versión 0.5.0).
 #>     https://github.com/jeshuamv/diagramaSEM.
 #> 
 #> R Core Team. (2024). R: A language and environment for statistical computing. R
@@ -836,7 +1172,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-35-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-43-1.png" width="100%" />
 
 Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -846,7 +1182,7 @@ Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-36-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-44-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados (y
 no se muestra R²):
@@ -855,7 +1191,7 @@ no se muestra R²):
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-37-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-45-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -863,13 +1199,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-38-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-46-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-38-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-46-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -889,20 +1225,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-40-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-48-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-40-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-48-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-40-3.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-48-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -915,7 +1251,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-41-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-49-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -924,7 +1260,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-42-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-50-1.png" width="100%" />
 
 ## Guardar el diagrama
 

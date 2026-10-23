@@ -23,12 +23,15 @@ con anchos de revista y revisión del tamaño del texto.
 Tablas en formato APA (se guardan en Word con \code{\link[=guardar_tabla]{guardar_tabla()}} o, todas
 juntas, con \code{\link[=guardar_tablas]{guardar_tablas()}}):
 \itemize{
-\item Datos: \code{\link[=tabla_descriptivos]{tabla_descriptivos()}}, \code{\link[=tabla_perdidos]{tabla_perdidos()}}, \code{\link[=tabla_normalidad]{tabla_normalidad()}}.
+\item Datos y supuestos: \code{\link[=tabla_descriptivos]{tabla_descriptivos()}}, \code{\link[=tabla_perdidos]{tabla_perdidos()}},
+\code{\link[=tabla_normalidad]{tabla_normalidad()}}, \code{\link[=tabla_atipicos]{tabla_atipicos()}}, \code{\link[=tabla_vif]{tabla_vif()}}.
 \item Análisis exploratorio: \code{\link[=tabla_factorabilidad]{tabla_factorabilidad()}}, \code{\link[=tabla_cargas]{tabla_cargas()}}.
 \item Medición: \code{\link[=tabla_cargas]{tabla_cargas()}}, \code{\link[=tabla_confiabilidad]{tabla_confiabilidad()}}, \code{\link[=tabla_validez]{tabla_validez()}},
 \code{\link[=tabla_htmt]{tabla_htmt()}}, \code{\link[=tabla_metodo_comun]{tabla_metodo_comun()}}.
-\item Ajuste: \code{\link[=tabla_ajuste]{tabla_ajuste()}}, \code{\link[=tabla_comparacion]{tabla_comparacion()}}, \code{\link[=tabla_invarianza]{tabla_invarianza()}}.
-\item Modelo estructural: \code{\link[=tabla_efectos]{tabla_efectos()}}.
+\item Ajuste: \code{\link[=tabla_ajuste]{tabla_ajuste()}}, \code{\link[=tabla_criterios_ajuste]{tabla_criterios_ajuste()}}, \code{\link[=tabla_comparacion]{tabla_comparacion()}},
+\code{\link[=tabla_modificacion]{tabla_modificacion()}}, \code{\link[=tabla_invarianza]{tabla_invarianza()}}.
+\item Modelo estructural: \code{\link[=tabla_parametros]{tabla_parametros()}}, \code{\link[=tabla_efectos]{tabla_efectos()}}, \code{\link[=tabla_hipotesis]{tabla_hipotesis()}}.
+\item MANOVA: \code{\link[=tabla_manova]{tabla_manova()}}.
 \item Redacción: \code{\link[=parrafo_metodo]{parrafo_metodo()}}.
 }
 

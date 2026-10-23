@@ -23,8 +23,11 @@
 #'   correlaciones entre errores se dibujan siempre. Las ocultas quedan en el
 #'   elemento `correlaciones_ocultas` del resultado.
 #' @param estandarizado Si `TRUE` (por omisión) muestra la solución
-#'   estandarizada; si `FALSE`, la no estandarizada (sin \eqn{R^2}).
-#' @param mostrar_r2 Mostrar la \eqn{R^2} de cada variable explicada.
+#'   estandarizada; si `FALSE`, la no estandarizada: como en AMOS, en lugar de
+#'   la \eqn{R^2} se escribe la varianza de cada variable exógena y de cada
+#'   error.
+#' @param mostrar_r2 Mostrar la \eqn{R^2} de cada variable explicada (o las
+#'   varianzas, en la solución no estandarizada).
 #' @param mostrar_errores Dibujar los círculos de error.
 #' @param mostrar_valores Escribir los valores sobre las flechas.
 #' @param estrellas Añadir asteriscos de significancia (`*` p < .05,
@@ -141,6 +144,9 @@ diagrama_sem <- function(fit, acomodo = "auto", correlaciones = "auto",
   } else {
     G <- extraer_estructura(fit, estandarizado, grupo, etiquetas, prefijo_error, mostrar_errores)
     tipo <- detectar_tipo(G)
+    # Solución no estandarizada: como en AMOS, junto a cada variable exógena va
+    # su varianza y junto a cada error, su varianza (en lugar de la R²)
+    if (!estandarizado) G$r2 <- varianzas_nodos(fit, G, grupo)
   }
 
   # Correlaciones entre constructos
@@ -197,6 +203,20 @@ diagrama_sem <- function(fit, acomodo = "auto", correlaciones = "auto",
   if (dibujar) dibujar_diagrama(obj)
   if (!is.null(archivo)) guardar_diagrama(obj, archivo, ancho = ancho)
   invisible(obj)
+}
+
+#' @noRd
+varianzas_nodos <- function(fit, G, grupo) {
+  pe <- lavaan::parameterEstimates(fit)
+  if ("group" %in% names(pe)) pe <- pe[pe$group == grupo, ]
+  v <- pe[pe$op == "~~" & pe$lhs == pe$rhs, ]
+  out <- numeric(0)
+  for (i in seq_len(nrow(v))) {
+    x <- v$lhs[i]
+    if (x %in% names(G$de_err)) out[G$de_err[[x]]] <- v$est[i]
+    else if (x %in% G$nodes$id && !x %in% unique(G$edges$to[G$edges$tipo %in% c("reg", "carga", "carga2", "cruzada")])) out[x] <- v$est[i]
+  }
+  out
 }
 
 #' @noRd

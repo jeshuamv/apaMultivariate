@@ -173,44 +173,78 @@ mardia_mv <- function(X) {
        b2 = b2, z = z, p_curt = 2 * stats::pnorm(-abs(z)))
 }
 
-#' Tabla de normalidad multivariada (Mardia)
+#' Tabla de normalidad univariada y multivariada
 #'
-#' Pruebas de asimetría y curtosis multivariadas de Mardia (1970). Si alguna
-#' es significativa, los datos no siguen una distribución normal
-#' multivariada y conviene un estimador robusto (`estimator = "MLR"` o
-#' `"MLM"` en `lavaan`). La nota indica además qué variables tienen
-#' asimetría o curtosis univariadas fuera de los rangos habituales.
+#' Evaluación de la normalidad como en la salida de AMOS ("Assessment of
+#' normality"), que es la que suele pedirse para estimar por máxima
+#' verosimilitud:
 #'
-#' Se usan solo los casos completos y las fórmulas originales de Mardia
-#' (covarianza con denominador n, como el paquete `MVN`); `psych::mardia()`
-#' usa n - 1, por lo que sus coeficientes son un poco menores.
+#' * **Por variable:** mínimo, máximo, asimetría y curtosis con su razón
+#'   crítica (c.r., un valor z): \eqn{z = asimetría / \sqrt{6/n}} y
+#'   \eqn{z = curtosis / \sqrt{24/n}}. Un |z| mayor que 1.96 (p < .05; en la
+#'   práctica, 2) o que 2.58 (p < .01) indica falta de normalidad.
+#' * **Multivariada:** coeficiente de curtosis multivariada de Mardia (exceso
+#'   sobre el valor esperado con normalidad) y su c.r. Un c.r. menor que 2 en
+#'   valor absoluto sugiere normalidad multivariada.
+#' * **Pruebas de Mardia** (1970) de asimetría y curtosis multivariadas, en la
+#'   segunda parte de la tabla.
+#'
+#' Si no hay normalidad multivariada, conviene un estimador robusto
+#' (`estimator = "MLR"` o `"MLM"`) o bootstrap.
+#'
+#' La asimetría y la curtosis de esta tabla se calculan como en AMOS (sin la
+#' corrección por sesgo de SPSS que usa [tabla_descriptivos()]); con
+#' muestras grandes la diferencia es mínima. Para Mardia se usa la covarianza
+#' con denominador n (como el paquete `MVN`; `psych::mardia()` usa n - 1).
+#' Se usan solo los casos completos.
 #'
 #' @inheritParams tabla_descriptivos
-#' @return Un objeto `tabla_apa`. Los valores están en `$datos`.
+#' @param datos Un `data.frame` o un modelo de `lavaan` (se usan las
+#'   variables observadas del modelo).
+#' @return Un objeto `tabla_apa` con dos partes. Los valores están en
+#'   `$datos$univariadas` y `$datos$mardia`.
 #' @examples
 #' library(lavaan)
 #' tabla_normalidad(HolzingerSwineford1939, variables = paste0("x", 1:9))
 #' @export
 tabla_normalidad <- function(datos, variables = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
-  d <- obtener_datos(datos, variables)
+  d <- obtener_datos(datos, variables); d <- d[stats::complete.cases(d), , drop = FALSE]
   if (ncol(d) < 2) stop("Se necesitan al menos dos variables.", call. = FALSE)
-  m <- mardia_mv(d)
-  cel <- rbind(c("Asimetr\u00eda multivariada", f_num(m$b1, decimales), paste0("\u03c7\u00b2 = ", f_num(m$chi, 2)),
-                 formatC(m$gl, format = "d"), f_p(m$p_asim)),
-               c("Curtosis multivariada", f_num(m$b2, decimales), paste0("z = ", f_num(m$z, 2)), "", f_p(m$p_curt)))
-  As <- vapply(d, asimetria, numeric(1)); Ku <- vapply(d, curtosis, numeric(1))
-  fuera <- c(if (any(abs(As) > 2)) paste0("asimetr\u00eda fuera de \u00b12 en ", paste(names(d)[abs(As) > 2], collapse = ", ")),
-             if (any(abs(Ku) > 7)) paste0("curtosis fuera de \u00b17 en ", paste(names(d)[abs(Ku) > 7], collapse = ", ")))
+  n <- nrow(d); m <- mardia_mv(d)
+  g1 <- vapply(d, function(x) { x <- x - mean(x); mean(x^3) / mean(x^2)^1.5 }, numeric(1))
+  g2 <- vapply(d, function(x) { x <- x - mean(x); mean(x^4) / mean(x^2)^2 - 3 }, numeric(1))
+  z1 <- g1 / sqrt(6 / n); z2 <- g2 / sqrt(24 / n)
+  kmv <- m$b2 - m$p * (m$p + 2)
+  cel <- cbind(names(d), f_num(vapply(d, min, numeric(1)), decimales), f_num(vapply(d, max, numeric(1)), decimales),
+               f_num(g1, decimales), f_num(z1, 2), f_num(g2, decimales), f_num(z2, 2))
+  cel <- rbind(cel, c("Multivariada (Mardia)", "", "", "", "", f_num(kmv, decimales), f_num(m$z, 2)))
+  neg <- matrix(FALSE, nrow(cel), ncol(cel))
+  neg[seq_len(ncol(d)), 5] <- abs(z1) > 1.96; neg[seq_len(ncol(d)), 7] <- abs(z2) > 1.96; neg[nrow(cel), 7] <- abs(m$z) > 1.96
+  fz1 <- names(d)[abs(z1) > 1.96]; fz2 <- names(d)[abs(z2) > 1.96]
+  nota <- paste0("c.r. = raz\u00f3n cr\u00edtica (z): asimetr\u00eda/\u221a(6/n) y curtosis/\u221a(24/n); la curtosis es el exceso sobre la normal. ",
+                 "En negritas, |c.r.| > 1.96 (p < .05), que indica falta de normalidad; con p < .01 el l\u00edmite es 2.58. ",
+                 "Multivariada: coeficiente de curtosis de Mardia y su c.r. N = ", n, " casos completos. ",
+                 if (length(fz1)) paste0("Asimetr\u00eda significativa en ", paste(fz1, collapse = ", "), ". ") else "",
+                 if (length(fz2)) paste0("Curtosis significativa en ", paste(fz2, collapse = ", "), ". ") else "",
+                 if (abs(m$z) < 1.96) "El c.r. multivariado sugiere normalidad multivariada."
+                 else "El c.r. multivariado indica que no hay normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.")
+  cel2 <- rbind(c("Asimetr\u00eda multivariada", f_num(m$b1, decimales), paste0("\u03c7\u00b2 = ", f_num(m$chi, 2)),
+                  formatC(m$gl, format = "d"), f_p(m$p_asim)),
+                c("Curtosis multivariada", f_num(m$b2, decimales), paste0("z = ", f_num(m$z, 2)), "", f_p(m$p_curt)))
   normal <- m$p_asim >= .05 && m$p_curt >= .05
-  nota <- paste0("Pruebas de Mardia (1970) con ", m$n, " casos completos y ", m$p, " variables. ",
-                 if (normal) "No se rechaza la normalidad multivariada. "
-                 else "Se rechaza la normalidad multivariada; se recomienda un estimador robusto (MLR o MLM). ",
-                 "Univariadas: ", if (length(fuera)) paste0(paste(fuera, collapse = "; "), " (West et al., 1995).")
-                 else "todas las variables tienen asimetr\u00eda entre \u00b12 y curtosis entre \u00b17 (West et al., 1995).")
-  t <- nueva_tabla(if (is.null(titulo)) "Pruebas de normalidad multivariada" else titulo,
-                   c("Prueba", "Coeficiente", "Estad\u00edstico", "gl", "p"), cel, nota = nota,
-                   datos = data.frame(prueba = c("asimetria", "curtosis"), coeficiente = c(m$b1, m$b2),
-                                      estadistico = c(m$chi, m$z), gl = c(m$gl, NA), p = c(m$p_asim, m$p_curt)))
+  nota2 <- paste0("Pruebas de Mardia (1970) con ", m$n, " casos y ", m$p, " variables. ",
+                  if (normal) "No se rechaza la normalidad multivariada."
+                  else "Se rechaza la normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.")
+  t <- nueva_tabla(if (is.null(titulo)) "Evaluaci\u00f3n de la normalidad" else titulo,
+                   c("Variable", "M\u00edn.", "M\u00e1x.", "Asimetr\u00eda", "c.r.", "Curtosis", "c.r."), cel, neg,
+                   nota = nota, separadores = ncol(d),
+                   datos = list(univariadas = data.frame(variable = names(d), asimetria = g1, cr_asimetria = z1,
+                                                         curtosis = g2, cr_curtosis = z2, row.names = NULL),
+                                mardia = data.frame(prueba = c("asimetria", "curtosis"), coeficiente = c(m$b1, m$b2),
+                                                    estadistico = c(m$chi, m$z), gl = c(m$gl, NA), p = c(m$p_asim, m$p_curt),
+                                                    curtosis_exceso = c(NA, kmv))),
+                   extra = list(nueva_tabla("Pruebas de normalidad multivariada de Mardia",
+                                            c("Prueba", "Coeficiente", "Estad\u00edstico", "gl", "p"), cel2, nota = nota2)))
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
 }

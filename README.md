@@ -179,7 +179,8 @@ un artículo o una tesis:
 |---|---|---|
 | Datos | `tabla_descriptivos(datos)` | n, M, DE, asimetría, curtosis y correlaciones (la "Tabla 1") |
 | | `tabla_perdidos(datos)` | Datos perdidos por variable |
-| | `tabla_normalidad(datos)` | Normalidad multivariada (Mardia) |
+| | `tabla_normalidad(datos)` | Normalidad: asimetría y curtosis con c.r. (como AMOS) y Mardia |
+| | `tabla_atipicos(datos)` | Atípicos multivariados (Mahalanobis, p1 y p2) |
 | AFE | `tabla_factorabilidad(datos)` | KMO, Bartlett y cuántos factores retener (Kaiser, análisis paralelo, MAP) |
 | | `tabla_cargas(afe)` | Cargas, comunalidades, varianza explicada |
 | Medición | `tabla_cargas(fit)` | Cargas estandarizadas, EE, *p* y R² |
@@ -188,9 +189,15 @@ un artículo o una tesis:
 | | `tabla_htmt(fit)` | Validez discriminante HTMT (la que hoy piden los revisores) |
 | | `tabla_metodo_comun(fit)` | Sesgo de método común (Harman y AFC de un factor) |
 | Ajuste | `tabla_ajuste(fit)` | χ², CFI, TLI, RMSEA, SRMR |
+| | `tabla_criterios_ajuste(fit)` | Cada índice (χ², χ²/gl, RMSEA, SRMR, CFI, TLI, GFI, PNFI, PRATIO) contra criterios excelente/aceptable, e identificación del modelo (p, q, gl) |
+| | `tabla_modificacion(fit)` | Índices de modificación |
 | | `tabla_comparacion("A" = fit1, "B" = fit2)` | Modelos alternativos: Δχ², ΔCFI, AIC, BIC |
 | | `tabla_invarianza(modelo, datos, grupo = "sexo")` | Invarianza configural, métrica, escalar y estricta |
-| Estructural | `tabla_efectos(fit)` | Efectos directos, indirectos (bootstrap) y totales |
+| Estructural | `tabla_parametros(fit)` | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas |
+| | `tabla_efectos(fit)` | Efectos directos, indirectos (bootstrap) y totales |
+| | `tabla_hipotesis(fit, c(H1 = "X -> Y (+)"))` | Cada hipótesis: se sostiene o se rechaza |
+| | `tabla_vif(fit)` | Multicolinealidad entre predictores |
+| MANOVA | `tabla_manova(datos, c("Y1", "Y2"), "grupo")` | Pillai, Wilks, Hotelling, Roy con η²p; M de Box y demás supuestos; ANOVA de seguimiento |
 | Método | `parrafo_metodo(fit)` | Párrafo de software y estimación, con referencias APA |
 
 Todas se ven en la consola. Para Word:
@@ -206,7 +213,10 @@ guardar_tablas(tabla_descriptivos(datos),                # todas en un documento
 ```
 
 Las tablas anchas se pasan a letra de 10 pt o a una página horizontal. Los valores de
-cada tabla se cotejaron con `psych`, `semTools` y `lavaan`. Los detalles y ejemplos de
+cada tabla se cotejaron con `psych`, `semTools`, `lavaan`, `car`, `rstatix` y
+`effectsize`. La guía incluye el análisis de trayectorias y SEM **paso a paso** (supuestos,
+diagrama, ajuste, estimaciones, hipótesis, efectos y modelo alternativo) y un ejemplo de
+MANOVA. Los detalles y ejemplos de
 cada una están en la sección *Tablas en formato APA* de la [guía](guia/GUIA.md).
 
 ---
@@ -227,7 +237,7 @@ varias.
 | Ocultar las correlaciones entre factores | `diagrama_sem(fit, correlaciones = FALSE)` |
 | Ponerle título | `diagrama_sem(fit, titulo = "Modelo de medición")` |
 | Otro acomodo | `diagrama_sem(fit, acomodo = "dos_filas")` |
-| Valores sin estandarizar | `diagrama_sem(fit, estandarizado = FALSE)` |
+| Valores sin estandarizar (con varianzas, como AMOS) | `diagrama_sem(fit, estandarizado = FALSE)` |
 | En el AFE, solo cargas de .40 o más | `diagrama_sem(afe, umbral = 0.40)` |
 
 `etiquetas` también funciona en las tablas: `tabla_cargas(afe, etiquetas = c(MR1 = "Ansiedad"))`.

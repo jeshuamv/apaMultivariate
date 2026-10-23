@@ -80,7 +80,7 @@ trazar <- function(G) {
 #' @noRd
 posiciones_r2 <- function(G, tr, op) {
   N <- G$nodes
-  if (!(op$mostrar_r2 && op$estandarizado && length(G$r2))) return(NULL)
+  if (!(op$mostrar_r2 && length(G$r2))) return(NULL)
   ids <- intersect(names(G$r2), N$id)
   if (!length(ids)) return(NULL)
   px <- unlist(lapply(tr, `[[`, "x")); py <- unlist(lapply(tr, `[[`, "y"))
@@ -88,10 +88,15 @@ posiciones_r2 <- function(G, tr, op) {
   out <- NULL
   for (v in ids) {
     n <- N[N$id == v, ]
-    cand <- rbind(c(1, 1), c(-1, 1), c(1, -1), c(-1, -1))
+    circ <- n$forma == "circ"
+    # en los círculos de error se prefiere arriba o abajo del círculo, para que
+    # el valor no se confunda con el de otra figura
+    cand <- if (circ) rbind(c(0, 1), c(0, -1), c(1, 1), c(-1, 1), c(1, -1), c(-1, -1))
+            else rbind(c(1, 1), c(-1, 1), c(1, -1), c(-1, -1))
     mejor <- -Inf; sel <- NULL
     for (k in seq_len(nrow(cand))) {
-      cx <- n$x + cand[k, 1] * (n$a + 0.14); cy <- n$y + cand[k, 2] * (n$b + 0.1)
+      cx <- n$x + cand[k, 1] * (n$a + 0.14)
+      cy <- n$y + cand[k, 2] * (n$b + if (cand[k, 1] == 0) 0.13 else 0.1)
       d_lin <- min(sqrt((px - cx)^2 / 0.5 + (py - cy)^2), 9)
       d_lab <- if (length(lx)) min(sqrt((lx - cx)^2 / 0.5 + (ly - cy)^2)) else 9
       otros <- N[N$id != v, ]
@@ -99,7 +104,7 @@ posiciones_r2 <- function(G, tr, op) {
       d_nod <- if (nrow(otros)) min(pmax(abs(otros$x - cx) - otros$a - 0.13, abs(otros$y - cy) - otros$b - 0.08)) else 9
       sc <- min(d_lin, d_lab * 0.9, d_nod + 0.25) - 0.04 * (k - 1)   # leve preferencia: arriba a la derecha
       if (!is.null(out)) sc <- min(sc, min(sqrt((out$x - cx)^2 / 0.5 + (out$y - cy)^2)))
-      if (k == 1 && sc >= 0.22) { sel <- c(cx, cy); break }   # arriba a la derecha si está libre
+      if ((k == 1 || (circ && k == 2)) && sc >= 0.22) { sel <- c(cx, cy); break }   # posición preferida si está libre
       if (sc > mejor) { mejor <- sc; sel <- c(cx, cy) }
     }
     out <- rbind(out, data.frame(id = v, x = sel[1], y = sel[2], valor = G$r2[[v]]))

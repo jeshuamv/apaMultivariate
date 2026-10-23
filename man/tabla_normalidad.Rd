@@ -2,7 +2,7 @@
 % Please edit documentation in R/tablas_preliminares.R
 \name{tabla_normalidad}
 \alias{tabla_normalidad}
-\title{Tabla de normalidad multivariada (Mardia)}
+\title{Tabla de normalidad univariada y multivariada}
 \usage{
 tabla_normalidad(
   datos,
@@ -13,7 +13,8 @@ tabla_normalidad(
 )
 }
 \arguments{
-\item{datos}{Un \code{data.frame} o un modelo de \code{lavaan} (se usan sus datos).}
+\item{datos}{Un \code{data.frame} o un modelo de \code{lavaan} (se usan las
+variables observadas del modelo).}
 
 \item{variables}{Nombres de las variables (por omisión, todas las numéricas).}
 
@@ -25,19 +26,35 @@ tabla_normalidad(
 \code{.csv}).}
 }
 \value{
-Un objeto \code{tabla_apa}. Los valores están en \verb{$datos}.
+Un objeto \code{tabla_apa} con dos partes. Los valores están en
+\verb{$datos$univariadas} y \verb{$datos$mardia}.
 }
 \description{
-Pruebas de asimetría y curtosis multivariadas de Mardia (1970). Si alguna
-es significativa, los datos no siguen una distribución normal
-multivariada y conviene un estimador robusto (\code{estimator = "MLR"} o
-\code{"MLM"} en \code{lavaan}). La nota indica además qué variables tienen
-asimetría o curtosis univariadas fuera de los rangos habituales.
+Evaluación de la normalidad como en la salida de AMOS ("Assessment of
+normality"), que es la que suele pedirse para estimar por máxima
+verosimilitud:
 }
 \details{
-Se usan solo los casos completos y las fórmulas originales de Mardia
-(covarianza con denominador n, como el paquete \code{MVN}); \code{psych::mardia()}
-usa n - 1, por lo que sus coeficientes son un poco menores.
+\itemize{
+\item \strong{Por variable:} mínimo, máximo, asimetría y curtosis con su razón
+crítica (c.r., un valor z): \eqn{z = asimetría / \sqrt{6/n}} y
+\eqn{z = curtosis / \sqrt{24/n}}. Un |z| mayor que 1.96 (p < .05; en la
+práctica, 2) o que 2.58 (p < .01) indica falta de normalidad.
+\item \strong{Multivariada:} coeficiente de curtosis multivariada de Mardia (exceso
+sobre el valor esperado con normalidad) y su c.r. Un c.r. menor que 2 en
+valor absoluto sugiere normalidad multivariada.
+\item \strong{Pruebas de Mardia} (1970) de asimetría y curtosis multivariadas, en la
+segunda parte de la tabla.
+}
+
+Si no hay normalidad multivariada, conviene un estimador robusto
+(\code{estimator = "MLR"} o \code{"MLM"}) o bootstrap.
+
+La asimetría y la curtosis de esta tabla se calculan como en AMOS (sin la
+corrección por sesgo de SPSS que usa \code{\link[=tabla_descriptivos]{tabla_descriptivos()}}); con
+muestras grandes la diferencia es mínima. Para Mardia se usa la covarianza
+con denominador n (como el paquete \code{MVN}; \code{psych::mardia()} usa n - 1).
+Se usan solo los casos completos.
 }
 \examples{
 library(lavaan)

@@ -36,9 +36,9 @@ test_that("Mardia: formula original (denominador n), relacionada con psych (n - 
   t <- tabla_normalidad(HS, variables = v9)
   pm <- psych::mardia(HS[, v9], plot = FALSE)
   n <- nrow(HS)
-  expect_equal(t$datos$coeficiente[1], as.numeric(pm$b1p) * (n / (n - 1))^3, tolerance = 1e-8)
-  expect_equal(t$datos$coeficiente[2], as.numeric(pm$b2p) * (n / (n - 1))^2, tolerance = 1e-8)
-  expect_equal(t$datos$gl[1], 9 * 10 * 11 / 6)
+  expect_equal(t$datos$mardia$coeficiente[1], as.numeric(pm$b1p) * (n / (n - 1))^3, tolerance = 1e-8)
+  expect_equal(t$datos$mardia$coeficiente[2], as.numeric(pm$b2p) * (n / (n - 1))^2, tolerance = 1e-8)
+  expect_equal(t$datos$mardia$gl[1], 9 * 10 * 11 / 6)
 })
 
 test_that("alfa, IC de Feldt y r item-total coinciden con psych", {

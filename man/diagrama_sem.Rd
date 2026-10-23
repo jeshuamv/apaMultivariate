@@ -47,9 +47,12 @@ correlaciones entre errores se dibujan siempre. Las ocultas quedan en el
 elemento \code{correlaciones_ocultas} del resultado.}
 
 \item{estandarizado}{Si \code{TRUE} (por omisión) muestra la solución
-estandarizada; si \code{FALSE}, la no estandarizada (sin \eqn{R^2}).}
+estandarizada; si \code{FALSE}, la no estandarizada: como en AMOS, en lugar de
+la \eqn{R^2} se escribe la varianza de cada variable exógena y de cada
+error.}
 
-\item{mostrar_r2}{Mostrar la \eqn{R^2} de cada variable explicada.}
+\item{mostrar_r2}{Mostrar la \eqn{R^2} de cada variable explicada (o las
+varianzas, en la solución no estandarizada).}
 
 \item{mostrar_errores}{Dibujar los círculos de error.}
 

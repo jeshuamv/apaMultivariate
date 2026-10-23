@@ -16,12 +16,15 @@
 #' Tablas en formato APA (se guardan en Word con [guardar_tabla()] o, todas
 #' juntas, con [guardar_tablas()]):
 #' \itemize{
-#'   \item Datos: [tabla_descriptivos()], [tabla_perdidos()], [tabla_normalidad()].
+#'   \item Datos y supuestos: [tabla_descriptivos()], [tabla_perdidos()],
+#'     [tabla_normalidad()], [tabla_atipicos()], [tabla_vif()].
 #'   \item Análisis exploratorio: [tabla_factorabilidad()], [tabla_cargas()].
 #'   \item Medición: [tabla_cargas()], [tabla_confiabilidad()], [tabla_validez()],
 #'     [tabla_htmt()], [tabla_metodo_comun()].
-#'   \item Ajuste: [tabla_ajuste()], [tabla_comparacion()], [tabla_invarianza()].
-#'   \item Modelo estructural: [tabla_efectos()].
+#'   \item Ajuste: [tabla_ajuste()], [tabla_criterios_ajuste()], [tabla_comparacion()],
+#'     [tabla_modificacion()], [tabla_invarianza()].
+#'   \item Modelo estructural: [tabla_parametros()], [tabla_efectos()], [tabla_hipotesis()].
+#'   \item MANOVA: [tabla_manova()].
 #'   \item Redacción: [parrafo_metodo()].
 #' }
 #'

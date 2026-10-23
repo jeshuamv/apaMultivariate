@@ -30,7 +30,8 @@ usarlo, paso a paso.
 8. [Estilos: clásico, revista y color](#estilos-clásico-revista-y-color)
 9. [Tablas en formato APA](#tablas-en-formato-apa): descriptivos,
    factorabilidad, cargas, confiabilidad, validez, HTMT, método común, ajuste,
-   comparación de modelos, invarianza, efectos y párrafo de método
+   comparación de modelos, invarianza, efectos, análisis de trayectorias paso a
+   paso, MANOVA y párrafo de método
 10. [Personalizar el diagrama](#personalizar-el-diagrama)
 11. [Guardar el diagrama](#guardar-el-diagrama)
 12. [Figuras para una revista](#figuras-para-una-revista)
@@ -293,7 +294,8 @@ horizontales y nota) y guardan sus valores numéricos en `$datos`.
 |---|---|---|
 | Datos | `tabla_descriptivos()` | n, M, DE, asimetría, curtosis y correlaciones |
 | | `tabla_perdidos()` | Datos perdidos por variable y casos completos |
-| | `tabla_normalidad()` | Normalidad multivariada de Mardia |
+| | `tabla_normalidad()` | Normalidad: asimetría y curtosis con c.r. (como AMOS) y Mardia |
+| | `tabla_atipicos()` | Atípicos multivariados (Mahalanobis, p1 y p2) |
 | AFE | `tabla_factorabilidad()` | KMO, Bartlett y número de factores (Kaiser, análisis paralelo, MAP) |
 | | `tabla_cargas()` | Cargas, comunalidades y varianza explicada |
 | Medición | `tabla_cargas()` | Cargas estandarizadas, EE, *p* y R² |
@@ -302,9 +304,15 @@ horizontales y nota) y guardan sus valores numéricos en `$datos`.
 | | `tabla_htmt()` | Validez discriminante HTMT |
 | | `tabla_metodo_comun()` | Sesgo de método común (Harman y AFC de un factor) |
 | Ajuste | `tabla_ajuste()` | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos |
+| | `tabla_criterios_ajuste()` | Cada índice contra criterios excelente/aceptable, e identificación del modelo |
+| | `tabla_modificacion()` | Índices de modificación |
 | | `tabla_comparacion()` | Modelos alternativos con Δχ², ΔCFI, AIC y BIC |
 | | `tabla_invarianza()` | Invarianza configural, métrica, escalar y estricta |
-| Estructural | `tabla_efectos()` | Efectos directos, indirectos (bootstrap) y totales |
+| Estructural | `tabla_parametros()` | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas |
+| | `tabla_efectos()` | Efectos directos, indirectos (bootstrap) y totales |
+| | `tabla_hipotesis()` | Cada hipótesis: se sostiene o se rechaza |
+| | `tabla_vif()` | Multicolinealidad entre predictores |
+| MANOVA | `tabla_manova()` | Pruebas multivariadas, supuestos, ANOVA de seguimiento y medias por grupo |
 | Método | `parrafo_metodo()` | Párrafo de software y estimación con sus referencias |
 
 ### Descriptivos, datos perdidos y normalidad
@@ -326,8 +334,23 @@ tabla_perdidos(airquality)      # datos de ejemplo de R con datos perdidos
 tabla_normalidad(items)
 ```
 
-Si la prueba de Mardia es significativa, conviene estimar el modelo con
-`estimator = "MLR"`; la nota lo indica.
+Como en AMOS, cada variable tiene su asimetría y su curtosis con la razón
+crítica (c.r. = z); un |c.r.| mayor que 1.96 (en la práctica, 2) indica falta
+de normalidad, y la última fila es la curtosis multivariada de Mardia. Si no
+hay normalidad multivariada, conviene estimar con `estimator = "MLR"` o
+bootstrap; la nota lo indica.
+
+Casos atípicos multivariados (distancia de Mahalanobis). Un p1 ≤ .001 señala
+un atípico (Kline, 2011):
+
+```{r}
+at <- tabla_atipicos(items)
+at
+at$atipicos          # filas de los atípicos
+```
+
+Si decides excluirlos, `items[-at$atipicos, ]` da los datos sin ellos; repórtalo
+y compara los resultados con y sin esos casos.
 
 ### Antes de un análisis exploratorio
 
@@ -450,6 +473,80 @@ tabla_efectos(fit3, bootstrap = 500)
 Usa 1000 o más remuestreos para un artículo (`bootstrap = 1000`, el valor por
 omisión). Un efecto indirecto es significativo si su intervalo no incluye el
 0; esos van en negritas en Word.
+
+### Análisis de trayectorias y SEM paso a paso
+
+El orden habitual del análisis, con el ejemplo de trayectorias de la guía
+(`fit3`, datos `swiss`):
+
+**1. Supuestos.** Normalidad (sobre todo de las variables dependientes),
+atípicos y multicolinealidad entre predictores:
+
+```{r}
+tabla_normalidad(fit3)
+tabla_vif(fit3)
+```
+
+**2. Diagrama** estandarizado (cargas y β, R²) y no estandarizado (B, y, como
+en AMOS, la varianza de cada variable exógena y de cada error):
+
+```{r, fig.height = 3}
+diagrama_sem(fit3, estandarizado = FALSE)
+```
+
+**3. Ajuste e identificación.** Cada índice contra los criterios excelente y
+aceptable, con su fuente, y la identificación del modelo (observaciones,
+parámetros, gl):
+
+```{r}
+tabla_criterios_ajuste(fit3)
+```
+
+**4. Estimaciones**, agrupadas como en AMOS (pesos de regresión, covarianzas,
+varianzas), con la razón crítica (C.R.):
+
+```{r}
+tabla_parametros(fit3)
+```
+
+**5. Hipótesis.** Escribe cada hipótesis como una trayectoria; agrega `(+)` o
+`(-)` si predice un signo. Las de mediación (`X -> M -> Y`) se evalúan con el
+intervalo del efecto indirecto:
+
+```{r, message = FALSE}
+tabla_hipotesis(fit3, c(H1 = "Education -> Examination (+)",
+                        H2 = "Examination -> Fertility (-)",
+                        H3 = "Catholic -> Fertility (+)",
+                        H4 = "Education -> Examination -> Fertility"),
+                bootstrap = 500)
+```
+
+**6. Efectos directos, indirectos y totales** con `tabla_efectos()` (véase
+arriba).
+
+**7. Modelo alternativo.** Si quitas trayectorias no significativas o agregas
+parámetros, compara los modelos con `tabla_comparacion()`. Los índices de
+modificación muestran qué parámetro agregado mejoraría el ajuste; solo deben
+liberarse si tiene sentido teórico:
+
+```{r}
+tabla_modificacion(fit, n = 5)
+```
+
+### MANOVA de un factor
+
+¿Difieren los grupos en un conjunto de variables dependientes? La tabla reúne
+las pruebas multivariadas (Pillai, Wilks, Hotelling-Lawley y Roy, con η²p), los
+supuestos (M de Box, tamaños de grupo, normalidad por grupo, atípicos,
+multicolinealidad), los ANOVA de seguimiento con corrección de Bonferroni y las
+medias por grupo. Con los datos `iris` de la clase:
+
+```{r}
+tabla_manova(iris, dependientes = c("Petal.Length", "Sepal.Length"), grupo = "Species")
+```
+
+Si la M de Box es significativa (p < .001), reporta la traza de Pillai, que es
+la más robusta.
 
 ### Párrafo de método
 

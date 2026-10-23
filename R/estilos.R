@@ -126,6 +126,6 @@ dibujar_moderno <- function(G, tr, op, f, tipo = "") {
   # R cuadrada en gris y cursiva
   r2 <- posiciones_r2(G, tr, op)
   for (i in seq_len(if (is.null(r2)) 0 else nrow(r2)))
-    graphics::text(r2$x[i], r2$y[i], formato_valor(r2$valor[i], TRUE, op$decimales),
+    graphics::text(r2$x[i], r2$y[i], formato_valor(r2$valor[i], op$estandarizado, op$decimales),
                    cex = 0.92 * f, col = GRIS, font = 3)
 }

@@ -1,3 +1,30 @@
+# diagramaSEM 0.5.0
+
+Tablas y opciones para cubrir el análisis de trayectorias, SEM y MANOVA tal
+como se enseñan en clase (salidas de AMOS):
+
+* `tabla_criterios_ajuste()`: χ², χ²/gl, RMSEA, SRMR, CFI, TLI, GFI, PNFI y
+  PRATIO contra criterios excelente/aceptable con su fuente, e identificación
+  del modelo (observaciones, parámetros, gl, razón N:q).
+* `tabla_parametros()`: estimaciones agrupadas como en AMOS (pesos de
+  regresión, cargas, covarianzas, varianzas y varianzas de error) con B, EE,
+  C.R., p y β.
+* `tabla_hipotesis()`: decisión sobre cada hipótesis directa o de mediación,
+  con signo esperado opcional.
+* `tabla_modificacion()`: índices de modificación con su sintaxis de lavaan.
+* `tabla_normalidad()` ahora reporta, como AMOS, asimetría y curtosis con su
+  razón crítica por variable y la curtosis multivariada de Mardia con su c.r.
+  (las pruebas de Mardia pasan a la segunda parte; sus valores están en
+  `$datos$mardia`).
+* `tabla_atipicos()`: distancia de Mahalanobis con p1 y p2, y las filas de los
+  atípicos en `$atipicos`.
+* `tabla_vif()`: tolerancia y VIF de los predictores.
+* `tabla_manova()`: MANOVA de un factor con Pillai, Wilks, Hotelling-Lawley y
+  Roy (η²p), M de Box y demás supuestos, ANOVA de seguimiento con Bonferroni y
+  medias por grupo.
+* `diagrama_sem(estandarizado = FALSE)` muestra, como AMOS, la varianza de cada
+  variable exógena y de cada error.
+
 # diagramaSEM 0.4.0
 
 * Las tablas se guardan en Word (`.docx`) y `guardar_tablas()` reúne varias
