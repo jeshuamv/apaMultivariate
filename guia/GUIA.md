@@ -19,7 +19,10 @@ artículos y tesis. Esta guía muestra cómo usarlo, paso a paso.
 7.  [Análisis factorial exploratorio](#análisis-factorial-exploratorio)
 8.  [Estilos: clásico, revista y
     color](#estilos-clásico-revista-y-color)
-9.  [Tablas en formato APA](#tablas-en-formato-apa)
+9.  [Tablas en formato APA](#tablas-en-formato-apa): descriptivos,
+    factorabilidad, cargas, confiabilidad, validez, HTMT, método común,
+    ajuste, comparación de modelos, invarianza, efectos y párrafo de
+    método
 10. [Personalizar el diagrama](#personalizar-el-diagrama)
 11. [Guardar el diagrama](#guardar-el-diagrama)
 12. [Figuras para una revista](#figuras-para-una-revista)
@@ -304,8 +307,154 @@ opciones `paleta` y `degradado` solo aplican al estilo `"clasico"`.
 
 ## Tablas en formato APA
 
-Tres funciones crean las tablas que suelen pedirse en un reporte. Todas
-se ven en la consola y se pueden guardar para Word.
+El paquete crea las tablas que suelen pedirse en un artículo o una tesis
+con análisis factoriales, de trayectorias o SEM. Todas se ven en la
+consola, se guardan en Word con formato APA (número, título en cursiva,
+solo líneas horizontales y nota) y guardan sus valores numéricos en
+`$datos`.
+
+| Etapa       | Función                  | Qué reporta                                                         |
+|-------------|--------------------------|---------------------------------------------------------------------|
+| Datos       | `tabla_descriptivos()`   | n, M, DE, asimetría, curtosis y correlaciones                       |
+|             | `tabla_perdidos()`       | Datos perdidos por variable y casos completos                       |
+|             | `tabla_normalidad()`     | Normalidad multivariada de Mardia                                   |
+| AFE         | `tabla_factorabilidad()` | KMO, Bartlett y número de factores (Kaiser, análisis paralelo, MAP) |
+|             | `tabla_cargas()`         | Cargas, comunalidades y varianza explicada                          |
+| Medición    | `tabla_cargas()`         | Cargas estandarizadas, EE, *p* y R²                                 |
+|             | `tabla_confiabilidad()`  | Alfa (con IC), omega y correlaciones ítem-total                     |
+|             | `tabla_validez()`        | CR, AVE y criterio de Fornell-Larcker                               |
+|             | `tabla_htmt()`           | Validez discriminante HTMT                                          |
+|             | `tabla_metodo_comun()`   | Sesgo de método común (Harman y AFC de un factor)                   |
+| Ajuste      | `tabla_ajuste()`         | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos                   |
+|             | `tabla_comparacion()`    | Modelos alternativos con Δχ², ΔCFI, AIC y BIC                       |
+|             | `tabla_invarianza()`     | Invarianza configural, métrica, escalar y estricta                  |
+| Estructural | `tabla_efectos()`        | Efectos directos, indirectos (bootstrap) y totales                  |
+| Método      | `parrafo_metodo()`       | Párrafo de software y estimación con sus referencias                |
+
+### Descriptivos, datos perdidos y normalidad
+
+La “Tabla 1” de casi cualquier artículo: descriptivos y correlaciones
+con asteriscos de significancia. La asimetría y la curtosis son las
+mismas que da SPSS.
+
+``` r
+items <- HolzingerSwineford1939[, paste0("x", 1:9)]
+tabla_descriptivos(items[, 1:5])
+#> 
+#> Estadísticos descriptivos y correlaciones
+#> ─────────────────────────────────────────────────────────────────────────────
+#> Variable   n    M     DE   Asimetría  Curtosis    1       2       3      4   
+#> ─────────────────────────────────────────────────────────────────────────────
+#> 1. x1     301  4.94  1.17    -0.26      0.36      —                          
+#> 2. x2     301  6.09  1.18    0.47       0.38    .30***    —                  
+#> 3. x3     301  2.25  1.13    0.39      -0.89    .44***  .34***    —          
+#> 4. x4     301  3.06  1.16    0.27       0.12    .37***  .15**   .16**    —   
+#> 5. x5     301  4.34  1.29    -0.35     -0.53    .29***   .14*    .08   .73***
+#> ─────────────────────────────────────────────────────────────────────────────
+#> Nota. M = media; DE = desviación estándar. Asimetría y curtosis corregidas
+#> por sesgo; valores de asimetría entre −2 y 2 y de curtosis entre −7 y 7
+#> suelen considerarse aceptables (West et al., 1995). Correlaciones de Pearson
+#> con eliminación por pares. * p < .05. ** p < .01. *** p < .001.
+```
+
+``` r
+tabla_perdidos(airquality)      # datos de ejemplo de R con datos perdidos
+#> 
+#> Datos perdidos por variable
+#> ──────────────────────────────────────────────
+#> Variable         Válidos  Perdidos  % perdidos
+#> ──────────────────────────────────────────────
+#> Ozone              116       37        24.2   
+#> Solar.R            146       7         4.6    
+#> Wind               153       0         0.0    
+#> Temp               153       0         0.0    
+#> Month              153       0         0.0    
+#> Day                153       0         0.0    
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Casos completos    111       42        27.5   
+#> ──────────────────────────────────────────────
+#> Nota. N = 153. En la última fila, casos sin ningún dato
+#> perdido y casos con al menos uno. Datos perdidos en total:
+#> 4.8 % de las celdas. Para estimar el modelo con todos los
+#> casos puede usarse máxima verosimilitud con información
+#> completa (missing = "fiml" en lavaan).
+```
+
+``` r
+tabla_normalidad(items)
+#> 
+#> Pruebas de normalidad multivariada
+#> ─────────────────────────────────────────────────────────────
+#> Prueba                  Coeficiente  Estadístico  gl     p   
+#> ─────────────────────────────────────────────────────────────
+#> Asimetría multivariada     6.88      χ² = 344.91  165  < .001
+#> Curtosis multivariada     103.59      z = 2.83          .005 
+#> ─────────────────────────────────────────────────────────────
+#> Nota. Pruebas de Mardia (1970) con 301 casos completos y 9
+#> variables. Se rechaza la normalidad multivariada; se
+#> recomienda un estimador robusto (MLR o MLM). Univariadas:
+#> todas las variables tienen asimetría entre ±2 y curtosis
+#> entre ±7 (West et al., 1995).
+```
+
+Si la prueba de Mardia es significativa, conviene estimar el modelo con
+`estimator = "MLR"`; la nota lo indica.
+
+### Antes de un análisis exploratorio
+
+Factorabilidad (KMO, Bartlett) y cuántos factores retener según cuatro
+criterios:
+
+``` r
+tabla_factorabilidad(items)
+#> 
+#> Factorabilidad de la matriz de correlaciones
+#> ───────────────────────────────────────────────────────────────
+#> Indicador                      Valor            Criterio       
+#> ───────────────────────────────────────────────────────────────
+#> KMO global                      .75             ≥ .60 (mediano)
+#> MSA mínimo por ítem          .59 (x7)           ≥ .50          
+#> Prueba de Bartlett   χ²(36) = 904.10, p < .001  p < .05        
+#> Determinante                 4.72e-02           > 0.00001      
+#> ───────────────────────────────────────────────────────────────
+#> Nota. KMO = medida de adecuación muestral de
+#> Kaiser-Meyer-Olkin (calificación de Kaiser, 1974); MSA =
+#> adecuación de cada ítem. N = 301 casos completos. Todos los
+#> ítems tienen MSA ≥ .50.
+#> 
+#> Número de factores sugerido por cada criterio
+#> ─────────────────────────────────────────────────────
+#> Criterio                                     Factores
+#> ─────────────────────────────────────────────────────
+#> Autovalores mayores que 1 (Kaiser)              3    
+#> Análisis paralelo, componentes (Horn, 1965)     3    
+#> Análisis paralelo, factores                     3    
+#> MAP de Velicer (1976)                           2    
+#> ─────────────────────────────────────────────────────
+#> Nota. Análisis paralelo con 100 conjuntos de datos
+#> aleatorios y el percentil 95. El criterio de Kaiser tiende
+#> a sobrestimar el número de factores; se recomienda dar más
+#> peso al análisis paralelo y a la MAP, y a la
+#> interpretabilidad de la solución.
+#> 
+#> Autovalores observados y aleatorios (percentil 95)
+#> ──────────────────────────────────────────────────
+#> N.º  Componentes  Aleatorios  Factores  Aleatorios
+#> ──────────────────────────────────────────────────
+#> 1       3.22         1.35       2.71       0.41   
+#> 2       1.64         1.26       1.07       0.29   
+#> 3       1.37         1.16       0.66       0.19   
+#> 4       0.70         1.08      -0.03       0.11   
+#> 5       0.58         1.04      -0.06       0.06   
+#> 6       0.50         0.98      -0.10       0.00   
+#> 7       0.47         0.92      -0.16      -0.05   
+#> 8       0.29         0.87      -0.18      -0.11   
+#> 9       0.24         0.81      -0.24      -0.17   
+#> ──────────────────────────────────────────────────
+#> Nota. En negritas, autovalores observados mayores que los
+#> aleatorios. Factores: autovalores de la matriz reducida
+#> (correlaciones múltiples al cuadrado en la diagonal).
+```
 
 ### Cargas factoriales
 
@@ -377,52 +526,35 @@ tabla_cargas(fit)
 #> por su factor. N = 301.
 ```
 
-### Índices de ajuste
-
-``` r
-tabla_ajuste(fit)
-#> 
-#> Índices de ajuste
-#> ───────────────────────────────────────────────────────────────────────
-#> Modelo     χ²    gl    p     χ²/gl  CFI   TLI    RMSEA [IC 90 %]   SRMR
-#> ───────────────────────────────────────────────────────────────────────
-#> Modelo 1  85.31  24  < .001  3.55   .931  .896  .092 [.071, .114]  .065
-#> ───────────────────────────────────────────────────────────────────────
-#> Nota. Criterios de buen ajuste (Hu y Bentler, 1999): CFI y TLI ≥ .95
-#> (≥ .90 aceptable), RMSEA ≤ .06 (≤ .08 aceptable), SRMR ≤ .08. Con
-#> muestras grandes la prueba χ² suele ser significativa aunque el ajuste
-#> sea bueno.
-```
-
-Para comparar modelos, ponles nombre y pásalos juntos. Con `extra` se
-agregan otros índices (`"gfi"`, `"agfi"`, `"nfi"`, `"pnfi"`, `"aic"`,
-`"bic"`):
-
-``` r
-un_factor <- cfa("g =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9",
-                 data = HolzingerSwineford1939)
-tabla_ajuste("Un factor" = un_factor, "Tres factores" = fit, extra = c("aic", "bic"))
-#> 
-#> Índices de ajuste
-#> ─────────────────────────────────────────────────────────────────────────────────────────────────
-#> Modelo           χ²    gl    p     χ²/gl  CFI   TLI    RMSEA [IC 90 %]   SRMR    AIC       BIC   
-#> ─────────────────────────────────────────────────────────────────────────────────────────────────
-#> Un factor      312.26  27  < .001  11.57  .677  .569  .187 [.169, .206]  .143  7,738.45  7,805.18
-#> Tres factores  85.31   24  < .001  3.55   .931  .896  .092 [.071, .114]  .065  7,517.49  7,595.34
-#> ─────────────────────────────────────────────────────────────────────────────────────────────────
-#> Nota. Criterios de buen ajuste (Hu y Bentler, 1999): CFI y TLI ≥ .95 (≥ .90 aceptable), RMSEA ≤
-#> .06 (≤ .08 aceptable), SRMR ≤ .08. Con muestras grandes la prueba χ² suele ser significativa
-#> aunque el ajuste sea bueno.
-```
-
-Si estimaste con un estimador robusto (`estimator = "MLR"`, `"MLM"`,
-`"WLSMV"`…), la tabla usa automáticamente los índices corregidos.
-
 ### Confiabilidad y validez
 
+Alfa de Cronbach con su intervalo de confianza, omega de McDonald y el
+rango de las correlaciones ítem-total:
+
+``` r
+tabla_confiabilidad(fit)
+#> 
+#> Confiabilidad de las escalas
+#> ──────────────────────────────────────────────────
+#> Factor   Ítems   α    IC 95 %     ω   r ítem-total
+#> ──────────────────────────────────────────────────
+#> visual     3    .63  [.55, .69]  .63    .37–.48   
+#> textual    3    .88  [.86, .90]  .89    .77–.79   
+#> speed      3    .69  [.62, .74]  .69    .46–.57   
+#> ──────────────────────────────────────────────────
+#> Nota. α = alfa de Cronbach; IC 95 % de Feldt; ω = omega de
+#> McDonald, calculado con las cargas del modelo; r ítem-total
+#> = correlación ítem-total corregida (mínima–máxima). Valores
+#> de α y ω ≥ .70 suelen considerarse aceptables (Nunnally y
+#> Bernstein, 1994) y una correlación ítem-total ≥ .30
+#> adecuada. n = 301 casos completos.
+```
+
+Sin un modelo, indica los ítems de cada factor:
+`tabla_confiabilidad(datos, factores = list(F1 = c("i1", "i2", "i3"), F2 = c(...)))`.
+
 Confiabilidad compuesta (CR), varianza promedio extraída (AVE) y la
-matriz de Fornell y Larcker (raíz del AVE en la diagonal, correlaciones
-debajo):
+matriz de Fornell y Larcker:
 
 ``` r
 tabla_validez(fit)
@@ -443,26 +575,257 @@ tabla_validez(fit)
 #> Todos los factores cumplen el criterio de Fornell-Larcker.
 ```
 
-La nota indica qué factores no cumplen el criterio de Fornell-Larcker.
-Las fórmulas usadas son las clásicas, con las cargas estandarizadas. Si
-en tu curso o revista se usa `semTools`, puedes obtener exactamente sus
-valores con `tabla_validez(fit, metodo = "semtools")`.
+Las fórmulas son las clásicas, con las cargas estandarizadas; con
+`metodo = "semtools"` se obtienen exactamente los valores de `semTools`.
+
+Muchos revisores piden además el **HTMT**, un criterio de validez
+discriminante más exigente que el de Fornell-Larcker. Valores menores
+que .85 indican validez discriminante:
+
+``` r
+tabla_htmt(fit)
+#> 
+#> Validez discriminante: razón heterorrasgo-monorrasgo (HTMT)
+#> ────────────────────────
+#> Factor   visual  textual
+#> ────────────────────────
+#> visual     —            
+#> textual   .42       —   
+#> speed     .47      .29  
+#> ────────────────────────
+#> Nota. HTMT = razón heterorrasgo-monorrasgo (Henseler et
+#> al., 2015). Valores menores que .85 (criterio estricto) o
+#> .90 (flexible) indican validez discriminante. Todos los
+#> pares son menores que .85.
+```
+
+Si todos los datos vienen de un mismo cuestionario, es habitual reportar
+el **sesgo de método común**:
+
+``` r
+tabla_metodo_comun(fit)
+#> 
+#> Pruebas de sesgo de método común
+#> ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Prueba                  Resultado                                            Criterio                                   Conclusión                             
+#> ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Factor único de Harman  Primer componente: 35.7 % de la varianza             < 50 %                                     No hay un factor general dominante     
+#> AFC de un factor        CFI = .677, RMSEA = .187; Δχ²(3) = 226.96, p < .001  Peor que el modelo propuesto (CFI = .931)  El sesgo de método no explica los datos
+#> ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. Pruebas según Podsakoff et al. (2003). Harman: análisis de componentes principales sin rotar de los 9 ítems. AFC de un factor: todos los ítems en un
+#> factor, comparado con el modelo propuesto (Δχ² y ΔCFI). Estas pruebas son poco sensibles: un resultado favorable no descarta por completo el sesgo de método
+#> común.
+```
+
+### Índices de ajuste y comparación de modelos
+
+``` r
+tabla_ajuste(fit)
+#> 
+#> Índices de ajuste
+#> ───────────────────────────────────────────────────────────────────────
+#> Modelo     χ²    gl    p     χ²/gl  CFI   TLI    RMSEA [IC 90 %]   SRMR
+#> ───────────────────────────────────────────────────────────────────────
+#> Modelo 1  85.31  24  < .001  3.55   .931  .896  .092 [.071, .114]  .065
+#> ───────────────────────────────────────────────────────────────────────
+#> Nota. Criterios de buen ajuste (Hu y Bentler, 1999): CFI y TLI ≥ .95
+#> (≥ .90 aceptable), RMSEA ≤ .06 (≤ .08 aceptable), SRMR ≤ .08. Con
+#> muestras grandes la prueba χ² suele ser significativa aunque el ajuste
+#> sea bueno.
+```
+
+Si estimaste con un estimador robusto (`estimator = "MLR"`, `"MLM"`,
+`"WLSMV"`…), las tablas usan automáticamente los índices corregidos.
+
+Para comparar modelos alternativos, con la prueba de diferencias Δχ²,
+ΔCFI, AIC y BIC:
+
+``` r
+un_factor <- cfa("g =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9",
+                 data = HolzingerSwineford1939)
+tabla_comparacion("Un factor" = un_factor, "Tres factores" = fit)
+#> 
+#> Comparación de modelos alternativos
+#> ───────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Modelo           χ²    gl  CFI   TLI   RMSEA  SRMR    AIC      BIC    Δχ² (Δgl)     p     ΔCFI   ΔRMSEA
+#> ───────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Un factor      312.26  27  .677  .569  .187   .143  7,738.4  7,805.2      —         —       —      —   
+#> Tres factores  85.31   24  .931  .896  .092   .065  7,517.5  7,595.3  226.96 (3)  < .001  +.254  -.095 
+#> ───────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. Diferencias respecto del modelo anterior. Δχ² válida solo para modelos anidados. Un ΔCFI menor
+#> que −.010 junto con un ΔRMSEA mayor que .015 indica un ajuste apreciablemente peor (Chen, 2007). AIC y
+#> BIC: menor es mejor; el AIC más bajo es el de Tres factores y también el BIC.
+```
+
+La Δχ² solo es válida si un modelo es una versión restringida del otro
+(modelos anidados); si no lo son, usa `anidados = FALSE` y compara AIC y
+BIC.
+
+### Invarianza de medición
+
+¿El instrumento mide lo mismo en distintos grupos? Indica el modelo, los
+datos y la variable de grupo:
+
+``` r
+tabla_invarianza(modelo, HolzingerSwineford1939, grupo = "school")
+#> 
+#> Invarianza de medición entre grupos
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────
+#> Modelo        χ²    gl  CFI   RMSEA  SRMR  Δχ² (Δgl)    p     ΔCFI   ΔRMSEA  ΔSRMR     Decisión   
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────
+#> Configural  115.85  48  .923  .097   .068      —        —       —      —       —          —       
+#> Métrica     124.04  54  .921  .093   .072  8.19 (6)    .224   -.002  -.004   +.004   Se sostiene  
+#> Escalar     164.10  60  .882  .107   .082  40.06 (6)  < .001  -.038  +.015   +.011  No se sostiene
+#> Estricta    181.51  69  .873  .104   .088  17.41 (9)   .043   -.009  -.003   +.006   No se evalúa 
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. Grupos: Pasteur (n = 156), Grant-White (n = 145). Cada modelo se compara con el anterior.
+#> No se sostiene la invarianza si ΔCFI < −.010 junto con ΔRMSEA > .015 o ΔSRMR > .030 (métrica) o >
+#> .010 (escalar y estricta) (Chen, 2007). Nivel más alto sostenido: métrica. Para probar invarianza
+#> parcial, los parámetros cuya igualdad más empeora el ajuste son, en orden: x3 ~ 1; x7 ~ 1; x2 ~
+#> 1. Libérelos de uno en uno, empezando por el primero (liberar = "x3 ~ 1"), y vuelva a revisar la
+#> tabla.
+```
+
+Cada nivel se compara con el anterior con el criterio de Chen (2007);
+también puedes usar `criterio = "cfi"` o `criterio = "chi2"`. Si un
+nivel no se sostiene, la nota indica qué parámetro conviene liberar para
+probar la **invarianza parcial**:
+
+``` r
+tabla_invarianza(modelo, HolzingerSwineford1939, grupo = "school", liberar = "x3 ~ 1")
+#> 
+#> Invarianza de medición entre grupos
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Modelo              χ²    gl  CFI   RMSEA  SRMR  Δχ² (Δgl)    p     ΔCFI   ΔRMSEA  ΔSRMR   Decisión  
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Configural        115.85  48  .923  .097   .068      —        —       —      —       —         —     
+#> Métrica           124.04  54  .921  .093   .072  8.19 (6)    .224   -.002  -.004   +.004  Se sostiene
+#> Escalar parcial   144.58  59  .903  .098   .077  20.54 (5)  < .001  -.018  +.005   +.006  Se sostiene
+#> Estricta parcial  162.12  68  .894  .096   .083  17.55 (9)   .041   -.010  -.002   +.006  Se sostiene
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. Grupos: Pasteur (n = 156), Grant-White (n = 145). Cada modelo se compara con el anterior. No
+#> se sostiene la invarianza si ΔCFI < −.010 junto con ΔRMSEA > .015 o ΔSRMR > .030 (métrica) o > .010
+#> (escalar y estricta) (Chen, 2007). Parámetros liberados (invarianza parcial): x3 ~ 1. Se sostiene la
+#> invarianza estricta.
+```
+
+Con ítems ordinales agrega `ordered = TRUE` (se igualan los umbrales);
+con un estimador robusto, `estimator = "MLR"`.
+
+### Efectos directos, indirectos y totales
+
+Para trayectorias y SEM. Las trayectorias indirectas se encuentran solas
+(no hace falta definirlas con `:=`) y sus intervalos se calculan por
+bootstrap:
+
+``` r
+tabla_efectos(fit3, bootstrap = 500)
+#> 
+#> Efectos directos, indirectos y totales
+#> ─────────────────────────────────────────────────────────────────────────────────
+#> Efecto                                    B     EE      IC 95 %       β      p   
+#> ─────────────────────────────────────────────────────────────────────────────────
+#> Efectos directos                                                                 
+#>    Education → Examination              0.58   0.12   [0.42, 0.89]   .70   < .001
+#>    Education → Fertility                -0.76  0.26  [-1.08, -0.02]  -.59  < .001
+#>    Examination → Fertility              -0.05  0.29  [-0.71, 0.40]   -.03   .796 
+#>    Catholic → Fertility                 0.11   0.04   [0.02, 0.18]   .36   < .001
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Efectos indirectos                                                               
+#>    Education → Examination → Fertility  -0.03  0.19  [-0.52, 0.23]   -.02        
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Efectos totales                                                                  
+#>    Education → Fertility                -0.79  0.16  [-1.05, -0.39]  -.61        
+#> ─────────────────────────────────────────────────────────────────────────────────
+#> Nota. B = coeficiente no estandarizado; EE = error estándar; IC 95 % por
+#> bootstrap de percentiles con 500 remuestreos; β = coeficiente estandarizado. Los
+#> valores p de los efectos directos son los de lavaan; para los indirectos y
+#> totales la significancia se juzga por el intervalo. En negritas, efectos
+#> indirectos cuyo intervalo no incluye el 0 (significativos).
+#> 
+#> Varianza explicada de las variables endógenas
+#> ────────────────
+#> Variable     R² 
+#> ────────────────
+#> Examination  .49
+#> Fertility    .57
+#> ────────────────
+```
+
+Usa 1000 o más remuestreos para un artículo (`bootstrap = 1000`, el
+valor por omisión). Un efecto indirecto es significativo si su intervalo
+no incluye el 0; esos van en negritas en Word.
+
+### Párrafo de método
+
+Redacta el párrafo de análisis de datos (software, versiones, estimador,
+datos perdidos y criterios de ajuste) con sus referencias en formato
+APA. Es un punto de partida para adaptar:
+
+``` r
+parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
+#> 
+#> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
+#> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
+#> Jorgensen et al., 2022) y diagramaSEM (versión 0.4.0; Moreno Valladares, 2026).
+#> El análisis factorial confirmatorio se estimó con una muestra de 301
+#> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
+#> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
+#> error cuadrático medio de aproximación (RMSEA) con su intervalo de confianza al
+#> 90 % y la raíz del residuo cuadrático medio estandarizado (SRMR). Se
+#> consideraron indicadores de buen ajuste CFI y TLI ≥ .95, RMSEA ≤ .06 y SRMR ≤
+#> .08 (Hu y Bentler, 1999).
+#> 
+#> Referencias
+#> 
+#> Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance
+#>     structure analysis: Conventional criteria versus new alternatives.
+#>     Structural Equation Modeling, 6(1), 1–55.
+#>     https://doi.org/10.1080/10705519909540118
+#> 
+#> Jorgensen, T. D., Pornprasertmanit, S., Schoemann, A. M., & Rosseel, Y. (2022).
+#>     semTools: Useful tools for structural equation modeling (Paquete de R,
+#>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
+#> 
+#> Moreno Valladares, J. (2026). diagramaSEM: Diagramas de trayectorias y tablas
+#>     APA para modelos lavaan y psych (Paquete de R, versión 0.4.0).
+#>     https://github.com/jeshuamv/diagramaSEM.
+#> 
+#> R Core Team. (2024). R: A language and environment for statistical computing. R
+#>     Foundation for Statistical Computing. https://www.R-project.org/
+#> 
+#> Rosseel, Y. (2012). lavaan: An R package for structural equation modeling.
+#>     Journal of Statistical Software, 48(2), 1–36.
+#>     https://doi.org/10.18637/jss.v048.i02
+```
+
+Con `archivo = "metodo.docx"` se guarda en Word.
 
 ### Guardar las tablas
 
-``` r
-tabla_cargas(afe, archivo = "tabla_cargas.rtf")    # se abre en Word
-tabla_ajuste(fit, archivo = "tabla_ajuste.html")   # para copiar y pegar
-tabla_validez(fit, archivo = "tabla_validez.csv")  # para Excel
+Una tabla:
 
-t <- tabla_validez(fit)
-guardar_tabla(t, "tabla2.rtf", numero = 2)          # "Tabla 2" en el encabezado
+``` r
+tabla_validez(fit, archivo = "tabla_validez.docx")   # Word
+tabla_ajuste(fit, archivo = "tabla_ajuste.html")     # para copiar y pegar
+tabla_cargas(fit, archivo = "tabla_cargas.csv")      # para Excel
 ```
 
-El archivo `.rtf` se abre en Word con la tabla en formato APA: título,
-líneas horizontales y nota. Desde Word puedes guardarlo como `.docx`.
-Los valores numéricos de cada tabla están en `$datos`, por si quieres
-usarlos en R.
+Todas las tablas de un artículo en un solo documento de Word, numeradas:
+
+``` r
+guardar_tablas(
+  tabla_descriptivos(items),
+  tabla_confiabilidad(fit),
+  tabla_ajuste(fit),
+  tabla_validez(fit),
+  tabla_htmt(fit),
+  archivo = "tablas_articulo.docx"
+)
+```
+
+Las tablas anchas se pasan a letra de 10 pt y, si aún no caben, se
+colocan en una página horizontal. También se puede guardar en `.rtf`.
 
 ## Personalizar el diagrama
 
@@ -473,7 +836,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-23-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-35-1.png" width="100%" />
 
 Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -483,7 +846,7 @@ Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-24-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-36-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados (y
 no se muestra R²):
@@ -492,7 +855,7 @@ no se muestra R²):
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-25-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-37-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -500,13 +863,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-26-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-38-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-26-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-38-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -526,20 +889,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-28-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-40-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-28-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-40-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-28-3.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-40-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -552,7 +915,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-29-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-41-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -561,7 +924,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-30-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-42-1.png" width="100%" />
 
 ## Guardar el diagrama
 

@@ -22,9 +22,10 @@ Guarda una tabla creada con \code{\link[=tabla_cargas]{tabla_cargas()}}, \code{\
 }
 \details{
 \itemize{
-\item \code{.rtf} (o \code{.doc}): documento que se abre en \strong{Word} con la tabla en
-formato APA (líneas horizontales, título y nota). Desde Word se puede
-guardar como \code{.docx}.
+\item \code{.docx}: documento de \strong{Word} con la tabla en formato APA (líneas
+horizontales, número, título y nota). Las tablas anchas se pasan a letra
+de 10 pt y, si aún no caben, a página horizontal.
+\item \code{.rtf}: igual, en formato RTF (lo abre cualquier procesador de textos).
 \item \code{.html}: página que se abre en el navegador; la tabla se puede copiar y
 pegar en Word o Google Docs conservando el formato.
 \item \code{.csv}: solo los datos, para Excel.
@@ -34,5 +35,9 @@ pegar en Word o Google Docs conservando el formato.
 library(lavaan)
 fit <- cfa("visual =~ x1 + x2 + x3
             textual =~ x4 + x5 + x6", data = HolzingerSwineford1939)
-guardar_tabla(tabla_ajuste(fit), file.path(tempdir(), "ajuste.rtf"))
+guardar_tabla(tabla_ajuste(fit), file.path(tempdir(), "ajuste.docx"))
+}
+\seealso{
+\code{\link[=guardar_tablas]{guardar_tablas()}} para guardar varias tablas en un mismo
+documento de Word.
 }

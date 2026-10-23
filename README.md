@@ -10,8 +10,9 @@
   todo solo.
 - **Tres estilos**: el clásico de AMOS y dos listos para publicar (`"revista"` en
   grises y `"color"`), que cumplen lo que piden APA y las principales revistas.
-- **Tablas en formato APA**, listas para Word: cargas factoriales, índices de ajuste y
-  validez (CR, AVE y Fornell-Larcker).
+- **Tablas en formato APA**, listas para Word: descriptivos, factorabilidad, cargas,
+  confiabilidad, validez y HTMT, ajuste, comparación de modelos, invarianza de medición,
+  efectos indirectos y hasta el párrafo de método con sus referencias.
 
 Funciona con análisis **exploratorios** (`psych::fa()`, `lavaan::efa()`),
 **confirmatorios** (`cfa()`), de **trayectorias** y **SEM** (`sem()`).
@@ -171,25 +172,42 @@ Revisa siempre las instrucciones para autores de tu revista. Más detalles en la
 
 ## Tablas para tu reporte
 
-Tres funciones crean las tablas que suelen pedirse en artículos y tesis. Se ven en la
-consola y, con `archivo = "....rtf"`, se guardan en un documento que **se abre en Word**
-con formato APA (desde Word puedes guardarlo como `.docx`).
+El paquete crea, en formato APA y listas para Word, las tablas que suelen pedirse en
+un artículo o una tesis:
 
-| Tabla | Código | Sirve para |
+| Etapa | Código | Qué reporta |
 |---|---|---|
-| Cargas factoriales | `tabla_cargas(fit)` | AFE (con comunalidades, varianza explicada y correlaciones entre factores) y AFC/SEM (cargas estandarizadas, EE, *p* y R²) |
-| Índices de ajuste | `tabla_ajuste(fit)` | AFC, SEM y trayectorias: χ², gl, *p*, CFI, TLI, RMSEA, SRMR. Compara varios modelos: `tabla_ajuste("Modelo A" = fit1, "Modelo B" = fit2)` |
-| Confiabilidad y validez | `tabla_validez(fit)` | AFC: CR, AVE y criterio de Fornell-Larcker |
+| Datos | `tabla_descriptivos(datos)` | n, M, DE, asimetría, curtosis y correlaciones (la "Tabla 1") |
+| | `tabla_perdidos(datos)` | Datos perdidos por variable |
+| | `tabla_normalidad(datos)` | Normalidad multivariada (Mardia) |
+| AFE | `tabla_factorabilidad(datos)` | KMO, Bartlett y cuántos factores retener (Kaiser, análisis paralelo, MAP) |
+| | `tabla_cargas(afe)` | Cargas, comunalidades, varianza explicada |
+| Medición | `tabla_cargas(fit)` | Cargas estandarizadas, EE, *p* y R² |
+| | `tabla_confiabilidad(fit)` | Alfa de Cronbach (con IC), omega de McDonald, correlaciones ítem-total |
+| | `tabla_validez(fit)` | CR, AVE y Fornell-Larcker |
+| | `tabla_htmt(fit)` | Validez discriminante HTMT (la que hoy piden los revisores) |
+| | `tabla_metodo_comun(fit)` | Sesgo de método común (Harman y AFC de un factor) |
+| Ajuste | `tabla_ajuste(fit)` | χ², CFI, TLI, RMSEA, SRMR |
+| | `tabla_comparacion("A" = fit1, "B" = fit2)` | Modelos alternativos: Δχ², ΔCFI, AIC, BIC |
+| | `tabla_invarianza(modelo, datos, grupo = "sexo")` | Invarianza configural, métrica, escalar y estricta |
+| Estructural | `tabla_efectos(fit)` | Efectos directos, indirectos (bootstrap) y totales |
+| Método | `parrafo_metodo(fit)` | Párrafo de software y estimación, con referencias APA |
+
+Todas se ven en la consola. Para Word:
 
 ```r
-tabla_cargas(fit)                                   # se ve en la consola
-tabla_cargas(fit, archivo = "tabla_cargas.rtf")     # y se guarda para Word
-tabla_ajuste(fit, archivo = "tabla_ajuste.rtf")
-tabla_validez(fit, archivo = "tabla_validez.rtf")
+tabla_validez(fit, archivo = "tabla_validez.docx")       # una tabla
+
+guardar_tablas(tabla_descriptivos(datos),                # todas en un documento,
+               tabla_confiabilidad(fit),                 # numeradas
+               tabla_ajuste(fit),
+               tabla_htmt(fit),
+               archivo = "tablas_articulo.docx")
 ```
 
-También puedes guardar en `.html` (para copiar y pegar en Word o Google Docs) o en
-`.csv` (para Excel).
+Las tablas anchas se pasan a letra de 10 pt o a una página horizontal. Los valores de
+cada tabla se cotejaron con `psych`, `semTools` y `lavaan`. Los detalles y ejemplos de
+cada una están en la sección *Tablas en formato APA* de la [guía](guia/GUIA.md).
 
 ---
 
@@ -245,8 +263,8 @@ d
 
 - **[Guía de uso completa](guia/GUIA.md)**: cada tipo de análisis, todas las opciones
   y todas las tablas, con ejemplos e imágenes.
-- **Ayuda dentro de R**: `?diagrama_sem`, `?tabla_cargas`, `?tabla_ajuste`,
-  `?tabla_validez`.
+- **Ayuda dentro de R**: `?diagrama_sem` o el nombre de cualquier tabla, por ejemplo
+  `?tabla_invarianza`.
 
 ## Problemas frecuentes
 
@@ -270,8 +288,9 @@ chica de lo que aceptan las revistas. Usa `estilo = "revista"` y `ancho = "pagin
 (`"fila"`, `"dos_filas"`, `"arbol"`, `"izq_der"`, `"arriba_abajo"`) o consulta la
 sección *Ajustes a mano* de la [guía](guia/GUIA.md).
 
-**El archivo `.rtf` se abre en otro programa (por ejemplo, TextEdit en Mac)**: haz
-clic derecho → *Abrir con* → *Microsoft Word*.
+**`tabla_efectos()` tarda**: calcula intervalos con 1000 remuestreos bootstrap. Es
+normal que tarde de segundos a un par de minutos; con `bootstrap = 0` es inmediato
+(método delta), pero para un artículo conviene el bootstrap.
 
 ¿Encontraste un error? Repórtalo en la pestaña
 [Issues](https://github.com/jeshuamv/diagramaSEM/issues) de esta página.

@@ -7,7 +7,8 @@ f_apa <- function(x, d = 2) {
   ifelse(is.na(x), "", sub("^(-?)0\\.", "\\1.", formatC(r, format = "f", digits = d)))
 }
 #' @noRd
-f_num <- function(x, d = 2) ifelse(is.na(x), "", formatC(x, format = "f", digits = d, big.mark = ","))
+f_num <- function(x, d = 2) { r <- round(x, d); r[!is.na(r) & r == 0] <- 0
+  ifelse(is.na(x), "", formatC(r, format = "f", digits = d, big.mark = ",")) }
 #' @noRd
 f_p <- function(p) ifelse(is.na(p), "", ifelse(p < .001, "< .001", f_apa(p, 3)))
 

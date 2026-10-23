@@ -1,3 +1,25 @@
+# diagramaSEM 0.4.0
+
+* Las tablas se guardan en Word (`.docx`) y `guardar_tablas()` reúne varias
+  en un solo documento, numeradas. Las tablas anchas pasan a 10 pt o a una
+  página horizontal propia; los símbolos estadísticos van en cursiva (APA).
+* Nuevas tablas, verificadas contra `psych`, `semTools` y `lavaan`:
+  * `tabla_descriptivos()`, `tabla_perdidos()` y `tabla_normalidad()` (Mardia).
+  * `tabla_confiabilidad()`: alfa con IC de Feldt, omega de McDonald y
+    correlaciones ítem-total.
+  * `tabla_htmt()`: validez discriminante HTMT (y HTMT2).
+  * `tabla_comparacion()`: modelos alternativos con Δχ², ΔCFI, ΔRMSEA, AIC y
+    BIC.
+  * `tabla_metodo_comun()`: factor único de Harman y AFC de un factor.
+  * `tabla_factorabilidad()`: KMO, Bartlett, Kaiser, análisis paralelo y MAP.
+  * `tabla_efectos()`: efectos directos, indirectos (encontrados
+    automáticamente, con bootstrap) y totales.
+  * `tabla_invarianza()`: configural, métrica, escalar y estricta, con
+    criterios de Chen (2007), Cheung y Rensvold (2002) o Δχ², sugerencias
+    para invarianza parcial y el argumento `liberar`.
+* `parrafo_metodo()` redacta el párrafo de análisis de datos con sus
+  referencias APA.
+
 # diagramaSEM 0.3.0
 
 * Nuevo argumento `estilo` en `diagrama_sem()`: `"clasico"` (el de AMOS, por

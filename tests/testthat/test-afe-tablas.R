@@ -60,5 +60,6 @@ test_that("guardar tablas en rtf, html y csv", {
   }
   f <- tempfile(fileext = ".rtf"); guardar_tabla(t, f); rtf <- paste(readLines(f), collapse = "")
   expect_match(rtf, "^\\{\\\\rtf1"); expect_match(rtf, "\\\\u237\\?")   # í codificada
-  expect_error(guardar_tabla(t, tempfile(fileext = ".docx")), "rtf")
+  f <- tempfile(fileext = ".docx"); guardar_tabla(t, f); expect_true(file.exists(f))
+  expect_error(guardar_tabla(t, tempfile(fileext = ".xls")), "docx")
 })

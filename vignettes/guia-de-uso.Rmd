@@ -28,7 +28,9 @@ usarlo, paso a paso.
 6. [Modelo de ecuaciones estructurales](#modelo-de-ecuaciones-estructurales)
 7. [Análisis factorial exploratorio](#análisis-factorial-exploratorio)
 8. [Estilos: clásico, revista y color](#estilos-clásico-revista-y-color)
-9. [Tablas en formato APA](#tablas-en-formato-apa)
+9. [Tablas en formato APA](#tablas-en-formato-apa): descriptivos,
+   factorabilidad, cargas, confiabilidad, validez, HTMT, método común, ajuste,
+   comparación de modelos, invarianza, efectos y párrafo de método
 10. [Personalizar el diagrama](#personalizar-el-diagrama)
 11. [Guardar el diagrama](#guardar-el-diagrama)
 12. [Figuras para una revista](#figuras-para-una-revista)
@@ -282,8 +284,59 @@ más de seis factores los colores se repiten. Las opciones `paleta` y
 
 ## Tablas en formato APA
 
-Tres funciones crean las tablas que suelen pedirse en un reporte. Todas se ven
-en la consola y se pueden guardar para Word.
+El paquete crea las tablas que suelen pedirse en un artículo o una tesis con
+análisis factoriales, de trayectorias o SEM. Todas se ven en la consola, se
+guardan en Word con formato APA (número, título en cursiva, solo líneas
+horizontales y nota) y guardan sus valores numéricos en `$datos`.
+
+| Etapa | Función | Qué reporta |
+|---|---|---|
+| Datos | `tabla_descriptivos()` | n, M, DE, asimetría, curtosis y correlaciones |
+| | `tabla_perdidos()` | Datos perdidos por variable y casos completos |
+| | `tabla_normalidad()` | Normalidad multivariada de Mardia |
+| AFE | `tabla_factorabilidad()` | KMO, Bartlett y número de factores (Kaiser, análisis paralelo, MAP) |
+| | `tabla_cargas()` | Cargas, comunalidades y varianza explicada |
+| Medición | `tabla_cargas()` | Cargas estandarizadas, EE, *p* y R² |
+| | `tabla_confiabilidad()` | Alfa (con IC), omega y correlaciones ítem-total |
+| | `tabla_validez()` | CR, AVE y criterio de Fornell-Larcker |
+| | `tabla_htmt()` | Validez discriminante HTMT |
+| | `tabla_metodo_comun()` | Sesgo de método común (Harman y AFC de un factor) |
+| Ajuste | `tabla_ajuste()` | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos |
+| | `tabla_comparacion()` | Modelos alternativos con Δχ², ΔCFI, AIC y BIC |
+| | `tabla_invarianza()` | Invarianza configural, métrica, escalar y estricta |
+| Estructural | `tabla_efectos()` | Efectos directos, indirectos (bootstrap) y totales |
+| Método | `parrafo_metodo()` | Párrafo de software y estimación con sus referencias |
+
+### Descriptivos, datos perdidos y normalidad
+
+La "Tabla 1" de casi cualquier artículo: descriptivos y correlaciones con
+asteriscos de significancia. La asimetría y la curtosis son las mismas que da
+SPSS.
+
+```{r}
+items <- HolzingerSwineford1939[, paste0("x", 1:9)]
+tabla_descriptivos(items[, 1:5])
+```
+
+```{r}
+tabla_perdidos(airquality)      # datos de ejemplo de R con datos perdidos
+```
+
+```{r}
+tabla_normalidad(items)
+```
+
+Si la prueba de Mardia es significativa, conviene estimar el modelo con
+`estimator = "MLR"`; la nota lo indica.
+
+### Antes de un análisis exploratorio
+
+Factorabilidad (KMO, Bartlett) y cuántos factores retener según cuatro
+criterios:
+
+```{r}
+tabla_factorabilidad(items)
+```
 
 ### Cargas factoriales
 
@@ -306,52 +359,135 @@ su error estándar, valor *p* y R²:
 tabla_cargas(fit)
 ```
 
-### Índices de ajuste
-
-```{r}
-tabla_ajuste(fit)
-```
-
-Para comparar modelos, ponles nombre y pásalos juntos. Con `extra` se agregan
-otros índices (`"gfi"`, `"agfi"`, `"nfi"`, `"pnfi"`, `"aic"`, `"bic"`):
-
-```{r}
-un_factor <- cfa("g =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9",
-                 data = HolzingerSwineford1939)
-tabla_ajuste("Un factor" = un_factor, "Tres factores" = fit, extra = c("aic", "bic"))
-```
-
-Si estimaste con un estimador robusto (`estimator = "MLR"`, `"MLM"`,
-`"WLSMV"`...), la tabla usa automáticamente los índices corregidos.
-
 ### Confiabilidad y validez
 
+Alfa de Cronbach con su intervalo de confianza, omega de McDonald y el rango
+de las correlaciones ítem-total:
+
+```{r}
+tabla_confiabilidad(fit)
+```
+
+Sin un modelo, indica los ítems de cada factor:
+`tabla_confiabilidad(datos, factores = list(F1 = c("i1", "i2", "i3"), F2 = c(...)))`.
+
 Confiabilidad compuesta (CR), varianza promedio extraída (AVE) y la matriz de
-Fornell y Larcker (raíz del AVE en la diagonal, correlaciones debajo):
+Fornell y Larcker:
 
 ```{r}
 tabla_validez(fit)
 ```
 
-La nota indica qué factores no cumplen el criterio de Fornell-Larcker. Las
-fórmulas usadas son las clásicas, con las cargas estandarizadas. Si en tu
-curso o revista se usa `semTools`, puedes obtener exactamente sus valores con
-`tabla_validez(fit, metodo = "semtools")`.
+Las fórmulas son las clásicas, con las cargas estandarizadas; con
+`metodo = "semtools"` se obtienen exactamente los valores de `semTools`.
+
+Muchos revisores piden además el **HTMT**, un criterio de validez
+discriminante más exigente que el de Fornell-Larcker. Valores menores que .85
+indican validez discriminante:
+
+```{r}
+tabla_htmt(fit)
+```
+
+Si todos los datos vienen de un mismo cuestionario, es habitual reportar el
+**sesgo de método común**:
+
+```{r}
+tabla_metodo_comun(fit)
+```
+
+### Índices de ajuste y comparación de modelos
+
+```{r}
+tabla_ajuste(fit)
+```
+
+Si estimaste con un estimador robusto (`estimator = "MLR"`, `"MLM"`,
+`"WLSMV"`...), las tablas usan automáticamente los índices corregidos.
+
+Para comparar modelos alternativos, con la prueba de diferencias Δχ², ΔCFI,
+AIC y BIC:
+
+```{r}
+un_factor <- cfa("g =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9",
+                 data = HolzingerSwineford1939)
+tabla_comparacion("Un factor" = un_factor, "Tres factores" = fit)
+```
+
+La Δχ² solo es válida si un modelo es una versión restringida del otro
+(modelos anidados); si no lo son, usa `anidados = FALSE` y compara AIC y BIC.
+
+### Invarianza de medición
+
+¿El instrumento mide lo mismo en distintos grupos? Indica el modelo, los datos
+y la variable de grupo:
+
+```{r}
+tabla_invarianza(modelo, HolzingerSwineford1939, grupo = "school")
+```
+
+Cada nivel se compara con el anterior con el criterio de Chen (2007); también
+puedes usar `criterio = "cfi"` o `criterio = "chi2"`. Si un nivel no se
+sostiene, la nota indica qué parámetro conviene liberar para probar la
+**invarianza parcial**:
+
+```{r}
+tabla_invarianza(modelo, HolzingerSwineford1939, grupo = "school", liberar = "x3 ~ 1")
+```
+
+Con ítems ordinales agrega `ordered = TRUE` (se igualan los umbrales); con un
+estimador robusto, `estimator = "MLR"`.
+
+### Efectos directos, indirectos y totales
+
+Para trayectorias y SEM. Las trayectorias indirectas se encuentran solas (no
+hace falta definirlas con `:=`) y sus intervalos se calculan por bootstrap:
+
+```{r, message = FALSE}
+tabla_efectos(fit3, bootstrap = 500)
+```
+
+Usa 1000 o más remuestreos para un artículo (`bootstrap = 1000`, el valor por
+omisión). Un efecto indirecto es significativo si su intervalo no incluye el
+0; esos van en negritas en Word.
+
+### Párrafo de método
+
+Redacta el párrafo de análisis de datos (software, versiones, estimador,
+datos perdidos y criterios de ajuste) con sus referencias en formato APA. Es
+un punto de partida para adaptar:
+
+```{r}
+parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
+```
+
+Con `archivo = "metodo.docx"` se guarda en Word.
 
 ### Guardar las tablas
 
-```{r, eval = FALSE}
-tabla_cargas(afe, archivo = "tabla_cargas.rtf")    # se abre en Word
-tabla_ajuste(fit, archivo = "tabla_ajuste.html")   # para copiar y pegar
-tabla_validez(fit, archivo = "tabla_validez.csv")  # para Excel
+Una tabla:
 
-t <- tabla_validez(fit)
-guardar_tabla(t, "tabla2.rtf", numero = 2)          # "Tabla 2" en el encabezado
+```{r, eval = FALSE}
+tabla_validez(fit, archivo = "tabla_validez.docx")   # Word
+tabla_ajuste(fit, archivo = "tabla_ajuste.html")     # para copiar y pegar
+tabla_cargas(fit, archivo = "tabla_cargas.csv")      # para Excel
 ```
 
-El archivo `.rtf` se abre en Word con la tabla en formato APA: título, líneas
-horizontales y nota. Desde Word puedes guardarlo como `.docx`. Los valores
-numéricos de cada tabla están en `$datos`, por si quieres usarlos en R.
+Todas las tablas de un artículo en un solo documento de Word, numeradas:
+
+```{r, eval = FALSE}
+guardar_tablas(
+  tabla_descriptivos(items),
+  tabla_confiabilidad(fit),
+  tabla_ajuste(fit),
+  tabla_validez(fit),
+  tabla_htmt(fit),
+  archivo = "tablas_articulo.docx"
+)
+```
+
+Las tablas anchas se pasan a letra de 10 pt y, si aún no caben, se colocan en
+una página horizontal. También se puede guardar en `.rtf`.
 
 ## Personalizar el diagrama
 

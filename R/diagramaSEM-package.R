@@ -13,12 +13,16 @@
 #'     con anchos de revista y revisión del tamaño del texto.
 #' }
 #'
-#' Tablas en formato APA:
+#' Tablas en formato APA (se guardan en Word con [guardar_tabla()] o, todas
+#' juntas, con [guardar_tablas()]):
 #' \itemize{
-#'   \item [tabla_cargas()]: cargas factoriales (AFE, AFC y SEM).
-#'   \item [tabla_ajuste()]: índices de ajuste de uno o varios modelos.
-#'   \item [tabla_validez()]: CR, AVE y criterio de Fornell-Larcker.
-#'   \item [guardar_tabla()]: guarda para Word (.rtf), HTML o CSV.
+#'   \item Datos: [tabla_descriptivos()], [tabla_perdidos()], [tabla_normalidad()].
+#'   \item Análisis exploratorio: [tabla_factorabilidad()], [tabla_cargas()].
+#'   \item Medición: [tabla_cargas()], [tabla_confiabilidad()], [tabla_validez()],
+#'     [tabla_htmt()], [tabla_metodo_comun()].
+#'   \item Ajuste: [tabla_ajuste()], [tabla_comparacion()], [tabla_invarianza()].
+#'   \item Modelo estructural: [tabla_efectos()].
+#'   \item Redacción: [parrafo_metodo()].
 #' }
 #'
 #' Consulte la guía de uso con `vignette("guia-de-uso", package = "diagramaSEM")`.

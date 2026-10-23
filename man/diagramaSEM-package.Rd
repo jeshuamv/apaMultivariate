@@ -20,12 +20,16 @@ trayectorias o SEM, en estilo clásico (AMOS), \code{"revista"} o \code{"color"}
 con anchos de revista y revisión del tamaño del texto.
 }
 
-Tablas en formato APA:
+Tablas en formato APA (se guardan en Word con \code{\link[=guardar_tabla]{guardar_tabla()}} o, todas
+juntas, con \code{\link[=guardar_tablas]{guardar_tablas()}}):
 \itemize{
-\item \code{\link[=tabla_cargas]{tabla_cargas()}}: cargas factoriales (AFE, AFC y SEM).
-\item \code{\link[=tabla_ajuste]{tabla_ajuste()}}: índices de ajuste de uno o varios modelos.
-\item \code{\link[=tabla_validez]{tabla_validez()}}: CR, AVE y criterio de Fornell-Larcker.
-\item \code{\link[=guardar_tabla]{guardar_tabla()}}: guarda para Word (.rtf), HTML o CSV.
+\item Datos: \code{\link[=tabla_descriptivos]{tabla_descriptivos()}}, \code{\link[=tabla_perdidos]{tabla_perdidos()}}, \code{\link[=tabla_normalidad]{tabla_normalidad()}}.
+\item Análisis exploratorio: \code{\link[=tabla_factorabilidad]{tabla_factorabilidad()}}, \code{\link[=tabla_cargas]{tabla_cargas()}}.
+\item Medición: \code{\link[=tabla_cargas]{tabla_cargas()}}, \code{\link[=tabla_confiabilidad]{tabla_confiabilidad()}}, \code{\link[=tabla_validez]{tabla_validez()}},
+\code{\link[=tabla_htmt]{tabla_htmt()}}, \code{\link[=tabla_metodo_comun]{tabla_metodo_comun()}}.
+\item Ajuste: \code{\link[=tabla_ajuste]{tabla_ajuste()}}, \code{\link[=tabla_comparacion]{tabla_comparacion()}}, \code{\link[=tabla_invarianza]{tabla_invarianza()}}.
+\item Modelo estructural: \code{\link[=tabla_efectos]{tabla_efectos()}}.
+\item Redacción: \code{\link[=parrafo_metodo]{parrafo_metodo()}}.
 }
 
 Consulte la guía de uso con \code{vignette("guia-de-uso", package = "diagramaSEM")}.
