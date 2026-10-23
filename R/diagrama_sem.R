@@ -1,0 +1,220 @@
+#' Dibuja el diagrama de un modelo estimado con lavaan
+#'
+#' Genera el diagrama de trayectorias de un modelo de `lavaan` con la
+#' convención gráfica clásica de los programas de ecuaciones estructurales:
+#' rectángulos para las variables observadas, óvalos para los constructos,
+#' círculos de error numerados (`e1`, `e2`, ...), cargas y coeficientes sobre
+#' las flechas y \eqn{R^2} junto a cada variable explicada.
+#'
+#' El tipo de modelo se detecta solo (AFC, segundo orden, bifactor, análisis de
+#' trayectorias o SEM completo) y el acomodo de los elementos se elige según
+#' el tipo; véase la sección *Acomodos*.
+#'
+#' @param fit Modelo estimado con [lavaan::cfa()], [lavaan::sem()] o
+#'   [lavaan::lavaan()].
+#' @param acomodo Forma de acomodar los elementos. `"auto"` (por omisión) elige
+#'   la más adecuada. Véase la sección *Acomodos*.
+#' @param correlaciones Qué correlaciones entre constructos dibujar:
+#'   `"auto"` (por omisión) las muestra en AFC con hasta 4 factores y en
+#'   cualquier SEM o análisis de trayectorias, y las oculta en AFC con 5 o más
+#'   factores; `TRUE` las muestra siempre; `FALSE` las oculta; un número entre
+#'   0 y 1 muestra solo las que tengan un valor absoluto igual o mayor. Las
+#'   correlaciones entre errores se dibujan siempre. Las ocultas quedan en el
+#'   elemento `correlaciones_ocultas` del resultado.
+#' @param estandarizado Si `TRUE` (por omisión) muestra la solución
+#'   estandarizada; si `FALSE`, la no estandarizada (sin \eqn{R^2}).
+#' @param mostrar_r2 Mostrar la \eqn{R^2} de cada variable explicada.
+#' @param mostrar_errores Dibujar los círculos de error.
+#' @param mostrar_valores Escribir los valores sobre las flechas.
+#' @param estrellas Añadir asteriscos de significancia (`*` p < .05,
+#'   `**` p < .01, `***` p < .001) a los parámetros libres.
+#' @param decimales Número de decimales.
+#' @param etiquetas Vector o lista con nombres para cambiar lo que se escribe
+#'   dentro de las figuras, p. ej. `c(Biblical = "Bíblico")`. Use `"\n"` para
+#'   partir un nombre en dos renglones.
+#' @param lados Vector o lista con nombres para indicar hacia dónde van los
+#'   ítems de un constructo: `"arriba"`, `"abajo"`, `"izquierda"` o
+#'   `"derecha"`, p. ej. `c(F3 = "abajo")`.
+#' @param mover Lista con nombres para desplazar elementos a mano, en unidades
+#'   del diagrama (el ancho de un ítem es aproximadamente 1), p. ej.
+#'   `list(Care = c(1, -0.5))`. Un constructo se mueve junto con sus ítems y
+#'   errores.
+#' @param paleta Colores, creados con [paleta_sem()].
+#' @param degradado Rellenar con degradado (`TRUE`) o con color sólido.
+#' @param titulo Título opcional.
+#' @param prefijo_error Prefijo de los nombres de los errores (`"e"`).
+#' @param grupo En modelos multigrupo, número del grupo que se dibuja.
+#' @param archivo Si se indica, guarda el diagrama en ese archivo (`.png`,
+#'   `.pdf`, `.svg`, `.jpg` o `.tiff`) con [guardar_diagrama()].
+#' @param dibujar Si `TRUE` (por omisión) dibuja en la ventana de gráficos.
+#'
+#' @section Acomodos:
+#' \describe{
+#'   \item{`"fila"`}{Constructos en fila, ítems arriba y correlaciones como
+#'     arcos abajo; en segundo orden, el factor general va abajo. Automático en
+#'     AFC y segundo orden con hasta 3 factores.}
+#'   \item{`"dos_filas"`}{Constructos en dos filas, ítems hacia afuera (la
+#'     "cruz" clásica); en segundo orden, el factor general va al centro.
+#'     Automático con 4 o más factores.}
+#'   \item{`"arbol"`}{Factor general arriba, constructos en fila e ítems abajo.}
+#'   \item{`"bifactor"`}{Factor general arriba, ítems al centro y factores
+#'     específicos abajo. Automático en modelos bifactor.}
+#'   \item{`"izq_der"`}{Por niveles causales de izquierda a derecha. En SEM,
+#'     cada constructo pone sus ítems donde menos estorban. Automático en
+#'     análisis de trayectorias y SEM.}
+#'   \item{`"arriba_abajo"`}{Por niveles causales de arriba hacia abajo.
+#'     Automático en modelos MIMIC y en trayectorias con 4 o más variables
+#'     exógenas.}
+#' }
+#'
+#' @return Invisiblemente, un objeto de clase `diagrama_sem` que puede volver
+#'   a dibujarse con `plot()` o guardarse con [guardar_diagrama()]. Contiene,
+#'   entre otros, `tipo`, `acomodo` y `correlaciones_ocultas`.
+#'
+#' @examples
+#' library(lavaan)
+#' modelo <- "visual  =~ x1 + x2 + x3
+#'            textual =~ x4 + x5 + x6
+#'            speed   =~ x7 + x8 + x9"
+#' fit <- cfa(modelo, data = HolzingerSwineford1939)
+#' diagrama_sem(fit)
+#' diagrama_sem(fit, acomodo = "dos_filas", paleta = paleta_sem("azul"))
+#' diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
+#'                                 speed = "Velocidad"), estrellas = TRUE)
+#'
+#' # Guardar en un archivo
+#' archivo <- file.path(tempdir(), "afc.png")
+#' diagrama_sem(fit, archivo = archivo, dibujar = FALSE)
+#' @export
+diagrama_sem <- function(fit, acomodo = "auto", correlaciones = "auto",
+                         estandarizado = TRUE, mostrar_r2 = TRUE, mostrar_errores = TRUE,
+                         mostrar_valores = TRUE, estrellas = FALSE, decimales = 2,
+                         etiquetas = NULL, lados = NULL, mover = NULL,
+                         paleta = paleta_sem(), degradado = TRUE, titulo = NULL,
+                         prefijo_error = "e", grupo = 1, archivo = NULL, dibujar = TRUE) {
+  if (!inherits(paleta, "paleta_sem")) stop("`paleta` debe crearse con paleta_sem().", call. = FALSE)
+  G <- extraer_estructura(fit, estandarizado, grupo, etiquetas, prefijo_error, mostrar_errores)
+  tipo <- detectar_tipo(G)
+
+  # Correlaciones entre constructos
+  es_cor_lv <- G$edges$tipo == "cov"
+  if (tipo %in% c("afc", "segundo_orden", "bifactor"))
+    es_cor_lv <- es_cor_lv & G$edges$from %in% G$lv & G$edges$to %in% G$lv
+  ocultar <- rep(FALSE, nrow(G$edges))
+  if (identical(correlaciones, "auto")) {
+    if (tipo %in% c("afc", "bifactor") && length(G$lv1) >= 5) {
+      ocultar <- es_cor_lv
+      if (any(ocultar)) message("Se ocultaron ", sum(ocultar), " correlaciones entre factores para ",
+                                "que el diagrama sea legible (5 o mas factores). Usa correlaciones = TRUE ",
+                                "para mostrarlas; los valores estan en $correlaciones_ocultas.")
+    }
+  } else if (isFALSE(correlaciones)) {
+    ocultar <- es_cor_lv
+  } else if (is.numeric(correlaciones)) {
+    ocultar <- es_cor_lv & abs(G$edges$val) < correlaciones
+  } else if (!isTRUE(correlaciones)) {
+    stop("`correlaciones` debe ser \"auto\", TRUE, FALSE o un numero entre 0 y 1.", call. = FALSE)
+  }
+  ocultas <- G$edges[ocultar, c("from", "to", "val", "p")]
+  names(ocultas) <- c("variable_1", "variable_2", "valor", "p")
+  G$edges <- G$edges[!ocultar, ]
+
+  # Lados de los ítems
+  if (!is.null(lados)) {
+    lados <- as.list(lados)
+    malos <- setdiff(names(lados), G$lv1)
+    if (length(malos)) stop("`lados`: estos no son constructos con items: ", paste(malos, collapse = ", "), call. = FALSE)
+    if (!all(unlist(lados) %in% names(LADOS)))
+      stop("`lados` acepta: ", paste(names(LADOS), collapse = ", "), ".", call. = FALSE)
+    G$lados <- lados
+  }
+
+  # Acomodo
+  validos <- ACOMODOS[[tipo]]
+  if (identical(acomodo, "auto")) acomodo <- elegir_acomodo(G, tipo)
+  else if (!acomodo %in% validos)
+    stop("El acomodo '", acomodo, "' no aplica a este modelo (", nombre_tipo(tipo), "). Opciones: ",
+         paste(c("auto", validos), collapse = ", "), ".", call. = FALSE)
+  G <- aplicar_acomodo(G, tipo, acomodo)
+  G <- aplicar_mover(G, mover)
+
+  obj <- structure(list(
+    G = G, trazos = trazar(G), tipo = tipo, acomodo = acomodo, correlaciones_ocultas = ocultas,
+    opciones = list(estandarizado = estandarizado, mostrar_r2 = mostrar_r2, mostrar_valores = mostrar_valores,
+                    estrellas = estrellas, decimales = decimales, paleta = paleta,
+                    degradado = degradado, titulo = titulo)),
+    class = "diagrama_sem")
+
+  if (dibujar) dibujar_diagrama(obj)
+  if (!is.null(archivo)) guardar_diagrama(obj, archivo)
+  invisible(obj)
+}
+
+#' @noRd
+nombre_tipo <- function(tipo) switch(tipo,
+  afc = "analisis factorial confirmatorio", segundo_orden = "AFC de segundo orden",
+  bifactor = "modelo bifactor", path = "analisis de trayectorias", sem = "modelo de ecuaciones estructurales")
+
+#' Guarda un diagrama en un archivo
+#'
+#' El formato se deduce de la extensión: `.png`, `.pdf`, `.svg`, `.jpg` /
+#' `.jpeg` o `.tiff`. Si no se indican medidas, se calculan a partir del
+#' tamaño del diagrama para que el texto quede legible.
+#'
+#' @param x Objeto creado por [diagrama_sem()].
+#' @param archivo Ruta del archivo.
+#' @param ancho,alto Medidas en pulgadas (opcionales). Si se da solo una, la
+#'   otra se calcula para conservar la proporción.
+#' @param res Resolución en puntos por pulgada para formatos de imagen
+#'   (300 por omisión, adecuada para publicación).
+#' @return Invisiblemente, la ruta del archivo.
+#' @examples
+#' library(lavaan)
+#' fit <- cfa("F =~ x1 + x2 + x3 + x4", data = HolzingerSwineford1939)
+#' d <- diagrama_sem(fit, dibujar = FALSE)
+#' guardar_diagrama(d, file.path(tempdir(), "unifactorial.pdf"))
+#' @export
+guardar_diagrama <- function(x, archivo, ancho = NULL, alto = NULL, res = 300) {
+  if (!inherits(x, "diagrama_sem")) stop("`x` debe crearse con diagrama_sem().", call. = FALSE)
+  ext <- tolower(tools::file_ext(archivo))
+  cj <- caja_total(x$G, x$trazos)
+  W <- diff(cj[1:2]) + 0.5; H <- diff(cj[3:4]) + 0.5 + if (is.null(x$opciones$titulo)) 0 else 0.6
+  if (is.null(ancho) && is.null(alto)) {
+    ancho <- W * PULG_POR_UNIDAD; alto <- H * PULG_POR_UNIDAD
+    k <- min(1, 14 / ancho, 14 / alto)                    # máximo 14 pulgadas por lado
+    if (max(ancho, alto) * k < 4) k <- 4 / max(ancho, alto)  # mínimo 4 pulgadas
+    ancho <- ancho * k; alto <- alto * k
+  } else if (is.null(alto)) alto <- ancho * H / W
+  else if (is.null(ancho)) ancho <- alto * W / H
+  switch(ext,
+    png  = grDevices::png(archivo, width = ancho, height = alto, units = "in", res = res),
+    jpg  = , jpeg = grDevices::jpeg(archivo, width = ancho, height = alto, units = "in", res = res, quality = 95),
+    tiff = , tif = grDevices::tiff(archivo, width = ancho, height = alto, units = "in", res = res, compression = "lzw"),
+    pdf  = grDevices::pdf(archivo, width = ancho, height = alto),
+    svg  = {
+      if (!capabilities("cairo")) stop("Para guardar en SVG se necesita soporte de cairo en R.", call. = FALSE)
+      grDevices::svg(archivo, width = ancho, height = alto)
+    },
+    stop("Formato no reconocido: '", ext, "'. Usa png, pdf, svg, jpg o tiff.", call. = FALSE))
+  on.exit(grDevices::dev.off())
+  dibujar_diagrama(x)
+  invisible(archivo)
+}
+
+#' @export
+plot.diagrama_sem <- function(x, ...) dibujar_diagrama(x)
+
+#' @export
+print.diagrama_sem <- function(x, ...) {
+  N <- x$G$nodes
+  cat("Diagrama de diagramaSEM\n")
+  cat("  Tipo de modelo:", nombre_tipo(x$tipo), "\n")
+  cat("  Acomodo:       ", x$acomodo, "\n")
+  cat("  Constructos:   ", sum(N$tipo == "lv"), " | Variables observadas:", sum(N$tipo %in% c("item", "ovc")),
+      " | Errores:", sum(N$tipo %in% c("err", "dist")), "\n")
+  cat("  Solucion:      ", if (x$opciones$estandarizado) "estandarizada" else "no estandarizada", "\n")
+  if (nrow(x$correlaciones_ocultas))
+    cat("  Correlaciones ocultas:", nrow(x$correlaciones_ocultas), "(ver $correlaciones_ocultas)\n")
+  cat("Usa plot() para dibujarlo o guardar_diagrama() para guardarlo.\n")
+  invisible(x)
+}

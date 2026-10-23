@@ -1,0 +1,25 @@
+Package: diagramaSEM
+Type: Package
+Title: Diagramas de Trayectorias al Estilo Clasico para Modelos 'lavaan'
+Version: 0.1.0
+Authors@R: person("Jeshua", "Moreno Valladares", email = "jeshuamv@gmail.com",
+                  role = c("aut", "cre"))
+Description: Dibuja diagramas de trayectorias para modelos estimados con 'lavaan'
+    (analisis factorial confirmatorio de primer y segundo orden, modelos bifactor,
+    analisis de trayectorias y modelos de ecuaciones estructurales) con la
+    convencion grafica clasica de los programas de ecuaciones estructurales:
+    rectangulos para variables observadas, ovalos para constructos, circulos de
+    error numerados, cargas y coeficientes sobre las flechas y R cuadrada junto a
+    cada variable. El acomodo de los elementos se elige automaticamente segun el
+    tipo de modelo y puede ajustarse a mano. Permite elegir colores, usar
+    degradados y guardar en PNG, PDF, SVG, JPEG o TIFF.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Language: es
+Depends: R (>= 4.0.0)
+Imports: lavaan (>= 0.6-9), graphics, grDevices, stats, tools, utils
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+RoxygenNote: 7.3.1
+Roxygen: list(markdown = TRUE)
