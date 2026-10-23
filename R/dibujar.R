@@ -55,11 +55,13 @@ dibujar_diagrama <- function(obj) {
   graphics::plot.window(xlim = cj[1:2] + c(-0.25, 0.25), ylim = cj[3:4] + c(-0.25, 0.25), asp = 1)
   usr <- graphics::par("usr"); pin <- graphics::par("pin")
   f <- min(pin[1] / diff(usr[1:2]), pin[2] / diff(usr[3:4])) / PULG_POR_UNIDAD
-  if (!is.null(op$titulo)) graphics::title(op$titulo, cex.main = 1, col.main = pal$texto)
+  if (!is.null(op$titulo)) graphics::title(utf8_real(op$titulo), cex.main = 1, col.main = pal$texto)
 
   # Flechas
-  for (g in tr) {
-    graphics::lines(g$x, g$y, lwd = 1.2, col = pal$linea)
+  debil <- if (!is.null(G$edges$debil)) G$edges$debil else rep(FALSE, length(tr))
+  for (j in seq_along(tr)) {
+    g <- tr[[j]]
+    graphics::lines(g$x, g$y, lwd = 1.2, col = pal$linea, lty = if (isTRUE(debil[j])) 2 else 1)
     punta(g$x[38], g$y[38], g$x[40], g$y[40], pal$linea)
     if (g$doble) punta(g$x[3], g$y[3], g$x[1], g$y[1], pal$linea)
   }
@@ -85,7 +87,7 @@ dibujar_diagrama <- function(obj) {
     if (n$forma == "rect") graphics::rect(n$x - n$a, n$y - n$b, n$x + n$a, n$y + n$b, border = pal$linea, lwd = 1.2)
     else graphics::polygon(n$x + n$a * cos(t), n$y + n$b * sin(t), border = pal$linea, lwd = 1.2)
     cx <- f * switch(n$tipo, lv = 0.85, ovc = 0.75, item = 0.68, err = 0.68, dist = 0.7)
-    graphics::text(n$x, n$y, n$etiqueta, cex = cx, col = pal$texto)
+    graphics::text(n$x, n$y, utf8_real(n$etiqueta), cex = cx, col = pal$texto)
   }
   # R cuadrada
   r2 <- posiciones_r2(G, tr, op)

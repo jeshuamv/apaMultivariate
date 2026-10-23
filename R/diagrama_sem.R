@@ -11,7 +11,8 @@
 #' el tipo; véase la sección *Acomodos*.
 #'
 #' @param fit Modelo estimado con [lavaan::cfa()], [lavaan::sem()] o
-#'   [lavaan::lavaan()].
+#'   [lavaan::lavaan()], o un análisis factorial exploratorio hecho con
+#'   `psych::fa()` o [lavaan::efa()].
 #' @param acomodo Forma de acomodar los elementos. `"auto"` (por omisión) elige
 #'   la más adecuada. Véase la sección *Acomodos*.
 #' @param correlaciones Qué correlaciones entre constructos dibujar:
@@ -44,6 +45,12 @@
 #' @param titulo Título opcional.
 #' @param prefijo_error Prefijo de los nombres de los errores (`"e"`).
 #' @param grupo En modelos multigrupo, número del grupo que se dibuja.
+#' @param umbral Solo para análisis exploratorios: carga mínima (en valor
+#'   absoluto) para dibujar una flecha. Por omisión .30. Cada ítem se dibuja
+#'   con el factor en que más carga; si esa carga es menor que el umbral, la
+#'   flecha se dibuja punteada.
+#' @param nfactores Solo para `lavaan::efa()` con varias soluciones: número de
+#'   factores de la solución que se dibuja.
 #' @param archivo Si se indica, guarda el diagrama en ese archivo (`.png`,
 #'   `.pdf`, `.svg`, `.jpg` o `.tiff`) con [guardar_diagrama()].
 #' @param dibujar Si `TRUE` (por omisión) dibuja en la ventana de gráficos.
@@ -91,18 +98,27 @@ diagrama_sem <- function(fit, acomodo = "auto", correlaciones = "auto",
                          mostrar_valores = TRUE, estrellas = FALSE, decimales = 2,
                          etiquetas = NULL, lados = NULL, mover = NULL,
                          paleta = paleta_sem(), degradado = TRUE, titulo = NULL,
-                         prefijo_error = "e", grupo = 1, archivo = NULL, dibujar = TRUE) {
+                         prefijo_error = "e", grupo = 1, umbral = 0.30, nfactores = NULL,
+                         archivo = NULL, dibujar = TRUE) {
   if (!inherits(paleta, "paleta_sem")) stop("`paleta` debe crearse con paleta_sem().", call. = FALSE)
-  G <- extraer_estructura(fit, estandarizado, grupo, etiquetas, prefijo_error, mostrar_errores)
-  tipo <- detectar_tipo(G)
+  if (es_afe(fit)) {
+    G <- estructura_afe(leer_afe(fit, nfactores), umbral, etiquetas, prefijo_error, mostrar_errores)
+    tipo <- "afe"; estandarizado <- TRUE
+    if (length(G$debiles))
+      message("Sin cargas >= ", formato_valor(umbral, TRUE, 2), ": ", paste(G$debiles, collapse = ", "),
+              ". Se dibujan con l\u00ednea punteada hacia el factor en que m\u00e1s cargan.")
+  } else {
+    G <- extraer_estructura(fit, estandarizado, grupo, etiquetas, prefijo_error, mostrar_errores)
+    tipo <- detectar_tipo(G)
+  }
 
   # Correlaciones entre constructos
   es_cor_lv <- G$edges$tipo == "cov"
-  if (tipo %in% c("afc", "segundo_orden", "bifactor"))
+  if (tipo %in% c("afc", "afe", "segundo_orden", "bifactor"))
     es_cor_lv <- es_cor_lv & G$edges$from %in% G$lv & G$edges$to %in% G$lv
   ocultar <- rep(FALSE, nrow(G$edges))
   if (identical(correlaciones, "auto")) {
-    if (tipo %in% c("afc", "bifactor") && length(G$lv1) >= 5) {
+    if (tipo %in% c("afc", "afe", "bifactor") && length(G$lv1) >= 5) {
       ocultar <- es_cor_lv
       if (any(ocultar)) message("Se ocultaron ", sum(ocultar), " correlaciones entre factores para ",
                                 "que el diagrama sea legible (5 o m\u00e1s factores). Usa correlaciones = TRUE ",
@@ -152,7 +168,7 @@ diagrama_sem <- function(fit, acomodo = "auto", correlaciones = "auto",
 
 #' @noRd
 nombre_tipo <- function(tipo) switch(tipo,
-  afc = "an\u00e1lisis factorial confirmatorio", segundo_orden = "AFC de segundo orden",
+  afc = "an\u00e1lisis factorial confirmatorio", afe = "an\u00e1lisis factorial exploratorio", segundo_orden = "AFC de segundo orden",
   bifactor = "modelo bifactor", path = "an\u00e1lisis de trayectorias", sem = "modelo de ecuaciones estructurales")
 
 #' Guarda un diagrama en un archivo

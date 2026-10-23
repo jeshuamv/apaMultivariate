@@ -4,6 +4,7 @@ LADOS <- list(arriba = c(0, 1), abajo = c(0, -1), izquierda = c(-1, 0), derecha 
 
 ACOMODOS <- list(
   afc           = c("fila", "dos_filas", "arbol"),
+  afe           = c("fila", "dos_filas", "arbol"),
   segundo_orden = c("fila", "dos_filas", "arbol"),
   bifactor      = c("bifactor", "fila", "dos_filas"),
   path          = c("izq_der", "arriba_abajo"),
@@ -14,7 +15,7 @@ ACOMODOS <- list(
 elegir_acomodo <- function(G, tipo) {
   n <- length(G$lv1)
   switch(tipo,
-    afc = , segundo_orden = if (n <= 3 && !any(G$edges$tipo == "cruzada")) "fila" else "dos_filas",
+    afc = , afe = , segundo_orden = if (n <= 3 && !any(G$edges$tipo == "cruzada")) "fila" else "dos_filas",
     bifactor = "bifactor",
     path = {
       lev <- niveles(G$core_ov, G$edges)

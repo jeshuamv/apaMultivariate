@@ -45,7 +45,7 @@ trazar <- function(G) {
       t <- seq(0, 1, length.out = 40)
       p <- list(x = p1[1] + t * (p2[1] - p1[1]), y = p1[2] + t * (p2[2] - p1[2]))
       # Un efecto que atraviesa otra caja se curva hacia el lado con menos cruces
-      if (E$tipo[j] == "reg" && choca_con(p$x, p$y, otros, holgura = 0.12)) {
+      if (E$tipo[j] %in% c("reg", "cruzada") && choca_con(p$x, p$y, otros, holgura = 0.12)) {
         S <- do.call(rbind, lapply(setdiff(seq_len(nrow(E)), j), function(q) {
           if (any(c(E$from[q], E$to[q]) %in% c(E$from[j], E$to[j]))) return(NULL)
           u <- N[N$id == E$from[q], ]; v <- N[N$id == E$to[q], ]; c(u$x, u$y, v$x, v$y) }))

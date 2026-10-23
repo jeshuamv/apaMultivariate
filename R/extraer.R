@@ -97,7 +97,7 @@ extraer_estructura <- function(fit, estandarizado = TRUE, grupo = 1, etiquetas =
   aristas <- list()
   agregar_a <- function(f, t, tipo, val, p, fijo) {
     aristas[[length(aristas) + 1]] <<- data.frame(from = f, to = t, tipo = tipo, val = val,
-                                                 p = p, fijo = fijo, stringsAsFactors = FALSE)
+                                                 p = p, fijo = fijo, debil = FALSE, stringsAsFactors = FALSE)
   }
   es_fijo <- function(x) is.na(x$se) | x$se == 0
   principal <- vapply(ind_ov, function(i) {
@@ -116,7 +116,7 @@ extraer_estructura <- function(fit, estandarizado = TRUE, grupo = 1, etiquetas =
   for (e in names(err_de)) agregar_a(e, err_de[[e]], "error", NA_real_, NA_real_, TRUE)
   edges <- if (length(aristas)) do.call(rbind, aristas) else
     data.frame(from = character(), to = character(), tipo = character(), val = numeric(),
-               p = numeric(), fijo = logical(), stringsAsFactors = FALSE)
+               p = numeric(), fijo = logical(), debil = logical(), stringsAsFactors = FALSE)
 
   list(nodes = nodes, edges = edges, r2 = r2, lv = lv, lv1 = lv1, lvH = lvH,
        core_ov = core_ov, ind_ov = ind_ov, principal = principal,

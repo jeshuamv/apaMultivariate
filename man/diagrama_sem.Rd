@@ -22,13 +22,16 @@ diagrama_sem(
   titulo = NULL,
   prefijo_error = "e",
   grupo = 1,
+  umbral = 0.3,
+  nfactores = NULL,
   archivo = NULL,
   dibujar = TRUE
 )
 }
 \arguments{
 \item{fit}{Modelo estimado con \code{\link[lavaan:cfa]{lavaan::cfa()}}, \code{\link[lavaan:sem]{lavaan::sem()}} o
-\code{\link[lavaan:lavaan]{lavaan::lavaan()}}.}
+\code{\link[lavaan:lavaan]{lavaan::lavaan()}}, o un análisis factorial exploratorio hecho con
+\code{psych::fa()} o \code{\link[lavaan:efa]{lavaan::efa()}}.}
 
 \item{acomodo}{Forma de acomodar los elementos. \code{"auto"} (por omisión) elige
 la más adecuada. Véase la sección \emph{Acomodos}.}
@@ -77,6 +80,14 @@ errores.}
 \item{prefijo_error}{Prefijo de los nombres de los errores (\code{"e"}).}
 
 \item{grupo}{En modelos multigrupo, número del grupo que se dibuja.}
+
+\item{umbral}{Solo para análisis exploratorios: carga mínima (en valor
+absoluto) para dibujar una flecha. Por omisión .30. Cada ítem se dibuja
+con el factor en que más carga; si esa carga es menor que el umbral, la
+flecha se dibuja punteada.}
+
+\item{nfactores}{Solo para \code{lavaan::efa()} con varias soluciones: número de
+factores de la solución que se dibuja.}
 
 \item{archivo}{Si se indica, guarda el diagrama en ese archivo (\code{.png},
 \code{.pdf}, \code{.svg}, \code{.jpg} o \code{.tiff}) con \code{\link[=guardar_diagrama]{guardar_diagrama()}}.}

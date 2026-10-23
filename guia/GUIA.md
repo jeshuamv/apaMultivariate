@@ -1,9 +1,11 @@
 Guía de uso de diagramaSEM
 ================
 
-`diagramaSEM` dibuja el diagrama de trayectorias de un modelo estimado
-con `lavaan`, con la convención gráfica clásica de los programas de
-ecuaciones estructurales. Esta guía muestra cómo usarlo, paso a paso.
+`diagramaSEM` dibuja el diagrama de trayectorias de tus análisis
+factoriales (exploratorios y confirmatorios), de trayectorias y de
+ecuaciones estructurales, con la convención gráfica clásica de los
+programas de SEM, y crea las tablas en formato APA que suelen pedirse en
+artículos y tesis. Esta guía muestra cómo usarlo, paso a paso.
 
 ## Contenido
 
@@ -14,9 +16,11 @@ ecuaciones estructurales. Esta guía muestra cómo usarlo, paso a paso.
 5.  [Análisis de trayectorias](#análisis-de-trayectorias)
 6.  [Modelo de ecuaciones
     estructurales](#modelo-de-ecuaciones-estructurales)
-7.  [Personalizar el diagrama](#personalizar-el-diagrama)
-8.  [Guardar el diagrama](#guardar-el-diagrama)
-9.  [Preguntas frecuentes](#preguntas-frecuentes)
+7.  [Análisis factorial exploratorio](#análisis-factorial-exploratorio)
+8.  [Tablas en formato APA](#tablas-en-formato-apa)
+9.  [Personalizar el diagrama](#personalizar-el-diagrama)
+10. [Guardar el diagrama](#guardar-el-diagrama)
+11. [Preguntas frecuentes](#preguntas-frecuentes)
 
 ## Instalación
 
@@ -25,6 +29,12 @@ Solo la primera vez, con conexión a internet:
 ``` r
 install.packages("remotes")
 remotes::install_github("jeshuamv/diagramaSEM")
+```
+
+Para análisis exploratorios con `psych` instala también:
+
+``` r
+install.packages(c("psych", "GPArotation"))
 ```
 
 En cada sesión de R se cargan los dos paquetes:
@@ -46,7 +56,7 @@ fit <- cfa(modelo, data = HolzingerSwineford1939)
 diagrama_sem(fit)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-3-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
 
 Qué se ve en el diagrama:
 
@@ -98,14 +108,14 @@ d
 
 Los acomodos disponibles son:
 
-| Acomodo          | Descripción                             | Se usa automáticamente en                                  |
-|------------------|-----------------------------------------|------------------------------------------------------------|
-| `"fila"`         | Constructos en fila, ítems arriba       | AFC y segundo orden con hasta 3 factores                   |
-| `"dos_filas"`    | Dos filas, ítems hacia afuera           | AFC y segundo orden con 4+ factores, o con cargas cruzadas |
-| `"arbol"`        | Factor general arriba, ítems abajo      | (a elección)                                               |
-| `"bifactor"`     | General arriba, específicos abajo       | Modelos bifactor                                           |
-| `"izq_der"`      | Niveles causales de izquierda a derecha | Trayectorias y SEM                                         |
-| `"arriba_abajo"` | Niveles causales de arriba hacia abajo  | MIMIC y trayectorias con 4+ exógenas                       |
+| Acomodo          | Descripción                             | Se usa automáticamente en                                       |
+|------------------|-----------------------------------------|-----------------------------------------------------------------|
+| `"fila"`         | Constructos en fila, ítems arriba       | AFC, AFE y segundo orden con hasta 3 factores                   |
+| `"dos_filas"`    | Dos filas, ítems hacia afuera           | AFC, AFE y segundo orden con 4+ factores, o con cargas cruzadas |
+| `"arbol"`        | Factor general arriba, ítems abajo      | (a elección)                                                    |
+| `"bifactor"`     | General arriba, específicos abajo       | Modelos bifactor                                                |
+| `"izq_der"`      | Niveles causales de izquierda a derecha | Trayectorias y SEM                                              |
+| `"arriba_abajo"` | Niveles causales de arriba hacia abajo  | MIMIC y trayectorias con 4+ exógenas                            |
 
 Para elegir otro:
 
@@ -113,7 +123,7 @@ Para elegir otro:
 diagrama_sem(fit, acomodo = "dos_filas")
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-6-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
 
 ## Segundo orden
 
@@ -123,32 +133,64 @@ fit2 <- cfa(paste(modelo, "\n Mental =~ visual + textual + speed"),
 diagrama_sem(fit2)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
 
 Los constructos de primer orden llevan su propio error (perturbación) y
 su R², que indica cuánto de su varianza explica el factor general.
 
 ## Análisis de trayectorias
 
-``` r
-set.seed(1)
-datos <- data.frame(X1 = rnorm(300), X2 = rnorm(300), X3 = rnorm(300))
-datos$M1 <- .4 * datos$X1 + .3 * datos$X2 + rnorm(300)
-datos$M2 <- .3 * datos$X2 + .4 * datos$X3 + rnorm(300)
-datos$Y  <- .4 * datos$M1 + .4 * datos$M2 + .1 * datos$X1 + rnorm(300)
+En un análisis de trayectorias todas las variables son observadas (no
+hay factores) y el modelo se escribe con `~`, que se lee “es explicada
+por”:
 
-fit3 <- sem("M1 ~ X1 + X2
-             M2 ~ X2 + X3
-             Y  ~ M1 + M2 + X1", data = datos)
-diagrama_sem(fit3)
+| Símbolo | Significado                              | Ejemplo                 |
+|---------|------------------------------------------|-------------------------|
+| `~`     | efecto (flecha de una punta)             | `Y ~ X`: X influye en Y |
+| `~~`    | correlación (flecha curva de dos puntas) | `Y1 ~~ Y2`              |
+
+Este ejemplo usa los datos `swiss`, incluidos en R: indicadores de 47
+provincias de Suiza en 1888. Se plantea que la educación influye en los
+resultados de un examen y que la educación, el examen y el porcentaje de
+católicos influyen en la fecundidad.
+
+``` r
+modelo_path <- "
+  Examination ~ Education
+  Fertility   ~ Education + Examination + Catholic
+"
+fit3 <- sem(modelo_path, data = swiss)
+diagrama_sem(fit3, etiquetas = c(Education = "Educación", Examination = "Examen",
+                                 Fertility = "Fecundidad", Catholic = "Católicos"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
 
-Las variables se ordenan por nivel causal: las que solo explican, a la
-izquierda; las mediadoras, al centro; los resultados, a la derecha. Un
-efecto que “salta” un nivel (aquí X1 → Y) se curva para no pasar por
-encima de otras cajas.
+Cómo se lee:
+
+- Las variables se ordenan por **nivel causal**: a la izquierda las que
+  solo explican (exógenas), al centro las mediadoras y a la derecha los
+  resultados.
+- Las **variables exógenas** se correlacionan entre sí (flecha curva).
+- Cada variable explicada lleva su **error** (`e1`, `e2`) y su **R²**:
+  la proporción de su varianza que explican sus predictores.
+- Un efecto que “salta” un nivel (aquí Educación → Fecundidad) se curva
+  para no pasar por encima de otras cajas.
+
+Con tus datos, una mediación simple se escribe así:
+
+``` r
+modelo <- "
+  M ~ X          # X influye en el mediador
+  Y ~ M + X      # el mediador y X influyen en el resultado
+"
+fit <- sem(modelo, data = datos)
+diagrama_sem(fit)
+```
+
+Los efectos indirectos o totales que definas con `:=` (por ejemplo,
+`ind := a*b`) no se dibujan, porque no son flechas del modelo;
+consúltalos con `summary(fit)`.
 
 ## Modelo de ecuaciones estructurales
 
@@ -166,11 +208,217 @@ fit4 <- sem("ind60 =~ x1 + x2 + x3
 diagrama_sem(fit4)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-11-1.png" width="100%" />
 
 Cada constructo coloca sus ítems donde menos estorban a las flechas
 entre constructos. Las covarianzas entre errores se dibujan como arcos
 entre los círculos de error.
+
+## Análisis factorial exploratorio
+
+`diagrama_sem()` también dibuja análisis exploratorios hechos con
+`psych::fa()` o con `lavaan::efa()`.
+
+``` r
+library(psych)
+items <- HolzingerSwineford1939[, paste0("x", 1:9)]   # solo las columnas de los ítems
+afe <- fa(items, nfactors = 3, rotate = "oblimin", fm = "ml")
+diagrama_sem(afe)
+```
+
+<img src="GUIA_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
+
+En un exploratorio cada ítem carga en todos los factores, así que el
+diagrama muestra solo lo importante:
+
+- Cada ítem va con el factor en que **más carga**, ordenado de mayor a
+  menor.
+- Se agregan las **cargas cruzadas** de .30 o más (aquí, x9 también
+  carga en otro factor). El umbral se cambia con `umbral = 0.40`.
+- Si un ítem no llega al umbral en ningún factor, su flecha se dibuja
+  **punteada** y aparece un aviso.
+- Con rotación oblicua (`oblimin`, `promax`) se muestran las
+  **correlaciones entre factores**; con rotación ortogonal (`varimax`)
+  no hay.
+- El número junto a cada ítem es su **comunalidad** (h²).
+
+Los nombres `ML1`, `ML2`… los pone `psych`; cámbialos con `etiquetas`:
+
+``` r
+diagrama_sem(afe, etiquetas = c(ML1 = "Verbal", ML2 = "Velocidad", ML3 = "Visual"))
+```
+
+<img src="GUIA_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
+
+Con `lavaan::efa()` es igual. Si pediste varias soluciones (por ejemplo,
+`nfactors = 2:4`), indica cuál dibujar:
+
+``` r
+afe2 <- efa(data = items, nfactors = 2:4)
+diagrama_sem(afe2, nfactores = 3)
+```
+
+## Tablas en formato APA
+
+Tres funciones crean las tablas que suelen pedirse en un reporte. Todas
+se ven en la consola y se pueden guardar para Word.
+
+### Cargas factoriales
+
+En un **exploratorio**, la tabla incluye la matriz de cargas (de patrón
+si la rotación es oblicua), las comunalidades, la varianza explicada y
+las correlaciones entre factores:
+
+``` r
+tabla_cargas(afe, etiquetas = c(ML1 = "Verbal", ML2 = "Velocidad", ML3 = "Visual"))
+#> 
+#> Cargas factoriales del análisis factorial exploratorio
+#> ──────────────────────────────────────────────────
+#> Ítem                Verbal  Visual  Velocidad  h² 
+#> ──────────────────────────────────────────────────
+#> x5                   .89                       .76
+#> x4                   .84                       .72
+#> x6                   .81                       .69
+#> x3                           .69               .46
+#> x1                           .60               .49
+#> x2                           .51               .25
+#> x7                                     .72     .50
+#> x8                                     .70     .53
+#> x9                           .37       .46     .46
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Varianza explicada   2.24    1.34     1.28        
+#> % de varianza        24.9    14.9     14.2        
+#> % acumulado          24.9    39.7     53.9        
+#> ──────────────────────────────────────────────────
+#> Nota. Matriz de patrón. Método: psych::fa (ml, rotación
+#> oblimin). N = 301. Se omiten cargas menores que .30. En
+#> negritas, la carga más alta de cada ítem. h² = comunalidad.
+#> 
+#> Correlaciones entre factores
+#> ────────────────────────────────────
+#> Factor     Verbal  Visual  Velocidad
+#> ────────────────────────────────────
+#> Verbal       —                      
+#> Visual      .33      —              
+#> Velocidad   .22     .27        —    
+#> ────────────────────────────────────
+```
+
+Por omisión se dejan en blanco las cargas menores que .30 y se marca en
+negritas la carga más alta de cada ítem (las negritas se ven en Word).
+Para ver todas las cargas: `ocultar_bajas = FALSE`.
+
+En un **confirmatorio o SEM**, la tabla muestra las cargas
+estandarizadas con su error estándar, valor *p* y R²:
+
+``` r
+tabla_cargas(fit)
+#> 
+#> Cargas factoriales estandarizadas
+#> ─────────────────────────────────────
+#> Factor   Ítem   λ    EE     p     R² 
+#> ─────────────────────────────────────
+#> visual   x1    .77  .055  < .001  .60
+#>          x2    .42  .060  < .001  .18
+#>          x3    .58  .055  < .001  .34
+#> textual  x4    .85  .023  < .001  .73
+#>          x5    .86  .022  < .001  .73
+#>          x6    .84  .023  < .001  .70
+#> speed    x7    .57  .053  < .001  .32
+#>          x8    .72  .051  < .001  .52
+#>          x9    .67  .051  < .001  .44
+#> ─────────────────────────────────────
+#> Nota. λ = carga factorial estandarizada; EE = error
+#> estándar; R² = proporción de varianza del ítem explicada
+#> por su factor. N = 301.
+```
+
+### Índices de ajuste
+
+``` r
+tabla_ajuste(fit)
+#> 
+#> Índices de ajuste
+#> ───────────────────────────────────────────────────────────────────────
+#> Modelo     χ²    gl    p     χ²/gl  CFI   TLI    RMSEA [IC 90 %]   SRMR
+#> ───────────────────────────────────────────────────────────────────────
+#> Modelo 1  85.31  24  < .001  3.55   .931  .896  .092 [.071, .114]  .065
+#> ───────────────────────────────────────────────────────────────────────
+#> Nota. Criterios de buen ajuste (Hu y Bentler, 1999): CFI y TLI ≥ .95
+#> (≥ .90 aceptable), RMSEA ≤ .06 (≤ .08 aceptable), SRMR ≤ .08. Con
+#> muestras grandes la prueba χ² suele ser significativa aunque el ajuste
+#> sea bueno.
+```
+
+Para comparar modelos, ponles nombre y pásalos juntos. Con `extra` se
+agregan otros índices (`"gfi"`, `"agfi"`, `"nfi"`, `"pnfi"`, `"aic"`,
+`"bic"`):
+
+``` r
+un_factor <- cfa("g =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9",
+                 data = HolzingerSwineford1939)
+tabla_ajuste("Un factor" = un_factor, "Tres factores" = fit, extra = c("aic", "bic"))
+#> 
+#> Índices de ajuste
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────
+#> Modelo           χ²    gl    p     χ²/gl  CFI   TLI    RMSEA [IC 90 %]   SRMR    AIC       BIC   
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────
+#> Un factor      312.26  27  < .001  11.57  .677  .569  .187 [.169, .206]  .143  7,738.45  7,805.18
+#> Tres factores  85.31   24  < .001  3.55   .931  .896  .092 [.071, .114]  .065  7,517.49  7,595.34
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. Criterios de buen ajuste (Hu y Bentler, 1999): CFI y TLI ≥ .95 (≥ .90 aceptable), RMSEA ≤
+#> .06 (≤ .08 aceptable), SRMR ≤ .08. Con muestras grandes la prueba χ² suele ser significativa
+#> aunque el ajuste sea bueno.
+```
+
+Si estimaste con un estimador robusto (`estimator = "MLR"`, `"MLM"`,
+`"WLSMV"`…), la tabla usa automáticamente los índices corregidos.
+
+### Confiabilidad y validez
+
+Confiabilidad compuesta (CR), varianza promedio extraída (AVE) y la
+matriz de Fornell y Larcker (raíz del AVE en la diagonal, correlaciones
+debajo):
+
+``` r
+tabla_validez(fit)
+#> 
+#> Confiabilidad compuesta, varianza promedio extraída y correlaciones entre factores
+#> ─────────────────────────────────────────
+#> Factor   CR   AVE  visual  textual  speed
+#> ─────────────────────────────────────────
+#> visual   .63  .37   .61                  
+#> textual  .89  .72   .46      .85         
+#> speed    .69  .43   .47      .28     .66 
+#> ─────────────────────────────────────────
+#> Nota. CR = confiabilidad compuesta; AVE = varianza promedio
+#> extraída. En negritas, la raíz cuadrada del AVE; debajo de
+#> la diagonal, correlaciones entre factores. Criterios: CR >
+#> .70, AVE > .50 (Hair et al., 2014) y raíz del AVE mayor que
+#> las correlaciones del factor (Fornell y Larcker, 1981).
+#> Todos los factores cumplen el criterio de Fornell-Larcker.
+```
+
+La nota indica qué factores no cumplen el criterio de Fornell-Larcker.
+Las fórmulas usadas son las clásicas, con las cargas estandarizadas. Si
+en tu curso o revista se usa `semTools`, puedes obtener exactamente sus
+valores con `tabla_validez(fit, metodo = "semtools")`.
+
+### Guardar las tablas
+
+``` r
+tabla_cargas(afe, archivo = "tabla_cargas.rtf")    # se abre en Word
+tabla_ajuste(fit, archivo = "tabla_ajuste.html")   # para copiar y pegar
+tabla_validez(fit, archivo = "tabla_validez.csv")  # para Excel
+
+t <- tabla_validez(fit)
+guardar_tabla(t, "tabla2.rtf", numero = 2)          # "Tabla 2" en el encabezado
+```
+
+El archivo `.rtf` se abre en Word con la tabla en formato APA: título,
+líneas horizontales y nota. Desde Word puedes guardarlo como `.docx`.
+Los valores numéricos de cada tabla están en `$datos`, por si quieres
+usarlos en R.
 
 ## Personalizar el diagrama
 
@@ -181,7 +429,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-21-1.png" width="100%" />
 
 Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -191,7 +439,7 @@ Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-11-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-22-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados (y
 no se muestra R²):
@@ -200,7 +448,7 @@ no se muestra R²):
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-23-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -208,13 +456,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-24-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-13-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-24-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -234,20 +482,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-15-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-26-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-15-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-26-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-15-3.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-26-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -260,7 +508,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-16-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-27-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -269,7 +517,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-17-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-28-1.png" width="100%" />
 
 ## Guardar el diagrama
 
@@ -299,3 +547,10 @@ el lado de los ítems con `lados` o desplace el constructo con `mover`.
 
 **Aparece el aviso “El modelo no convergió”.** Revise el modelo en
 `lavaan`; el diagrama se dibuja, pero sus valores no son confiables.
+
+**`fa()` marca un error sobre `GPArotation`.** Instala el paquete con
+`install.packages("GPArotation")`; `psych` lo necesita para las
+rotaciones oblicuas.
+
+**El archivo `.rtf` se abre en otro programa.** Haz clic derecho →
+*Abrir con* → *Microsoft Word*.

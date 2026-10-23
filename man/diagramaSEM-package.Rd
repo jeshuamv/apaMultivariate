@@ -6,16 +6,25 @@
 \alias{diagramaSEM-package}
 \title{diagramaSEM: diagramas de trayectorias para modelos de lavaan}
 \description{
-Dibuja diagramas de AFC (primer y segundo orden, bifactor), análisis de
-trayectorias y modelos de ecuaciones estructurales estimados con \code{lavaan},
-con la convención gráfica clásica de los programas de SEM.
+Diagramas y tablas APA para análisis factoriales exploratorios y
+confirmatorios, análisis de trayectorias y modelos de ecuaciones
+estructurales, con la convención gráfica clásica de los programas de SEM.
 }
 \details{
-Funciones principales:
+Diagramas:
 \itemize{
-\item \code{\link[=diagrama_sem]{diagrama_sem()}}: dibuja el diagrama.
+\item \code{\link[=diagrama_sem]{diagrama_sem()}}: dibuja el diagrama de un AFE, AFC, análisis de
+trayectorias o SEM.
 \item \code{\link[=paleta_sem]{paleta_sem()}}: elige o define los colores.
 \item \code{\link[=guardar_diagrama]{guardar_diagrama()}}: guarda en PNG, PDF, SVG, JPEG o TIFF.
+}
+
+Tablas en formato APA:
+\itemize{
+\item \code{\link[=tabla_cargas]{tabla_cargas()}}: cargas factoriales (AFE, AFC y SEM).
+\item \code{\link[=tabla_ajuste]{tabla_ajuste()}}: índices de ajuste de uno o varios modelos.
+\item \code{\link[=tabla_validez]{tabla_validez()}}: CR, AVE y criterio de Fornell-Larcker.
+\item \code{\link[=guardar_tabla]{guardar_tabla()}}: guarda para Word (.rtf), HTML o CSV.
 }
 
 Consulte la guía de uso con \code{vignette("guia-de-uso", package = "diagramaSEM")}.
