@@ -105,15 +105,15 @@ diagrama_sem <- function(fit, acomodo = "auto", correlaciones = "auto",
     if (tipo %in% c("afc", "bifactor") && length(G$lv1) >= 5) {
       ocultar <- es_cor_lv
       if (any(ocultar)) message("Se ocultaron ", sum(ocultar), " correlaciones entre factores para ",
-                                "que el diagrama sea legible (5 o mas factores). Usa correlaciones = TRUE ",
-                                "para mostrarlas; los valores estan en $correlaciones_ocultas.")
+                                "que el diagrama sea legible (5 o m\u00e1s factores). Usa correlaciones = TRUE ",
+                                "para mostrarlas; los valores est\u00e1n en $correlaciones_ocultas.")
     }
   } else if (isFALSE(correlaciones)) {
     ocultar <- es_cor_lv
   } else if (is.numeric(correlaciones)) {
     ocultar <- es_cor_lv & abs(G$edges$val) < correlaciones
   } else if (!isTRUE(correlaciones)) {
-    stop("`correlaciones` debe ser \"auto\", TRUE, FALSE o un numero entre 0 y 1.", call. = FALSE)
+    stop("`correlaciones` debe ser \"auto\", TRUE, FALSE o un n\u00famero entre 0 y 1.", call. = FALSE)
   }
   ocultas <- G$edges[ocultar, c("from", "to", "val", "p")]
   names(ocultas) <- c("variable_1", "variable_2", "valor", "p")
@@ -123,7 +123,7 @@ diagrama_sem <- function(fit, acomodo = "auto", correlaciones = "auto",
   if (!is.null(lados)) {
     lados <- as.list(lados)
     malos <- setdiff(names(lados), G$lv1)
-    if (length(malos)) stop("`lados`: estos no son constructos con items: ", paste(malos, collapse = ", "), call. = FALSE)
+    if (length(malos)) stop("`lados`: estos no son constructos con \u00edtems: ", paste(malos, collapse = ", "), call. = FALSE)
     if (!all(unlist(lados) %in% names(LADOS)))
       stop("`lados` acepta: ", paste(names(LADOS), collapse = ", "), ".", call. = FALSE)
     G$lados <- lados
@@ -152,8 +152,8 @@ diagrama_sem <- function(fit, acomodo = "auto", correlaciones = "auto",
 
 #' @noRd
 nombre_tipo <- function(tipo) switch(tipo,
-  afc = "analisis factorial confirmatorio", segundo_orden = "AFC de segundo orden",
-  bifactor = "modelo bifactor", path = "analisis de trayectorias", sem = "modelo de ecuaciones estructurales")
+  afc = "an\u00e1lisis factorial confirmatorio", segundo_orden = "AFC de segundo orden",
+  bifactor = "modelo bifactor", path = "an\u00e1lisis de trayectorias", sem = "modelo de ecuaciones estructurales")
 
 #' Guarda un diagrama en un archivo
 #'
@@ -212,7 +212,7 @@ print.diagrama_sem <- function(x, ...) {
   cat("  Acomodo:       ", x$acomodo, "\n")
   cat("  Constructos:   ", sum(N$tipo == "lv"), " | Variables observadas:", sum(N$tipo %in% c("item", "ovc")),
       " | Errores:", sum(N$tipo %in% c("err", "dist")), "\n")
-  cat("  Solucion:      ", if (x$opciones$estandarizado) "estandarizada" else "no estandarizada", "\n")
+  cat("  Soluci\u00f3n:      ", if (x$opciones$estandarizado) "estandarizada" else "no estandarizada", "\n")
   if (nrow(x$correlaciones_ocultas))
     cat("  Correlaciones ocultas:", nrow(x$correlaciones_ocultas), "(ver $correlaciones_ocultas)\n")
   cat("Usa plot() para dibujarlo o guardar_diagrama() para guardarlo.\n")

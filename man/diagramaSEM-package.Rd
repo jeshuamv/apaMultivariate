@@ -20,6 +20,14 @@ Funciones principales:
 
 Consulte la guía de uso con \code{vignette("guia-de-uso", package = "diagramaSEM")}.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/jeshuamv/diagramaSEM}
+  \item Report bugs at \url{https://github.com/jeshuamv/diagramaSEM/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Jeshua Moreno Valladares \email{jeshuamv@gmail.com}
 

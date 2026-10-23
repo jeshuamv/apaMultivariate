@@ -264,7 +264,7 @@ aplicar_mover <- function(G, mover) {
     stop("`mover` debe ser una lista con nombres, p. ej. list(Care = c(1, 0)).", call. = FALSE)
   for (id in names(mover)) {
     real <- G$nodes$id[G$nodes$id == id | G$nodes$etiqueta == id][1]
-    if (is.na(real)) stop("`mover`: no existe el elemento '", id, "'.", call. = FALSE)
+    if (is.na(real)) stop("`mover`: no existe el elemento '", id, "'. Revisa que el nombre sea igual al del modelo.", call. = FALSE)
     d <- mover[[id]]
     if (!is.numeric(d) || length(d) != 2) stop("`mover`: cada desplazamiento debe ser c(dx, dy).", call. = FALSE)
     grupo <- real

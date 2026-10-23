@@ -29,7 +29,7 @@ extraer_estructura <- function(fit, estandarizado = TRUE, grupo = 1, etiquetas =
   if (!inherits(fit, "lavaan"))
     stop("`fit` debe ser un modelo estimado con lavaan (cfa(), sem() o lavaan()).", call. = FALSE)
   if (!isTRUE(lavaan::lavInspect(fit, "converged")))
-    warning("El modelo no convergio; el diagrama puede no ser confiable.", call. = FALSE)
+    warning("El modelo no convergi\u00f3; el diagrama puede no ser confiable.", call. = FALSE)
 
   ng <- lavaan::lavInspect(fit, "ngroups")
   if (grupo < 1 || grupo > ng) stop("`grupo` debe estar entre 1 y ", ng, ".", call. = FALSE)

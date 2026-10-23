@@ -49,6 +49,6 @@ print.paleta_sem <- function(x, ...) {
   cat("  latente:  ", paste(x$latente, collapse = " -> "), "\n")
   cat("  observada:", paste(x$observada, collapse = " -> "), "\n")
   cat("  error:    ", paste(x$error, collapse = " -> "), "\n")
-  cat("  linea:", x$linea, " | texto:", x$texto, "\n")
+  cat("  l\u00ednea:", x$linea, " | texto:", x$texto, "\n")
   invisible(x)
 }

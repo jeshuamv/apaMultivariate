@@ -16,12 +16,35 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height
 `lavaan`, con la convención gráfica clásica de los programas de ecuaciones
 estructurales. Esta guía muestra cómo usarlo, paso a paso.
 
-```{r}
+## Contenido
+
+1. [El primer diagrama](#el-primer-diagrama)
+2. [Con tus propios datos](#con-tus-propios-datos)
+3. [Acomodo automático](#acomodo-automático)
+4. [Segundo orden](#segundo-orden)
+5. [Análisis de trayectorias](#análisis-de-trayectorias)
+6. [Modelo de ecuaciones estructurales](#modelo-de-ecuaciones-estructurales)
+7. [Personalizar el diagrama](#personalizar-el-diagrama)
+8. [Guardar el diagrama](#guardar-el-diagrama)
+9. [Preguntas frecuentes](#preguntas-frecuentes)
+
+## Instalación
+
+Solo la primera vez, con conexión a internet:
+
+```{r, eval = FALSE}
+install.packages("remotes")
+remotes::install_github("jeshuamv/diagramaSEM")
+```
+
+En cada sesión de R se cargan los dos paquetes:
+
+```{r, message = FALSE}
 library(lavaan)
 library(diagramaSEM)
 ```
 
-## 1. El primer diagrama
+## El primer diagrama
 
 Basta con estimar el modelo en `lavaan` y pasárselo a `diagrama_sem()`.
 
@@ -42,7 +65,29 @@ Qué se ve en el diagrama:
 - **Número junto a cada ítem**: su R², la proporción de varianza que explica el constructo.
 - **Flechas curvas de doble punta**: correlaciones entre constructos.
 
-## 2. Acomodo automático
+## Con tus propios datos
+
+El procedimiento es siempre el mismo: leer los datos, escribir el modelo,
+estimarlo con `lavaan` y pasárselo a `diagrama_sem()`.
+
+```{r, eval = FALSE}
+datos <- read.csv("mis_datos.csv")      # o read_excel(), read_sav(), etc.
+
+modelo <- "
+  Factor1 =~ item1 + item2 + item3
+  Factor2 =~ item4 + item5 + item6
+"
+fit <- cfa(modelo, data = datos)        # sem() para trayectorias o SEM
+
+diagrama_sem(fit)
+```
+
+Los nombres de los ítems en el modelo deben ser exactamente los nombres de las
+columnas de tus datos. Si `cfa()` o `sem()` marcan un error, el problema está
+en el modelo o en los datos, no en `diagramaSEM`; corrígelo primero en
+`lavaan`.
+
+## Acomodo automático
 
 `diagrama_sem()` detecta el tipo de modelo y elige el acomodo. Al imprimir el
 resultado se ve qué decidió:
@@ -69,7 +114,7 @@ Para elegir otro:
 diagrama_sem(fit, acomodo = "dos_filas")
 ```
 
-## 3. Segundo orden
+## Segundo orden
 
 ```{r}
 fit2 <- cfa(paste(modelo, "\n Mental =~ visual + textual + speed"),
@@ -80,7 +125,7 @@ diagrama_sem(fit2)
 Los constructos de primer orden llevan su propio error (perturbación) y su R²,
 que indica cuánto de su varianza explica el factor general.
 
-## 4. Análisis de trayectorias
+## Análisis de trayectorias
 
 ```{r}
 set.seed(1)
@@ -99,7 +144,7 @@ Las variables se ordenan por nivel causal: las que solo explican, a la izquierda
 las mediadoras, al centro; los resultados, a la derecha. Un efecto que "salta" un
 nivel (aquí X1 → Y) se curva para no pasar por encima de otras cajas.
 
-## 5. Modelo de ecuaciones estructurales
+## Modelo de ecuaciones estructurales
 
 ```{r, fig.width = 9, fig.height = 3.5}
 fit4 <- sem("ind60 =~ x1 + x2 + x3
@@ -119,7 +164,7 @@ Cada constructo coloca sus ítems donde menos estorban a las flechas entre
 constructos. Las covarianzas entre errores se dibujan como arcos entre los
 círculos de error.
 
-## 6. Personalizar el diagrama
+## Personalizar el diagrama
 
 ### Nombres
 
@@ -185,7 +230,7 @@ equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-## 7. Guardar el diagrama
+## Guardar el diagrama
 
 ```{r, eval = FALSE}
 diagrama_sem(fit, archivo = "figura1.png")    # PNG a 300 ppp
@@ -199,7 +244,7 @@ guardar_diagrama(d, "figura1.tiff", ancho = 7)  # medidas en pulgadas
 Si no se indican medidas, se calculan solas para que el texto quede legible.
 Para publicaciones se recomienda PDF o PNG/TIFF a 300 ppp.
 
-## 8. Preguntas frecuentes
+## Preguntas frecuentes
 
 **El diagrama sale muy pequeño o el texto muy chico.** Guárdelo con
 `guardar_diagrama()`; en la ventana de RStudio el tamaño depende del panel.
