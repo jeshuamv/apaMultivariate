@@ -89,3 +89,17 @@ test_that("paletas", {
 test_that("rechaza objetos que no son lavaan", {
   expect_error(diagrama_sem(lm(mpg ~ wt, mtcars)), "lavaan")
 })
+
+test_that("path con parametros etiquetados, efectos definidos y errores correlacionados", {
+  set.seed(3); n <- 300
+  d <- data.frame(X = rnorm(n), W = rnorm(n))
+  d$M <- .5 * d$X + rnorm(n); d$Y <- .4 * d$M + .2 * d$X + .3 * d$W + rnorm(n); d$Z <- .3 * d$Y + rnorm(n)
+  f1 <- sem("M ~ a*X\n Y ~ b*M + c*X + W\n Z ~ Y\n ind := a*b", data = d)
+  o1 <- diagrama_sem(f1, dibujar = FALSE)
+  expect_equal(o1$tipo, "path"); expect_true(sin_na(o1))
+  expect_equal(sum(o1$G$edges$tipo == "reg"), 5)            # := no se dibuja
+  f2 <- sem("M ~ X\n Y ~ M\n Z ~ M\n Y ~~ Z", data = d)
+  o2 <- diagrama_sem(f2, dibujar = FALSE)
+  expect_equal(sum(o2$G$edges$tipo == "covres"), 1)
+  expect_true(all(o2$G$edges$from[o2$G$edges$tipo == "covres"] %in% names(o2$G$err_de)))
+})

@@ -78,6 +78,11 @@ colocar_libre <- function(G, quien) {
     dn <- if (nrow(puestos)) min(sqrt((puestos$x - cx)^2 + (puestos$y - cy)^2) - pmax(puestos$a, puestos$b)) else 9
     ds <- if (!is.null(segs)) min(apply(segs, 1, function(s) dist_seg(cx, cy, s[1], s[2], s[3], s[4]))) else 9
     sc <- min(dn, ds * 1.2) + 0.05 * (abs(dx) > 0.9)
+    if (!is.null(segs)) {                                  # el conector no debe cruzar flechas
+      p0 <- c(n$x + dx * extension(n, dx, dy), n$y + dy * extension(n, dx, dy))
+      cruces <- sum(apply(segs, 1, function(s) cruza(p0, c(cx, cy), s[1:2], s[3:4])))
+      sc <- sc - 2 * cruces
+    }
     if (sc > mejor) { mejor <- sc; sel <- c(cx, cy) }
   }
   N$x[je] <- sel[1]; N$y[je] <- sel[2]; G$nodes <- N; G

@@ -5,8 +5,8 @@ PULG_POR_UNIDAD <- 0.8   # escala de referencia para el tamaño del texto
 #' @noRd
 caja_total <- function(G, tr) {
   N <- G$nodes
-  xs <- c(N$x - N$a, N$x + N$a + 0.35, unlist(lapply(tr, `[[`, "x")))
-  ys <- c(N$y - N$b, N$y + N$b + 0.3, unlist(lapply(tr, `[[`, "y")))
+  xs <- c(N$x - N$a - 0.3, N$x + N$a + 0.35, unlist(lapply(tr, `[[`, "x")))
+  ys <- c(N$y - N$b - 0.25, N$y + N$b + 0.3, unlist(lapply(tr, `[[`, "y")))
   c(range(xs), range(ys))
 }
 
@@ -88,12 +88,9 @@ dibujar_diagrama <- function(obj) {
     graphics::text(n$x, n$y, n$etiqueta, cex = cx, col = pal$texto)
   }
   # R cuadrada
-  if (op$mostrar_r2 && op$estandarizado && length(G$r2)) {
-    for (v in intersect(names(G$r2), N$id)) {
-      n <- N[N$id == v, ]
-      graphics::text(n$x + n$a + 0.14, n$y + n$b + 0.1,
-                     formato_valor(G$r2[[v]], TRUE, op$decimales), cex = 0.66 * f, col = pal$texto)
-    }
-  }
+  r2 <- posiciones_r2(G, tr, op)
+  for (i in seq_len(if (is.null(r2)) 0 else nrow(r2)))
+    graphics::text(r2$x[i], r2$y[i], formato_valor(r2$valor[i], TRUE, op$decimales),
+                   cex = 0.66 * f, col = pal$texto)
   invisible(obj)
 }
