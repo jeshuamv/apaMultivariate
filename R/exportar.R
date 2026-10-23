@@ -27,7 +27,7 @@ print.tabla_apa <- function(x, ...) {
       if (i %in% b$separadores) cat(strrep("\u2508", nchar(linea)), "\n", sep = "")
     }
     cat(linea, "\n", sep = "")
-    if (!is.null(b$nota)) cat(strwrap(paste("Nota.", b$nota), width = max(60, nchar(linea))), sep = "\n")
+    if (!is.null(b$nota)) cat(strwrap(paste(tx("Nota.", "Note."), b$nota), width = max(60, nchar(linea))), sep = "\n")
     cat("\n")
   }
   invisible(x)
@@ -109,7 +109,7 @@ tabla_rtf <- function(x, numero) {
     if (sum(tw) > 9360) { fs <- 20; tw <- w * 98 }   # tabla ancha: letra de 10 pt
     if (sum(tw) > 9360) tw <- tw * 9360 / sum(tw)    # y si aún no cabe, se ajusta
     anchos <- cumsum(round(tw))
-    if (k == 1) out <- c(out, paste0("{\\pard\\sb0\\sa0\\b Tabla ", numero, "\\par}"))
+    if (k == 1) out <- c(out, paste0("{\\pard\\sb0\\sa0\\b ", tx("Tabla", "Table"), " ", numero, "\\par}"))
     out <- c(out, paste0("{\\pard\\sb0\\sa120\\i ", rtf_txt(b$titulo), "\\par}"))
     for (i in seq_len(nrow(M))) {
       arriba <- i == 1; abajo <- i == 1 || i == nrow(M)
@@ -123,7 +123,7 @@ tabla_rtf <- function(x, numero) {
         if (N[i, j]) "{\\b " else if (i == 1 && es_cursiva(M[i, j])) "{\\i " else "{", rtf_txt(M[i, j]), "}\\cell"), character(1)), collapse = "")
       out <- c(out, paste0("\\trowd\\trgaph80", defs, "\\fs", fs, " ", celdas, "\\row\\fs24"))
     }
-    if (!is.null(b$nota)) out <- c(out, paste0("{\\pard\\sb60\\sa240\\fs20{\\i Nota.} ", rtf_txt(b$nota), "\\par}"))
+    if (!is.null(b$nota)) out <- c(out, paste0("{\\pard\\sb60\\sa240\\fs20{\\i ", tx("Nota.", "Note."), "} ", rtf_txt(b$nota), "\\par}"))
     else out <- c(out, "{\\pard\\sa240\\par}")
   }
   c(out, "}")
@@ -141,11 +141,11 @@ tabla_html <- function(x, numero) {
                "td{padding:3px 12px;} tr.ultima td{border-bottom:1.5px solid #000;}",
                "tr.sep td{border-bottom:1px dotted #000;} .l{text-align:left;} .c{text-align:center;}",
                "p.titulo{font-style:italic;margin:0 0 .2em;} p.nota{font-size:10pt;margin:.2em 0 2em;max-width:42em;}")
-  out <- c("<!DOCTYPE html><html lang=\"es\"><head><meta charset=\"utf-8\"><title>Tabla</title>",
+  out <- c(paste0("<!DOCTYPE html><html lang=\"", tx("es", "en"), "\"><head><meta charset=\"utf-8\"><title>", tx("Tabla", "Table"), "</title>"),
            paste0("<style>", css, "</style></head><body>"))
   for (k in seq_along(bloques(x))) {
     b <- bloques(x)[[k]]
-    if (k == 1) out <- c(out, paste0("<p style=\"font-weight:bold;margin:0\">Tabla ", numero, "</p>"))
+    if (k == 1) out <- c(out, paste0("<p style=\"font-weight:bold;margin:0\">", tx("Tabla", "Table"), " ", numero, "</p>"))
     out <- c(out, paste0("<p class=\"titulo\">", html_txt(b$titulo), "</p><table>"),
              paste0("<tr>", paste0("<th class=\"", b$alinear, "\">",
                                    ifelse(es_cursiva(b$columnas), paste0("<i>", html_txt(b$columnas), "</i>"), html_txt(b$columnas)),
@@ -157,7 +157,7 @@ tabla_html <- function(x, numero) {
         paste0("<td class=\"", b$alinear[j], "\">", v, "</td>") }, character(1))
       out <- c(out, paste0("<tr", cls, ">", paste(tds, collapse = ""), "</tr>"))
     }
-    out <- c(out, "</table>", if (!is.null(b$nota)) paste0("<p class=\"nota\"><i>Nota.</i> ", html_txt(b$nota), "</p>"))
+    out <- c(out, "</table>", if (!is.null(b$nota)) paste0("<p class=\"nota\"><i>", tx("Nota.", "Note."), "</i> ", html_txt(b$nota), "</p>"))
   }
   c(out, "</body></html>")
 }
@@ -272,12 +272,12 @@ escribir_docx <- function(tablas, archivo, numero = 1) {
     bl <- bloques(tablas[[k]])
     for (m in seq_along(bl)) {
       b <- bl[[m]]; med <- docx_medidas(b, disponible)
-      if (m == 1) cuerpo <- c(cuerpo, docx_par(docx_run(paste("Tabla", numero + k - 1), b = TRUE),
+      if (m == 1) cuerpo <- c(cuerpo, docx_par(docx_run(paste(tx("Tabla", "Table"), numero + k - 1), b = TRUE),
                                                antes = if (k > 1 && !nueva_seccion) 240 else 0, mantener = TRUE))
       cuerpo <- c(cuerpo, docx_par(docx_run(b$titulo, i = TRUE), despues = 120, mantener = TRUE),
                   docx_tabla(b, med, disponible))
       cuerpo <- c(cuerpo, if (!is.null(b$nota))
-        docx_par(c(docx_run("Nota.", i = TRUE, sz = 20), docx_run(paste0(" ", b$nota), sz = 20)), antes = 60, despues = 240)
+        docx_par(c(docx_run(tx("Nota.", "Note."), i = TRUE, sz = 20), docx_run(paste0(" ", b$nota), sz = 20)), antes = 60, despues = 240)
         else docx_par("", despues = 240))
     }
   }
@@ -304,7 +304,7 @@ empaquetar_docx <- function(cuerpo, archivo, horizontal = FALSE) {
                     "<w:styles xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">",
                     "<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii=\"Times New Roman\" w:hAnsi=\"Times New Roman\" ",
                     "w:cs=\"Times New Roman\" w:eastAsia=\"Times New Roman\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/>",
-                    "<w:lang w:val=\"es-MX\"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after=\"0\" ",
+                    "<w:lang w:val=\"", tx("es-MX", "en-US"), "\"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after=\"0\" ",
                     "w:line=\"240\" w:lineRule=\"auto\"/></w:pPr></w:pPrDefault></w:docDefaults>",
                     "<w:style w:type=\"paragraph\" w:default=\"1\" w:styleId=\"Normal\"><w:name w:val=\"Normal\"/></w:style>",
                     "<w:style w:type=\"table\" w:default=\"1\" w:styleId=\"TableNormal\"><w:name w:val=\"Normal Table\"/>",

@@ -12,10 +12,33 @@ box_m <- function(Y, g) {
   c(M = M, chi = chi, gl = gl, p = stats::pchisq(chi, gl, lower.tail = FALSE))
 }
 
+# Comparaciones por pares de una variable entre grupos (Tukey HSD o Games-Howell)
+#' @noRd
+comparaciones_pares <- function(y, g, metodo, nivel = .95) {
+  lv <- levels(g); k <- length(lv)
+  m <- tapply(y, g, mean); v <- tapply(y, g, stats::var); n <- tapply(y, g, length)
+  N <- length(y); mse <- sum((n - 1) * v) / (N - k)
+  pares <- utils::combn(lv, 2)
+  out <- lapply(seq_len(ncol(pares)), function(j) {
+    a <- pares[1, j]; b <- pares[2, j]; dif <- m[[b]] - m[[a]]
+    if (metodo == "tukey") {
+      se <- sqrt(mse / 2 * (1 / n[[a]] + 1 / n[[b]])); gl <- N - k
+    } else {
+      se <- sqrt((v[[a]] / n[[a]] + v[[b]] / n[[b]]) / 2)
+      gl <- (v[[a]] / n[[a]] + v[[b]] / n[[b]])^2 / ((v[[a]] / n[[a]])^2 / (n[[a]] - 1) + (v[[b]] / n[[b]])^2 / (n[[b]] - 1))
+    }
+    q <- abs(dif) / se; crit <- stats::qtukey(nivel, k, gl)
+    dp <- sqrt(((n[[a]] - 1) * v[[a]] + (n[[b]] - 1) * v[[b]]) / (n[[a]] + n[[b]] - 2))
+    data.frame(grupo1 = a, grupo2 = b, diferencia = dif, ic_inf = dif - crit * se, ic_sup = dif + crit * se,
+               p = stats::ptukey(q, k, gl, lower.tail = FALSE), d = dif / dp, stringsAsFactors = FALSE)
+  })
+  do.call(rbind, out)
+}
+
 #' Tabla de MANOVA de un factor
 #'
 #' Análisis de varianza multivariado de un factor: ¿difieren los grupos en el
-#' conjunto de variables dependientes? La tabla tiene cuatro partes:
+#' conjunto de variables dependientes? La tabla tiene cinco partes:
 #'
 #' 1. **Pruebas multivariadas:** traza de Pillai, lambda de Wilks, traza de
 #'    Hotelling-Lawley y raíz mayor de Roy, con su F aproximada, grados de
@@ -31,25 +54,34 @@ box_m <- function(Y, g) {
 #'    las variables dependientes (r < .90).
 #' 3. **ANOVA univariados** de seguimiento para cada variable dependiente,
 #'    con la corrección de Bonferroni (\eqn{\alpha} / número de variables).
-#' 4. **Descriptivos por grupo:** media y desviación estándar.
+#' 4. **Comparaciones post hoc** entre pares de grupos para cada variable
+#'    dependiente (con tres o más grupos): diferencia de medias, intervalo de
+#'    confianza al 95 %, *p* ajustado y *d* de Cohen. Con `posthoc = "auto"`
+#'    se usa Tukey HSD si se cumple la igualdad de matrices de covarianza y
+#'    Games-Howell (que no supone varianzas iguales) si no se cumple.
+#' 5. **Descriptivos por grupo:** media y desviación estándar.
 #'
 #' Con dos grupos, las cuatro pruebas equivalen a la \eqn{T^2} de Hotelling,
-#' que se informa en la nota.
+#' que se informa en la nota, y no hacen falta comparaciones post hoc.
 #'
 #' @param datos `data.frame`.
 #' @param dependientes Nombres de las variables dependientes (dos o más,
 #'   métricas).
 #' @param grupo Nombre de la variable independiente (el factor).
+#' @param posthoc `"auto"` (por omisión), `"tukey"`, `"games-howell"` o
+#'   `"ninguno"`.
 #' @param alfa Nivel de significancia.
 #' @param decimales Número de decimales.
 #' @param titulo Título de la tabla.
 #' @param archivo Si se indica, guarda la tabla.
-#' @return Un objeto `tabla_apa` con cuatro partes; los valores están en
+#' @return Un objeto `tabla_apa` con varias partes; los valores están en
 #'   `$datos` y el modelo de `stats::manova()` en `$modelo`.
 #' @examples
 #' tabla_manova(iris, c("Petal.Length", "Sepal.Length"), "Species")
 #' @export
-tabla_manova <- function(datos, dependientes, grupo, alfa = .05, decimales = 2, titulo = NULL, archivo = NULL) {
+tabla_manova <- function(datos, dependientes, grupo, posthoc = c("auto", "tukey", "games-howell", "ninguno"),
+                         alfa = .05, decimales = 2, titulo = NULL, archivo = NULL) {
+  posthoc <- match.arg(posthoc)
   if (!is.data.frame(datos)) stop("`datos` debe ser un data.frame.", call. = FALSE)
   falta <- setdiff(c(dependientes, grupo), names(datos))
   if (length(falta)) stop("No est\u00e1n en los datos: ", paste(falta, collapse = ", "), call. = FALSE)
@@ -69,14 +101,15 @@ tabla_manova <- function(datos, dependientes, grupo, alfa = .05, decimales = 2, 
            Wilks = 1 - res["Wilks", "valor"]^(1 / s),
            "Hotelling-Lawley" = (res["Hotelling-Lawley", "valor"] / s) / (1 + res["Hotelling-Lawley", "valor"] / s),
            Roy = res["Roy", "valor"] / (1 + res["Roy", "valor"]))
-  nombres <- c("Traza de Pillai", "Lambda de Wilks", "Traza de Hotelling-Lawley", "Ra\u00edz mayor de Roy")
+  nombres <- c(tx("Traza de Pillai", "Pillai's trace"), tx("Lambda de Wilks", "Wilks' lambda"),
+               tx("Traza de Hotelling-Lawley", "Hotelling-Lawley trace"), tx("Ra\u00edz mayor de Roy", "Roy's largest root"))
   cel <- cbind(nombres, f_num(res[, "valor"], 3), f_num(res[, "F"], 2), f_num(res[, "gl1"], 0), f_num(res[, "gl2"], 0),
                f_p(res[, "p"]), f_apa(eta, decimales))
   t2 <- if (k == 2) res["Hotelling-Lawley", "valor"] * (N - 2) else NA
-  nota <- paste0("F aproximada; \u03b7\u00b2p = eta cuadrada parcial (en un MANOVA de un factor coincide con la eta cuadrada). ",
-                 "La traza de Pillai es la prueba m\u00e1s robusta si no se cumple la igualdad de matrices de covarianza. ",
-                 "Variables dependientes: ", paste(dependientes, collapse = ", "), "; factor: ", grupo, " (", k, " grupos, N = ", N, ").",
-                 if (!is.na(t2)) paste0(" Con dos grupos las cuatro pruebas equivalen a la T\u00b2 de Hotelling: T\u00b2 = ", f_num(t2, 2), ".") else "")
+  nota <- paste0(tx("F aproximada; \u03b7\u00b2p = eta cuadrada parcial (en un MANOVA de un factor coincide con la eta cuadrada). La traza de Pillai es la prueba m\u00e1s robusta si no se cumple la igualdad de matrices de covarianza. Variables dependientes: ",
+                    "Approximate F; \u03b7\u00b2p = partial eta squared (equal to eta squared in a one-way MANOVA). Pillai's trace is the most robust test when covariance matrices are unequal. Dependent variables: "),
+                 paste(dependientes, collapse = ", "), "; ", tx("factor: ", "factor: "), grupo, " (", k, tx(" grupos, N = ", " groups, N = "), N, ").",
+                 if (!is.na(t2)) paste0(tx(" Con dos grupos las cuatro pruebas equivalen a la T\u00b2 de Hotelling: T\u00b2 = ", " With two groups the four tests are equivalent to Hotelling's T\u00b2: T\u00b2 = "), f_num(t2, 2), ".") else "")
 
   # Supuestos
   bm <- box_m(Y, g)
@@ -89,28 +122,29 @@ tabla_manova <- function(datos, dependientes, grupo, alfa = .05, decimales = 2, 
     D2 <- stats::mahalanobis(Yl, colMeans(Yl), stats::cov(Yl))
     as.integer(rownames(d)[idx][D2 > stats::qchisq(.999, p)]) }))
   R <- stats::cor(Y); rmax <- max(abs(R[upper.tri(R)]))
+  si <- tx("Se cumple", "Met"); no <- tx("No se cumple", "Not met")
+  fp <- function(x) if (x < .001) "< .001" else paste("=", f_apa(x, 3))
   filas_normal <- t(vapply(seq_along(mard), function(i) {
     m <- mard[[i]]
-    if (is.null(m)) return(c(paste0("   ", levels(g)[i]), "n insuficiente", "p > .05", ""))
+    if (is.null(m)) return(c(paste0("   ", levels(g)[i]), tx("n insuficiente", "insufficient n"), "p > .05", ""))
     ok <- m$p_asim >= .05 && m$p_curt >= .05
-    c(paste0("   ", levels(g)[i]), paste0("Asimetr\u00eda p ", if (m$p_asim < .001) "< .001" else paste("=", f_apa(m$p_asim, 3)),
-                                        "; curtosis p ", if (m$p_curt < .001) "< .001" else paste("=", f_apa(m$p_curt, 3))),
-      "p > .05", if (ok) "Se cumple" else "No se cumple")
+    c(paste0("   ", levels(g)[i]), paste0(tx("Asimetr\u00eda p ", "Skewness p "), fp(m$p_asim), tx("; curtosis p ", "; kurtosis p "), fp(m$p_curt)),
+      "p > .05", if (ok) si else no)
   }, character(4)))
   cel2 <- rbind(
-    c("Igualdad de matrices de covarianza (M de Box)", paste0("M = ", f_num(bm[["M"]], 2), ", \u03c7\u00b2(", f_num(bm[["gl"]], 0), ") = ",
-                                                              f_num(bm[["chi"]], 2), ", p ", if (bm[["p"]] < .001) "< .001" else paste("=", f_apa(bm[["p"]], 3))),
-      "p > .001", if (bm[["p"]] > .001) "Se cumple" else "No se cumple"),
-    c("Raz\u00f3n de tama\u00f1os de grupo (mayor/menor)", f_num(razon, 2), "< 1.5", if (razon < 1.5) "Se cumple" else "No se cumple"),
-    c("Normalidad multivariada por grupo (Mardia)", "", "", ""),
+    c(tx("Igualdad de matrices de covarianza (M de Box)", "Equality of covariance matrices (Box's M)"),
+      paste0("M = ", f_num(bm[["M"]], 2), ", \u03c7\u00b2(", f_num(bm[["gl"]], 0), ") = ", f_num(bm[["chi"]], 2), ", p ", fp(bm[["p"]])),
+      "p > .001", if (bm[["p"]] > .001) si else no),
+    c(tx("Raz\u00f3n de tama\u00f1os de grupo (mayor/menor)", "Group size ratio (largest/smallest)"), f_num(razon, 2), "< 1.5", if (razon < 1.5) si else no),
+    c(tx("Normalidad multivariada por grupo (Mardia)", "Multivariate normality by group (Mardia)"), "", "", ""),
     filas_normal,
-    c("At\u00edpicos multivariados por grupo (Mahalanobis)", if (length(atip)) paste0(length(atip), " (filas ", paste(sort(atip), collapse = ", "), ")") else "Ninguno",
-      paste0("D\u00b2 > ", f_num(stats::qchisq(.999, p), 2), " (p < .001)"), if (length(atip)) "Revisar" else "Se cumple"),
-    c("Multicolinealidad entre variables dependientes", paste0("|r| m\u00e1xima = ", f_apa(rmax, 2)), "< .90", if (rmax < .90) "Se cumple" else "No se cumple"))
-  nota2 <- paste0("La M de Box es muy sensible a la falta de normalidad, por eso se eval\u00faa con \u03b1 = .001. Si no se cumple la igualdad de ",
-                  "matrices de covarianza, use la traza de Pillai, procure grupos de tama\u00f1o similar y un nivel de significancia m\u00e1s estricto. ",
-                  "La linealidad entre pares de variables dependientes se revisa con diagramas de dispersi\u00f3n; la independencia de las ",
-                  "observaciones, con el dise\u00f1o del estudio.")
+    c(tx("At\u00edpicos multivariados por grupo (Mahalanobis)", "Multivariate outliers by group (Mahalanobis)"),
+      if (length(atip)) paste0(length(atip), tx(" (filas ", " (rows "), paste(sort(atip), collapse = ", "), ")") else tx("Ninguno", "None"),
+      paste0("D\u00b2 > ", f_num(stats::qchisq(.999, p), 2), " (p < .001)"), if (length(atip)) tx("Revisar", "Review") else si),
+    c(tx("Multicolinealidad entre variables dependientes", "Multicollinearity among dependent variables"),
+      paste0(tx("|r| m\u00e1xima = ", "Largest |r| = "), f_apa(rmax, 2)), "< .90", if (rmax < .90) si else no))
+  nota2 <- tx("La M de Box es muy sensible a la falta de normalidad, por eso se eval\u00faa con \u03b1 = .001. Si no se cumple la igualdad de matrices de covarianza, use la traza de Pillai, procure grupos de tama\u00f1o similar y un nivel de significancia m\u00e1s estricto. La linealidad entre pares de variables dependientes se revisa con diagramas de dispersi\u00f3n; la independencia de las observaciones, con el dise\u00f1o del estudio.",
+              "Box's M is highly sensitive to non-normality and is therefore evaluated at \u03b1 = .001. If covariance matrices are unequal, report Pillai's trace, keep group sizes similar, and use a stricter significance level. Linearity between pairs of dependent variables is checked with scatterplots; independence of observations, through the study design.")
 
   # ANOVA univariados
   au <- stats::summary.aov(mod)
@@ -121,8 +155,34 @@ tabla_manova <- function(datos, dependientes, grupo, alfa = .05, decimales = 2, 
   }, numeric(5)))
   cel3 <- cbind(dependientes, f_num(uni[, "F"], 2), f_num(uni[, "gl1"], 0), f_num(uni[, "gl2"], 0), f_p(uni[, "p"]), f_apa(uni[, "eta"], decimales))
   neg3 <- matrix(FALSE, p, 6); neg3[uni[, "p"] < alfa_b, 5] <- TRUE
-  nota3 <- paste0("\u03b7\u00b2p = eta cuadrada parcial. Con la correcci\u00f3n de Bonferroni, cada ANOVA se eval\u00faa con \u03b1 = ",
-                  f_apa(alfa, 2), "/", p, " = ", f_apa(alfa_b, 3), "; en negritas, los significativos.")
+  nota3 <- paste0(tx("\u03b7\u00b2p = eta cuadrada parcial. Con la correcci\u00f3n de Bonferroni, cada ANOVA se eval\u00faa con \u03b1 = ",
+                     "\u03b7\u00b2p = partial eta squared. With the Bonferroni correction, each ANOVA is evaluated at \u03b1 = "),
+                  f_apa(alfa, 2), "/", p, " = ", f_apa(alfa_b, 3), tx("; en negritas, los significativos.", "; significant results are in bold."))
+
+  # Post hoc
+  extra_ph <- list(); ph <- NULL
+  if (k >= 3 && posthoc != "ninguno") {
+    metodo <- if (posthoc == "auto") (if (bm[["p"]] > .001) "tukey" else "games-howell") else posthoc
+    ph <- do.call(rbind, lapply(dependientes, function(v) cbind(variable = v, comparaciones_pares(d[[v]], g, metodo))))
+    prev <- ""
+    cel5 <- t(vapply(seq_len(nrow(ph)), function(i) {
+      v <- if (ph$variable[i] != prev) ph$variable[i] else ""; prev <<- ph$variable[i]
+      c(v, paste(ph$grupo2[i], "\u2212", ph$grupo1[i]), f_num(ph$diferencia[i], decimales),
+        paste0("[", f_num(ph$ic_inf[i], decimales), ", ", f_num(ph$ic_sup[i], decimales), "]"), f_p(ph$p[i]), f_num(ph$d[i], 2))
+    }, character(6)))
+    neg5 <- matrix(FALSE, nrow(cel5), 6); neg5[ph$p < alfa, 5] <- TRUE
+    nombre_m <- if (metodo == "tukey") "Tukey HSD" else "Games-Howell"
+    nota5 <- paste0(tx("Comparaciones por pares con ", "Pairwise comparisons using "), nombre_m,
+                    if (posthoc == "auto") tx(if (metodo == "tukey") " (se cumple la igualdad de matrices de covarianza)" else " (no se cumple la igualdad de matrices de covarianza; Games-Howell no supone varianzas iguales)",
+                                              if (metodo == "tukey") " (covariance matrices are equal)" else " (covariance matrices are unequal; Games-Howell does not assume equal variances)") else "",
+                    tx(". Diferencia = media del segundo grupo menos la del primero; IC 95 % y p ajustados por comparaciones m\u00faltiples; d = d de Cohen (0.20 peque\u00f1o, 0.50 mediano, 0.80 grande); en negritas, p < ",
+                       ". Difference = mean of the second group minus the first; 95% CI and p adjusted for multiple comparisons; d = Cohen's d (0.20 small, 0.50 medium, 0.80 large); p < "),
+                    f_apa(alfa, 2), tx(".", " in bold."))
+    extra_ph <- list(nueva_tabla(tx("Comparaciones post hoc entre grupos", "Post hoc comparisons between groups"),
+                                 c("Variable", tx("Comparaci\u00f3n", "Comparison"), tx("Diferencia", "Difference"), tx("IC 95 %", "95% CI"), "p", "d"),
+                                 cel5, neg5, alinear = c("l", "l", "c", "c", "c", "c"), nota = nota5,
+                                 separadores = cumsum(table(factor(ph$variable, levels = dependientes)))[-p]))
+  }
 
   # Descriptivos por grupo
   desc <- vapply(levels(g), function(l) vapply(dependientes, function(v) {
@@ -130,17 +190,19 @@ tabla_manova <- function(datos, dependientes, grupo, alfa = .05, decimales = 2, 
   desc <- matrix(desc, nrow = p)
   cel4 <- rbind(cbind(dependientes, desc), c("n", as.character(as.numeric(ni))))
 
-  t <- nueva_tabla(if (is.null(titulo)) "MANOVA de un factor: pruebas multivariadas" else titulo,
-                   c("Prueba", "Valor", "F", "gl1", "gl2", "p", "\u03b7\u00b2p"), cel, nota = nota,
+  t <- nueva_tabla(if (is.null(titulo)) tx("MANOVA de un factor: pruebas multivariadas", "One-way MANOVA: multivariate tests") else titulo,
+                   c(tx("Prueba", "Test"), tx("Valor", "Value"), "F", tx("gl1", "df1"), tx("gl2", "df2"), "p", "\u03b7\u00b2p"), cel, nota = nota,
                    datos = list(multivariadas = cbind(as.data.frame(res), eta_p = eta), box_m = bm, razon = razon,
-                                univariadas = data.frame(variable = dependientes, uni, row.names = NULL), atipicos = sort(atip)),
-                   extra = list(
-                     nueva_tabla("Supuestos del MANOVA", c("Supuesto", "Resultado", "Criterio", "Conclusi\u00f3n"), cel2,
+                                univariadas = data.frame(variable = dependientes, uni, row.names = NULL), posthoc = ph, atipicos = sort(atip)),
+                   extra = c(list(
+                     nueva_tabla(tx("Supuestos del MANOVA", "MANOVA assumptions"),
+                                 c(tx("Supuesto", "Assumption"), tx("Resultado", "Result"), tx("Criterio", "Criterion"), tx("Conclusi\u00f3n", "Conclusion")), cel2,
                                  alinear = rep("l", 4), nota = nota2),
-                     nueva_tabla("ANOVA univariados de seguimiento", c("Variable", "F", "gl1", "gl2", "p", "\u03b7\u00b2p"), cel3, neg3,
-                                 nota = nota3),
-                     nueva_tabla("Medias (desviaciones est\u00e1ndar) por grupo", c("Variable", levels(g)), cel4,
-                                 separadores = p, nota = "Valores: M (DE).")))
+                     nueva_tabla(tx("ANOVA univariados de seguimiento", "Follow-up univariate ANOVAs"),
+                                 c("Variable", "F", tx("gl1", "df1"), tx("gl2", "df2"), "p", "\u03b7\u00b2p"), cel3, neg3, nota = nota3)),
+                     extra_ph,
+                     list(nueva_tabla(tx("Medias (desviaciones est\u00e1ndar) por grupo", "Means (standard deviations) by group"), c("Variable", levels(g)), cel4,
+                                      separadores = p, nota = tx("Valores: M (DE).", "Values: M (SD).")))))
   t$modelo <- mod
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t

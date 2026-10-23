@@ -22,10 +22,11 @@
 #'   \item Medición: [tabla_cargas()], [tabla_confiabilidad()], [tabla_validez()],
 #'     [tabla_htmt()], [tabla_metodo_comun()].
 #'   \item Ajuste: [tabla_ajuste()], [tabla_criterios_ajuste()], [tabla_comparacion()],
-#'     [tabla_modificacion()], [tabla_invarianza()].
+#'     [tabla_modificacion()], [tabla_residuales()], [tabla_invarianza()].
 #'   \item Modelo estructural: [tabla_parametros()], [tabla_efectos()], [tabla_hipotesis()].
 #'   \item MANOVA: [tabla_manova()].
 #'   \item Redacción: [parrafo_metodo()].
+#'   \item Idioma (español o inglés): [idioma_sem()].
 #' }
 #'
 #' Consulte la guía de uso con `vignette("guia-de-uso", package = "diagramaSEM")`.

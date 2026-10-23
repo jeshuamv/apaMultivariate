@@ -8,7 +8,7 @@
 evalua <- function(v, exc, acep, mayor = TRUE) {
   if (is.na(v)) return("")
   ok <- function(c) if (mayor) v >= c else v <= c
-  if (!is.na(exc) && ok(exc)) "Excelente" else if (ok(acep)) "Aceptable" else "No aceptable"
+  if (!is.na(exc) && ok(exc)) tx("Excelente", "Excellent") else if (ok(acep)) tx("Aceptable", "Acceptable") else tx("No aceptable", "Not acceptable")
 }
 
 #' Tabla de criterios de ajuste e identificación del modelo
@@ -58,46 +58,44 @@ tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "
   pnfi <- if ("pnfi" %in% names(fm)) fm[["pnfi"]] else NA
   f3 <- function(x) f_apa(x, 3)
   filas <- list(
-    chi2 = c("\u03c7\u00b2", paste0(f_num(I[["chisq"]], 2), " (gl = ", formatC(I[["df"]], format = "d"), ", p ",
-                                    if (is.na(I[["pvalue"]])) "no calculable" else if (I[["pvalue"]] < .001) "< .001" else paste("=", f_apa(I[["pvalue"]], 3)), ")"),
-             "p > .05", "", if (is.na(I[["pvalue"]])) "" else if (I[["pvalue"]] > .05) "Adecuado" else "No adecuado",
+    chi2 = c("\u03c7\u00b2", paste0(f_num(I[["chisq"]], 2), tx(" (gl = ", " (df = "), formatC(I[["df"]], format = "d"), ", p ",
+                                    if (is.na(I[["pvalue"]])) tx("no calculable", "not computable") else if (I[["pvalue"]] < .001) "< .001" else paste("=", f_apa(I[["pvalue"]], 3)), ")"),
+             "p > .05", "", if (is.na(I[["pvalue"]])) "" else if (I[["pvalue"]] > .05) tx("Adecuado", "Adequate") else tx("No adecuado", "Not adequate"),
              "Hair et al. (2014); Kline (2011)"),
-    chi2gl = c("\u03c7\u00b2/gl", f_num(I[["chisq"]] / I[["df"]], 2), "\u2264 2", "\u2264 3",
+    chi2gl = c(tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), f_num(I[["chisq"]] / I[["df"]], 2), "\u2264 2", "\u2264 3",
                evalua(I[["chisq"]] / I[["df"]], 2, 3, FALSE), "Hair et al. (2014)"),
-    rmsea = c("RMSEA [IC 90 %]", paste0(f3(I[["rmsea"]]), " [", f3(I[["lo"]]), ", ", f3(I[["hi"]]), "]"),
-              "\u2264 .05", "\u2264 .06", evalua(I[["rmsea"]], .05, .06, FALSE), "Kline (2011); Hu y Bentler (1999)"),
+    rmsea = c(tx("RMSEA [IC 90 %]", "RMSEA [90% CI]"), paste0(f3(I[["rmsea"]]), " [", f3(I[["lo"]]), ", ", f3(I[["hi"]]), "]"),
+              "\u2264 .05", "\u2264 .06", evalua(I[["rmsea"]], .05, .06, FALSE), tx("Kline (2011); Hu y Bentler (1999)", "Kline (2011); Hu & Bentler (1999)")),
     srmr = c("SRMR", f3(I[["srmr"]]), "\u2264 .08", "\u2264 .10", evalua(I[["srmr"]], .08, .10, FALSE),
-             "Hu y Bentler (1999); Hair et al. (2014)"),
-    cfi = c("CFI", f3(I[["cfi"]]), "\u2265 .95", "\u2265 .90", evalua(I[["cfi"]], .95, .90), "Hu y Bentler (1999); Hair et al. (2014)"),
-    tli = c("TLI (NNFI)", f3(I[["tli"]]), "\u2265 .95", "\u2265 .90", evalua(I[["tli"]], .95, .90), "Tabachnick y Fidell (2013)"),
+             tx("Hu y Bentler (1999); Hair et al. (2014)", "Hu & Bentler (1999); Hair et al. (2014)")),
+    cfi = c("CFI", f3(I[["cfi"]]), "\u2265 .95", "\u2265 .90", evalua(I[["cfi"]], .95, .90), tx("Hu y Bentler (1999); Hair et al. (2014)", "Hu & Bentler (1999); Hair et al. (2014)")),
+    tli = c("TLI (NNFI)", f3(I[["tli"]]), "\u2265 .95", "\u2265 .90", evalua(I[["tli"]], .95, .90), tx("Tabachnick y Fidell (2013)", "Tabachnick & Fidell (2013)")),
     gfi = c("GFI", f3(gfi), "\u2265 .95", "\u2265 .90", evalua(gfi, .95, .90), "Hair et al. (2014)"),
     pnfi = c("PNFI", f3(pnfi), "", "\u2265 .50", evalua(pnfi, NA, .50), "Mulaik et al. (1989)"),
     pratio = c("PRATIO", f3(pratio), "", "\u2265 .50", evalua(pratio, NA, .50), "Mulaik et al. (1989)"))
   cel <- do.call(rbind, filas[indices])
-  nota <- paste0(if (as.logical(I[["robusto"]])) "Se usan los \u00edndices corregidos del estimador robusto (el GFI no tiene versi\u00f3n corregida). " else "",
-                 "RMSEA = error cuadr\u00e1tico medio de aproximaci\u00f3n; SRMR = ra\u00edz del residuo cuadr\u00e1tico medio estandarizado; ",
-                 "CFI = \u00edndice de ajuste comparativo; TLI = \u00edndice de Tucker-Lewis; GFI = \u00edndice de bondad de ajuste; ",
-                 "PNFI = \u00edndice de ajuste normado parsimonioso; PRATIO = raz\u00f3n de parsimonia. La prueba \u03c7\u00b2 es sensible al ",
-                 "tama\u00f1o de la muestra; con muestras grandes suele ser significativa aunque el ajuste sea bueno.")
+  nota <- paste0(if (as.logical(I[["robusto"]])) tx("Se usan los \u00edndices corregidos del estimador robusto (el GFI no tiene versi\u00f3n corregida). ",
+                                                    "Robust (scaled) indices are reported (GFI has no robust version). ") else "",
+                 tx("RMSEA = error cuadr\u00e1tico medio de aproximaci\u00f3n; SRMR = ra\u00edz del residuo cuadr\u00e1tico medio estandarizado; CFI = \u00edndice de ajuste comparativo; TLI = \u00edndice de Tucker-Lewis; GFI = \u00edndice de bondad de ajuste; PNFI = \u00edndice de ajuste normado parsimonioso; PRATIO = raz\u00f3n de parsimonia. La prueba \u03c7\u00b2 es sensible al tama\u00f1o de la muestra; con muestras grandes suele ser significativa aunque el ajuste sea bueno.",
+                    "RMSEA = root mean square error of approximation; SRMR = standardized root mean square residual; CFI = comparative fit index; TLI = Tucker-Lewis index; GFI = goodness-of-fit index; PNFI = parsimony normed fit index; PRATIO = parsimony ratio. The \u03c7\u00b2 test is sensitive to sample size; with large samples it is usually significant even when fit is good."))
   # Identificación
   q <- fm[["npar"]]; gl <- fm[["df"]]; p <- q + gl; n <- lavaan::lavInspect(fit, "ntotal")
-  ident <- if (gl > 0) "Sobreidentificado" else if (gl == 0) "Exactamente identificado" else "Subidentificado"
+  ident <- if (gl > 0) tx("Sobreidentificado", "Overidentified") else if (gl == 0) tx("Exactamente identificado", "Just-identified") else tx("Subidentificado", "Underidentified")
   razon <- n / q
-  cel2 <- rbind(c("Observaciones (p)", formatC(p, format = "d"), "Elementos no redundantes de la matriz de covarianzas"),
-                c("Par\u00e1metros estimados (q)", formatC(q, format = "d"), ""),
-                c("Grados de libertad (p \u2212 q)", formatC(gl, format = "d"), ident),
-                c("Tama\u00f1o de la muestra (N)", formatC(n, format = "d"), ""),
-                c("Raz\u00f3n N:q", paste0(f_num(razon, 1), ":1"),
-                  if (razon >= 20) "Ideal (\u2265 20:1)" else if (razon >= 10) "Aceptable (\u2265 10:1)" else "Baja (< 10:1)"))
-  nota2 <- paste0("gl > 0: modelo sobreidentificado (el deseable); gl = 0: exactamente identificado (\u03c7\u00b2 = 0, el ajuste no puede ",
-                  "evaluarse); gl < 0: subidentificado (no puede estimarse). Raz\u00f3n N:q: se recomiendan al menos 10 casos por ",
-                  "par\u00e1metro y, de preferencia, 20 (Kline, 2011).")
-  t <- nueva_tabla(if (is.null(titulo)) "Evaluaci\u00f3n del ajuste del modelo" else titulo,
-                   c("\u00cdndice", "Valor", "Excelente", "Aceptable", "Evaluaci\u00f3n", "Fuente"), cel,
+  cel2 <- rbind(c(tx("Observaciones (p)", "Observations (p)"), formatC(p, format = "d"), tx("Elementos no redundantes de la matriz de covarianzas", "Non-redundant elements of the covariance matrix")),
+                c(tx("Par\u00e1metros estimados (q)", "Estimated parameters (q)"), formatC(q, format = "d"), ""),
+                c(tx("Grados de libertad (p \u2212 q)", "Degrees of freedom (p \u2212 q)"), formatC(gl, format = "d"), ident),
+                c(tx("Tama\u00f1o de la muestra (N)", "Sample size (N)"), formatC(n, format = "d"), ""),
+                c(tx("Raz\u00f3n N:q", "N:q ratio"), paste0(f_num(razon, 1), ":1"),
+                  if (razon >= 20) "Ideal (\u2265 20:1)" else if (razon >= 10) tx("Aceptable (\u2265 10:1)", "Acceptable (\u2265 10:1)") else tx("Baja (< 10:1)", "Low (< 10:1)")))
+  nota2 <- tx("gl > 0: modelo sobreidentificado (el deseable); gl = 0: exactamente identificado (\u03c7\u00b2 = 0, el ajuste no puede evaluarse); gl < 0: subidentificado (no puede estimarse). Raz\u00f3n N:q: se recomiendan al menos 10 casos por par\u00e1metro y, de preferencia, 20 (Kline, 2011).",
+              "df > 0: overidentified model (desirable); df = 0: just-identified (\u03c7\u00b2 = 0, fit cannot be evaluated); df < 0: underidentified (cannot be estimated). N:q ratio: at least 10 and preferably 20 cases per parameter are recommended (Kline, 2011).")
+  t <- nueva_tabla(if (is.null(titulo)) tx("Evaluaci\u00f3n del ajuste del modelo", "Model fit evaluation") else titulo,
+                   c(tx("\u00cdndice", "Index"), tx("Valor", "Value"), tx("Excelente", "Excellent"), tx("Aceptable", "Acceptable"), tx("Evaluaci\u00f3n", "Evaluation"), tx("Fuente", "Source")), cel,
                    alinear = c("l", "c", "c", "c", "c", "l"), nota = nota,
                    datos = list(indices = c(I, gfi = gfi, pnfi = pnfi, pratio = pratio),
                                 identificacion = c(p = p, q = q, gl = gl, n = n, razon = razon)),
-                   extra = list(nueva_tabla("Identificaci\u00f3n del modelo y tama\u00f1o de la muestra", c("Elemento", "Valor", "Interpretaci\u00f3n"),
+                   extra = list(nueva_tabla(tx("Identificaci\u00f3n del modelo y tama\u00f1o de la muestra", "Model identification and sample size"), c(tx("Elemento", "Element"), tx("Valor", "Value"), tx("Interpretaci\u00f3n", "Interpretation")),
                                             cel2, alinear = c("l", "c", "l"), nota = nota2)))
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
@@ -136,27 +134,30 @@ tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales 
                                 if (is.na(r$z)) "\u2014" else f_num(r$z, 2),
                                 if (is.na(r$pvalue)) "\u2014" else f_p(r$pvalue), f_apa(r$std.all, decimales))
   secciones <- list(
-    "Pesos de regresi\u00f3n" = list(pe$op == "~", function(r) paste0(et(r$lhs), " \u2190 ", et(r$rhs))),
-    "Cargas factoriales" = list(pe$op == "=~", function(r) paste0(et(r$rhs), " \u2190 ", et(r$lhs))),
-    "Covarianzas (correlaci\u00f3n en \u03b2)" = list(pe$op == "~~" & pe$lhs != pe$rhs, function(r) paste0(et(r$lhs), " \u2194 ", et(r$rhs))),
-    "Varianzas de las variables ex\u00f3genas" = list(varianzas & pe$op == "~~" & pe$lhs == pe$rhs & !pe$lhs %in% endo,
+    reg = list(pe$op == "~", function(r) paste0(et(r$lhs), " \u2190 ", et(r$rhs))),
+    car = list(pe$op == "=~", function(r) paste0(et(r$rhs), " \u2190 ", et(r$lhs))),
+    cov = list(pe$op == "~~" & pe$lhs != pe$rhs, function(r) paste0(et(r$lhs), " \u2194 ", et(r$rhs))),
+    var = list(varianzas & pe$op == "~~" & pe$lhs == pe$rhs & !pe$lhs %in% endo,
                                                      function(r) et(r$lhs)),
-    "Varianzas de los errores (residuales)" = list(varianzas & pe$op == "~~" & pe$lhs == pe$rhs & pe$lhs %in% endo,
-                                                   function(r) paste("Error de", et(r$lhs))),
-    "Par\u00e1metros definidos" = list(pe$op == ":=", function(r) r$lhs))
+    err = list(varianzas & pe$op == "~~" & pe$lhs == pe$rhs & pe$lhs %in% endo,
+                                                   function(r) paste(tx("Error de", "Error of"), et(r$lhs))),
+    def = list(pe$op == ":=", function(r) r$lhs))
+  rotulo <- c(reg = tx("Pesos de regresi\u00f3n", "Regression weights"), car = tx("Cargas factoriales", "Factor loadings"),
+              cov = tx("Covarianzas (correlaci\u00f3n en \u03b2)", "Covariances (correlation in \u03b2)"),
+              var = tx("Varianzas de las variables ex\u00f3genas", "Variances of exogenous variables"),
+              err = tx("Varianzas de los errores (residuales)", "Error (residual) variances"), def = tx("Par\u00e1metros definidos", "Defined parameters"))
   cel <- NULL; sep <- integer(0); orden <- integer(0)
   for (s in names(secciones)) {
     idx <- which(secciones[[s]][[1]]); if (!length(idx)) next
-    cel <- rbind(cel, c(s, rep("", 5)), t(vapply(idx, function(i) fila(pe[i, ], secciones[[s]][[2]](pe[i, ])), character(6))))
+    cel <- rbind(cel, c(rotulo[[s]], rep("", 5)), t(vapply(idx, function(i) fila(pe[i, ], secciones[[s]][[2]](pe[i, ])), character(6))))
     sep <- c(sep, nrow(cel)); orden <- c(orden, idx)
   }
   sep <- utils::head(sep, -1)
-  nota <- paste0("B = estimaci\u00f3n no estandarizada; EE = error est\u00e1ndar; C.R. = raz\u00f3n cr\u00edtica (B/EE); ",
-                 "|C.R.| > 1.96 indica un par\u00e1metro significativo (p < .05); \u03b2 = estimaci\u00f3n estandarizada ",
-                 "(en las covarianzas, la correlaci\u00f3n; en los errores, la proporci\u00f3n de varianza no explicada, 1 \u2212 R\u00b2). ",
-                 "\u2014 = par\u00e1metro fijo (por ejemplo, la carga de referencia fijada en 1). N = ", lavaan::lavInspect(fit, "ntotal"), ".")
-  t <- nueva_tabla(if (is.null(titulo)) "Estimaciones del modelo" else titulo,
-                   c("Par\u00e1metro", "B", "EE", "C.R.", "p", "\u03b2"), cel, nota = nota, separadores = sep,
+  nota <- paste0(tx("B = estimaci\u00f3n no estandarizada; EE = error est\u00e1ndar; C.R. = raz\u00f3n cr\u00edtica (B/EE); |C.R.| > 1.96 indica un par\u00e1metro significativo (p < .05); \u03b2 = estimaci\u00f3n estandarizada (en las covarianzas, la correlaci\u00f3n; en los errores, la proporci\u00f3n de varianza no explicada, 1 \u2212 R\u00b2). \u2014 = par\u00e1metro fijo (por ejemplo, la carga de referencia fijada en 1). N = ",
+                    "B = unstandardized estimate; SE = standard error; C.R. = critical ratio (B/SE); |C.R.| > 1.96 indicates a significant parameter (p < .05); \u03b2 = standardized estimate (for covariances, the correlation; for errors, the proportion of unexplained variance, 1 \u2212 R\u00b2). \u2014 = fixed parameter (e.g., the reference loading fixed at 1). N = "),
+                 lavaan::lavInspect(fit, "ntotal"), ".")
+  t <- nueva_tabla(if (is.null(titulo)) tx("Estimaciones del modelo", "Model estimates") else titulo,
+                   c(tx("Par\u00e1metro", "Parameter"), "B", tx("EE", "SE"), "C.R.", "p", "\u03b2"), cel, nota = nota, separadores = sep,
                    datos = pe[orden, c("lhs", "op", "rhs", "est", "se", "z", "pvalue", "std.all")])
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
@@ -234,21 +235,22 @@ tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etique
   cel <- t(vapply(names(H), function(nm) {
     r <- res[[nm]]; h <- H[[nm]]
     c(nm, paste0(paste(renombrar(h$v, etiquetas), collapse = " \u2192 "), if (nzchar(h$signo)) paste0(" (", h$signo, ")") else ""),
-      r$tipo, f_apa(r$beta, decimales),
-      if (r$tipo == "Directo") f_p(r$p) else paste0("IC [", f_num(r$ic[1], decimales), ", ", f_num(r$ic[2], decimales), "]"),
-      if (sostiene[[nm]]) "Se sostiene" else "Se rechaza")
+      if (r$tipo == "Directo") tx("Directo", "Direct") else tx("Indirecto", "Indirect"), f_apa(r$beta, decimales),
+      if (r$tipo == "Directo") f_p(r$p) else paste0(tx("IC [", "CI ["), f_num(r$ic[1], decimales), ", ", f_num(r$ic[2], decimales), "]"),
+      if (sostiene[[nm]]) tx("Se sostiene", "Supported") else tx("Se rechaza", "Not supported"))
   }, character(6)))
-  nota <- paste0("\u03b2 = coeficiente estandarizado. Efectos directos: se sostienen si p < ", f_apa(alfa, 2),
-                 ". Efectos indirectos: se sostienen si el intervalo de confianza al 95 % (",
-                 if (necesita_ind && bootstrap > 0) paste0("bootstrap con ", bootstrap, " remuestreos") else "m\u00e9todo delta",
-                 ") no incluye el 0. Si la hip\u00f3tesis indica un signo (+ o \u2212), el efecto debe tener ese signo.")
+  nota <- paste0(tx("\u03b2 = coeficiente estandarizado. Efectos directos: se sostienen si p < ", "\u03b2 = standardized coefficient. Direct effects are supported if p < "), f_apa(alfa, 2),
+                 tx(". Efectos indirectos: se sostienen si el intervalo de confianza al 95 % (", ". Indirect effects are supported if the 95% confidence interval ("),
+                 if (necesita_ind && bootstrap > 0) paste0(tx("bootstrap con ", "bootstrap with "), bootstrap, tx(" remuestreos", " resamples")) else tx("m\u00e9todo delta", "delta method"),
+                 tx(") no incluye el 0. Si la hip\u00f3tesis indica un signo (+ o \u2212), el efecto debe tener ese signo.",
+                    ") excludes 0. If the hypothesis specifies a sign (+ or \u2212), the effect must have that sign."))
   datos <- data.frame(hipotesis = names(H), trayectoria = vapply(H, function(h) paste(h$v, collapse = " -> "), character(1)),
                       signo = vapply(H, `[[`, character(1), "signo"), tipo = vapply(res, `[[`, character(1), "tipo"),
                       B = vapply(res, `[[`, numeric(1), "est"), beta = vapply(res, `[[`, numeric(1), "beta"),
                       p = vapply(res, function(r) if (is.null(r$p)) NA_real_ else r$p, numeric(1)),
                       sostiene = sostiene, row.names = NULL)
-  t <- nueva_tabla(if (is.null(titulo)) "Contraste de hip\u00f3tesis" else titulo,
-                   c("Hip\u00f3tesis", "Trayectoria", "Efecto", "\u03b2", "p / IC 95 %", "Decisi\u00f3n"), cel,
+  t <- nueva_tabla(if (is.null(titulo)) tx("Contraste de hip\u00f3tesis", "Hypothesis testing") else titulo,
+                   c(tx("Hip\u00f3tesis", "Hypothesis"), tx("Trayectoria", "Path"), tx("Efecto", "Effect"), "\u03b2", tx("p / IC 95 %", "p / 95% CI"), tx("Decisi\u00f3n", "Decision")), cel,
                    alinear = c("l", "l", "l", "c", "c", "l"), nota = nota, datos = datos)
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
@@ -289,25 +291,74 @@ tabla_modificacion <- function(fit, n = 10, minimo = 3.84, tipos = c("~~", "=~",
   mi <- utils::head(mi, n)
   et <- function(v) renombrar(v, etiquetas)
   desc <- function(r) switch(r$op,
-    "~~" = paste0("Covarianza ", et(r$lhs), " \u2194 ", et(r$rhs)),
-    "=~" = paste0("Carga de ", et(r$rhs), " en ", et(r$lhs)),
-    "~"  = paste0("Efecto ", et(r$rhs), " \u2192 ", et(r$lhs)), paste(r$lhs, r$op, r$rhs))
+    "~~" = paste0(tx("Covarianza ", "Covariance "), et(r$lhs), " \u2194 ", et(r$rhs)),
+    "=~" = paste0(tx("Carga de ", "Loading of "), et(r$rhs), tx(" en ", " on "), et(r$lhs)),
+    "~"  = paste0(tx("Efecto ", "Effect "), et(r$rhs), " \u2192 ", et(r$lhs)), paste(r$lhs, r$op, r$rhs))
   if (!nrow(mi)) {
-    cel <- matrix(c("Ning\u00fan par\u00e1metro supera el m\u00ednimo", "", "", "", ""), 1)
+    cel <- matrix(c(tx("Ning\u00fan par\u00e1metro supera el m\u00ednimo", "No parameter exceeds the minimum"), "", "", "", ""), 1)
   } else {
     cel <- t(vapply(seq_len(nrow(mi)), function(i) {
       r <- mi[i, ]
       c(desc(r), paste(r$lhs, r$op, r$rhs), f_num(r$mi, 2), f_num(r$epc, decimales), f_apa(r$sepc.all, decimales))
     }, character(5)))
   }
-  nota <- paste0("IM = \u00edndice de modificaci\u00f3n (disminuci\u00f3n esperada del \u03c7\u00b2 al liberar el par\u00e1metro); ",
-                 "EPC = cambio esperado en el par\u00e1metro (no estandarizado y estandarizado). Se muestran los IM \u2265 ",
-                 f_num(minimo, 2), ". Liberar un par\u00e1metro solo se justifica si tiene sentido te\u00f3rico; ",
-                 "la sintaxis de lavaan para agregarlo est\u00e1 en la segunda columna.")
-  t <- nueva_tabla(if (is.null(titulo)) "\u00cdndices de modificaci\u00f3n" else titulo,
-                   c("Par\u00e1metro", "Sintaxis lavaan", "IM", "EPC", "EPC est."), cel,
+  nota <- paste0(tx("IM = \u00edndice de modificaci\u00f3n (disminuci\u00f3n esperada del \u03c7\u00b2 al liberar el par\u00e1metro); EPC = cambio esperado en el par\u00e1metro (no estandarizado y estandarizado). Se muestran los IM \u2265 ",
+                    "MI = modification index (expected decrease in \u03c7\u00b2 if the parameter is freed); EPC = expected parameter change (unstandardized and standardized). MIs \u2265 "),
+                 f_num(minimo, 2), tx(". Liberar un par\u00e1metro solo se justifica si tiene sentido te\u00f3rico; la sintaxis de lavaan para agregarlo est\u00e1 en la segunda columna.",
+                                      " are shown. Freeing a parameter is justified only on theoretical grounds; the lavaan syntax to add it is in the second column."))
+  t <- nueva_tabla(if (is.null(titulo)) tx("\u00cdndices de modificaci\u00f3n", "Modification indices") else titulo,
+                   c(tx("Par\u00e1metro", "Parameter"), tx("Sintaxis lavaan", "lavaan syntax"), tx("IM", "MI"), "EPC", tx("EPC est.", "Std. EPC")), cel,
                    alinear = c("l", "l", "c", "c", "c"), nota = nota,
                    datos = mi[, intersect(c("lhs", "op", "rhs", "mi", "epc", "sepc.all"), names(mi))])
+  if (!is.null(archivo)) guardar_tabla(t, archivo)
+  t
+}
+
+# --- Residuales de correlación ---------------------------------------------------------
+
+#' Tabla de residuales de correlación
+#'
+#' Diferencia entre cada correlación observada y la que reproduce el modelo
+#' (residual de correlación). Muestra *dónde* ajusta mal el modelo, algo que
+#' los índices globales no dicen, y es lo que recomiendan los estándares de
+#' reporte de SEM (Kline, 2016; Appelbaum et al., 2018). Residuales mayores
+#' que .10 en valor absoluto señalan pares de variables que el modelo explica
+#' mal.
+#'
+#' @param fit Modelo de `lavaan`.
+#' @param umbral Valor absoluto a partir del cual se marca un residual (.10
+#'   por omisión).
+#' @inheritParams tabla_descriptivos
+#' @return Un objeto `tabla_apa`; la matriz de residuales está en `$datos`.
+#' @examples
+#' library(lavaan)
+#' fit <- cfa("visual =~ x1 + x2 + x3
+#'             textual =~ x4 + x5 + x6
+#'             speed =~ x7 + x8 + x9", data = HolzingerSwineford1939)
+#' tabla_residuales(fit)
+#' @export
+tabla_residuales <- function(fit, umbral = .10, etiquetas = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
+  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
+  r <- lavaan::lavResiduals(fit, type = "cor", summary = FALSE)
+  if (!is.null(r$cov)) R <- r$cov else R <- r[[1]]$cov
+  R <- unclass(R); v <- rownames(R); k <- length(v)
+  cc <- matrix("", k, k - 1); neg <- matrix(FALSE, k, k - 1)
+  for (i in seq_len(k)) for (j in seq_len(k - 1)) {
+    if (i == j) cc[i, j] <- "\u2014"
+    else if (i > j) { cc[i, j] <- f_apa(R[i, j], decimales); neg[i, j] <- abs(R[i, j]) > umbral }
+  }
+  low <- R[lower.tri(R)]; n_alto <- sum(abs(low) > umbral)
+  im <- which(abs(R) == max(abs(low)) & lower.tri(R), arr.ind = TRUE)[1, ]
+  nom <- paste0(seq_len(k), ". ", renombrar(v, etiquetas))
+  srmr <- lavaan::fitMeasures(fit, "srmr")[[1]]
+  nota <- paste0(tx("Residual = correlaci\u00f3n observada menos la reproducida por el modelo. En negritas, |residual| > ",
+                    "Residual = observed minus model-implied correlation. |Residual| > "),
+                 f_apa(umbral, 2), tx(" (Kline, 2016): ", " in bold (Kline, 2016): "), n_alto, tx(" de ", " of "), length(low),
+                 tx(" pares. El residual m\u00e1s grande es el de ", " pairs. The largest residual is "),
+                 renombrar(v[im[2]], etiquetas), tx(" y ", " with "), renombrar(v[im[1]], etiquetas), " (", f_apa(R[im[1], im[2]], decimales), "). SRMR = ",
+                 f_apa(srmr, 3), ".")
+  t <- nueva_tabla(if (is.null(titulo)) tx("Residuales de correlaci\u00f3n", "Correlation residuals") else titulo,
+                   c("Variable", as.character(seq_len(k - 1))), cbind(nom, cc), cbind(FALSE, neg), nota = nota, datos = R)
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
 }

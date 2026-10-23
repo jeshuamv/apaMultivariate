@@ -108,7 +108,7 @@ test_that("MANOVA coincide con el ejemplo de clase (iris)", {
   skip_if_not_installed("rstatix")
   bm <- rstatix::box_m(iris[, c("Petal.Length", "Sepal.Length")], iris$Species)
   expect_equal(unname(t$datos$box_m["chi"]), unname(bm$statistic), tolerance = 1e-6)
-  expect_length(t$extra, 3)
+  expect_length(t$extra, 4)
   expect_equal(nrow(t$datos$univariadas), 2)
 })
 

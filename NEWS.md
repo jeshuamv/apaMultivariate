@@ -1,3 +1,15 @@
+# diagramaSEM 0.6.0
+
+* `idioma_sem("en")`: tablas, notas, párrafo de método y referencias en
+  inglés, con los términos de APA (M, SD, SE, df, CI, Note., Table), para
+  revistas en inglés. `idioma_sem("es")` vuelve al español.
+* `tabla_manova()` agrega las comparaciones post hoc entre grupos (Tukey HSD
+  o Games-Howell, elegido según la M de Box) con IC 95 %, *p* ajustado y *d*
+  de Cohen.
+* `tabla_residuales()`: residuales de correlación (observada menos
+  reproducida), con los mayores que .10 en negritas.
+* En inglés, el párrafo de método no empieza oraciones con un número.
+
 # diagramaSEM 0.5.0
 
 Tablas y opciones para cubrir el análisis de trayectorias, SEM y MANOVA tal

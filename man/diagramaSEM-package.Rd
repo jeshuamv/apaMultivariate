@@ -29,10 +29,11 @@ juntas, con \code{\link[=guardar_tablas]{guardar_tablas()}}):
 \item Medición: \code{\link[=tabla_cargas]{tabla_cargas()}}, \code{\link[=tabla_confiabilidad]{tabla_confiabilidad()}}, \code{\link[=tabla_validez]{tabla_validez()}},
 \code{\link[=tabla_htmt]{tabla_htmt()}}, \code{\link[=tabla_metodo_comun]{tabla_metodo_comun()}}.
 \item Ajuste: \code{\link[=tabla_ajuste]{tabla_ajuste()}}, \code{\link[=tabla_criterios_ajuste]{tabla_criterios_ajuste()}}, \code{\link[=tabla_comparacion]{tabla_comparacion()}},
-\code{\link[=tabla_modificacion]{tabla_modificacion()}}, \code{\link[=tabla_invarianza]{tabla_invarianza()}}.
+\code{\link[=tabla_modificacion]{tabla_modificacion()}}, \code{\link[=tabla_residuales]{tabla_residuales()}}, \code{\link[=tabla_invarianza]{tabla_invarianza()}}.
 \item Modelo estructural: \code{\link[=tabla_parametros]{tabla_parametros()}}, \code{\link[=tabla_efectos]{tabla_efectos()}}, \code{\link[=tabla_hipotesis]{tabla_hipotesis()}}.
 \item MANOVA: \code{\link[=tabla_manova]{tabla_manova()}}.
 \item Redacción: \code{\link[=parrafo_metodo]{parrafo_metodo()}}.
+\item Idioma (español o inglés): \code{\link[=idioma_sem]{idioma_sem()}}.
 }
 
 Consulte la guía de uso con \code{vignette("guia-de-uso", package = "diagramaSEM")}.

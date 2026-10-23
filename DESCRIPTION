@@ -1,7 +1,7 @@
 Package: diagramaSEM
 Type: Package
 Title: Diagramas de Trayectorias y Tablas APA para Modelos 'lavaan' y 'psych'
-Version: 0.5.0
+Version: 0.6.0
 Authors@R: person("Jeshua", "Moreno Valladares", email = "jeshuamv@gmail.com",
                   role = c("aut", "cre"))
 URL: https://github.com/jeshuamv/diagramaSEM
@@ -14,9 +14,11 @@ Description: Dibuja diagramas de trayectorias para analisis factoriales
     observadas, ovalos para constructos, circulos de error numerados, cargas y
     coeficientes sobre las flechas y R cuadrada junto a cada variable. El acomodo
     se elige automaticamente segun el tipo de modelo y puede ajustarse a mano.
-    Ademas crea tablas en formato APA (cargas factoriales, indices de ajuste,
-    confiabilidad compuesta, varianza promedio extraida y criterio de
-    Fornell-Larcker) que se guardan para Word, HTML o CSV.
+    Incluye estilos para revistas. Ademas crea, en espanol o en ingles, las
+    tablas en formato APA de un articulo (descriptivos, supuestos,
+    factorabilidad, cargas, confiabilidad, validez y HTMT, ajuste, comparacion
+    de modelos, invarianza, efectos indirectos, hipotesis, MANOVA) y el parrafo
+    de metodo, que se guardan para Word, HTML o CSV.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Language: es

@@ -84,7 +84,7 @@ tabla_descriptivos <- function(datos, variables = NULL, correlaciones = TRUE,
   nom <- paste0(seq_len(k), ". ", renombrar(v, etiquetas))
   cel <- cbind(nom, formatC(n, format = "d"), f_num(M, decimales), f_num(DE, decimales),
                f_num(As, decimales), f_num(Ku, decimales))
-  cols <- c("Variable", "n", "M", "DE", "Asimetr\u00eda", "Curtosis")
+  cols <- c("Variable", "n", "M", tx("DE", "SD"), tx("Asimetr\u00eda", "Skewness"), tx("Curtosis", "Kurtosis"))
   R <- P <- NULL
   if (correlaciones && k > 1) {
     R <- stats::cor(d, use = "pairwise.complete.obs", method = metodo)
@@ -101,13 +101,12 @@ tabla_descriptivos <- function(datos, variables = NULL, correlaciones = TRUE,
     }
     cel <- cbind(cel, cc); cols <- c(cols, as.character(seq_len(k - 1)))
   }
-  nota <- paste0("M = media; DE = desviaci\u00f3n est\u00e1ndar. Asimetr\u00eda y curtosis corregidas por sesgo; ",
-                 "valores de asimetr\u00eda entre \u22122 y 2 y de curtosis entre \u22127 y 7 suelen considerarse ",
-                 "aceptables (West et al., 1995).",
-                 if (!is.null(R)) paste0(" Correlaciones de ", if (metodo == "pearson") "Pearson" else "Spearman",
-                                         " con eliminaci\u00f3n por pares. ", nota_estrellas))
+  nota <- paste0(tx("M = media; DE = desviaci\u00f3n est\u00e1ndar. Asimetr\u00eda y curtosis corregidas por sesgo; valores de asimetr\u00eda entre \u22122 y 2 y de curtosis entre \u22127 y 7 suelen considerarse aceptables (West et al., 1995).",
+                    "M = mean; SD = standard deviation. Bias-corrected skewness and kurtosis; skewness between \u22122 and 2 and kurtosis between \u22127 and 7 are usually considered acceptable (West et al., 1995)."),
+                 if (!is.null(R)) paste0(tx(" Correlaciones de ", " "), if (metodo == "pearson") "Pearson" else "Spearman",
+                                         tx(" con eliminaci\u00f3n por pares. ", " correlations with pairwise deletion. "), nota_estrellas))
   datos_t <- data.frame(variable = v, n = n, M = M, DE = DE, asimetria = As, curtosis = Ku, row.names = NULL)
-  t <- nueva_tabla(if (is.null(titulo)) "Estad\u00edsticos descriptivos y correlaciones" else titulo,
+  t <- nueva_tabla(if (is.null(titulo)) tx("Estad\u00edsticos descriptivos y correlaciones", "Descriptive statistics and correlations") else titulo,
                    cols, cel, nota = nota, datos = datos_t)
   t$correlaciones <- R; t$p <- P
   if (!is.null(archivo)) guardar_tabla(t, archivo)
@@ -143,15 +142,17 @@ tabla_perdidos <- function(datos, variables = NULL, solo_con_perdidos = FALSE, e
   completos <- sum(stats::complete.cases(d))
   cel <- cbind(renombrar(v[usar], etiquetas), formatC(N - per[usar], format = "d"),
                formatC(per[usar], format = "d"), f_num(100 * per[usar] / N, 1))
-  cel <- rbind(cel, c("Casos completos", formatC(completos, format = "d"),
+  cel <- rbind(cel, c(tx("Casos completos", "Complete cases"), formatC(completos, format = "d"),
                       formatC(N - completos, format = "d"), f_num(100 * (N - completos) / N, 1)))
   total <- 100 * sum(per) / (N * length(v))
-  nota <- paste0("N = ", N, ". En la \u00faltima fila, casos sin ning\u00fan dato perdido y casos con al menos uno. ",
-                 "Datos perdidos en total: ", f_num(total, 1), " % de las celdas. ",
-                 if (sum(per) > 0) "Para estimar el modelo con todos los casos puede usarse m\u00e1xima verosimilitud con informaci\u00f3n completa (missing = \"fiml\" en lavaan)."
-                 else "No hay datos perdidos.")
-  t <- nueva_tabla(if (is.null(titulo)) "Datos perdidos por variable" else titulo,
-                   c("Variable", "V\u00e1lidos", "Perdidos", "% perdidos"), cel, nota = nota,
+  nota <- paste0("N = ", N, tx(". En la \u00faltima fila, casos sin ning\u00fan dato perdido y casos con al menos uno. Datos perdidos en total: ",
+                                ". The last row shows cases with no missing data and cases with at least one missing value. Total missing data: "),
+                 f_num(total, 1), tx(" % de las celdas. ", "% of cells. "),
+                 if (sum(per) > 0) tx("Para estimar el modelo con todos los casos puede usarse m\u00e1xima verosimilitud con informaci\u00f3n completa (missing = \"fiml\" en lavaan).",
+                                      "Full information maximum likelihood (missing = \"fiml\" in lavaan) can be used to estimate the model with all cases.")
+                 else tx("No hay datos perdidos.", "There are no missing data."))
+  t <- nueva_tabla(if (is.null(titulo)) tx("Datos perdidos por variable", "Missing data by variable") else titulo,
+                   c("Variable", tx("V\u00e1lidos", "Valid"), tx("Perdidos", "Missing"), tx("% perdidos", "% missing")), cel, nota = nota,
                    separadores = sum(usar),
                    datos = data.frame(variable = v, validos = N - per, perdidos = per, porcentaje = 100 * per / N,
                                       row.names = NULL))
@@ -217,34 +218,36 @@ tabla_normalidad <- function(datos, variables = NULL, decimales = 2, titulo = NU
   kmv <- m$b2 - m$p * (m$p + 2)
   cel <- cbind(names(d), f_num(vapply(d, min, numeric(1)), decimales), f_num(vapply(d, max, numeric(1)), decimales),
                f_num(g1, decimales), f_num(z1, 2), f_num(g2, decimales), f_num(z2, 2))
-  cel <- rbind(cel, c("Multivariada (Mardia)", "", "", "", "", f_num(kmv, decimales), f_num(m$z, 2)))
+  cel <- rbind(cel, c(tx("Multivariada (Mardia)", "Multivariate (Mardia)"), "", "", "", "", f_num(kmv, decimales), f_num(m$z, 2)))
   neg <- matrix(FALSE, nrow(cel), ncol(cel))
   neg[seq_len(ncol(d)), 5] <- abs(z1) > 1.96; neg[seq_len(ncol(d)), 7] <- abs(z2) > 1.96; neg[nrow(cel), 7] <- abs(m$z) > 1.96
   fz1 <- names(d)[abs(z1) > 1.96]; fz2 <- names(d)[abs(z2) > 1.96]
-  nota <- paste0("c.r. = raz\u00f3n cr\u00edtica (z): asimetr\u00eda/\u221a(6/n) y curtosis/\u221a(24/n); la curtosis es el exceso sobre la normal. ",
-                 "En negritas, |c.r.| > 1.96 (p < .05), que indica falta de normalidad; con p < .01 el l\u00edmite es 2.58. ",
-                 "Multivariada: coeficiente de curtosis de Mardia y su c.r. N = ", n, " casos completos. ",
-                 if (length(fz1)) paste0("Asimetr\u00eda significativa en ", paste(fz1, collapse = ", "), ". ") else "",
-                 if (length(fz2)) paste0("Curtosis significativa en ", paste(fz2, collapse = ", "), ". ") else "",
-                 if (abs(m$z) < 1.96) "El c.r. multivariado sugiere normalidad multivariada."
-                 else "El c.r. multivariado indica que no hay normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.")
-  cel2 <- rbind(c("Asimetr\u00eda multivariada", f_num(m$b1, decimales), paste0("\u03c7\u00b2 = ", f_num(m$chi, 2)),
+  nota <- paste0(tx("c.r. = raz\u00f3n cr\u00edtica (z): asimetr\u00eda/\u221a(6/n) y curtosis/\u221a(24/n); la curtosis es el exceso sobre la normal. En negritas, |c.r.| > 1.96 (p < .05), que indica falta de normalidad; con p < .01 el l\u00edmite es 2.58. Multivariada: coeficiente de curtosis de Mardia y su c.r. N = ",
+                    "c.r. = critical ratio (z): skewness/\u221a(6/n) and kurtosis/\u221a(24/n); kurtosis is excess kurtosis. Values with |c.r.| > 1.96 (p < .05), indicating non-normality, are in bold; at p < .01 the cutoff is 2.58. Multivariate: Mardia's kurtosis coefficient and its c.r. N = "),
+                 n, tx(" casos completos. ", " complete cases. "),
+                 if (length(fz1)) paste0(tx("Asimetr\u00eda significativa en ", "Significant skewness: "), paste(fz1, collapse = ", "), ". ") else "",
+                 if (length(fz2)) paste0(tx("Curtosis significativa en ", "Significant kurtosis: "), paste(fz2, collapse = ", "), ". ") else "",
+                 if (abs(m$z) < 1.96) tx("El c.r. multivariado sugiere normalidad multivariada.", "The multivariate c.r. suggests multivariate normality.")
+                 else tx("El c.r. multivariado indica que no hay normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.",
+                         "The multivariate c.r. indicates multivariate non-normality; a robust estimator (MLR or MLM) or bootstrapping is recommended."))
+  cel2 <- rbind(c(tx("Asimetr\u00eda multivariada", "Multivariate skewness"), f_num(m$b1, decimales), paste0("\u03c7\u00b2 = ", f_num(m$chi, 2)),
                   formatC(m$gl, format = "d"), f_p(m$p_asim)),
-                c("Curtosis multivariada", f_num(m$b2, decimales), paste0("z = ", f_num(m$z, 2)), "", f_p(m$p_curt)))
+                c(tx("Curtosis multivariada", "Multivariate kurtosis"), f_num(m$b2, decimales), paste0("z = ", f_num(m$z, 2)), "", f_p(m$p_curt)))
   normal <- m$p_asim >= .05 && m$p_curt >= .05
-  nota2 <- paste0("Pruebas de Mardia (1970) con ", m$n, " casos y ", m$p, " variables. ",
-                  if (normal) "No se rechaza la normalidad multivariada."
-                  else "Se rechaza la normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.")
-  t <- nueva_tabla(if (is.null(titulo)) "Evaluaci\u00f3n de la normalidad" else titulo,
-                   c("Variable", "M\u00edn.", "M\u00e1x.", "Asimetr\u00eda", "c.r.", "Curtosis", "c.r."), cel, neg,
+  nota2 <- paste0(tx("Pruebas de Mardia (1970) con ", "Mardia's (1970) tests with "), m$n, tx(" casos y ", " cases and "), m$p, " variables. ",
+                  if (normal) tx("No se rechaza la normalidad multivariada.", "Multivariate normality is not rejected.")
+                  else tx("Se rechaza la normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.",
+                          "Multivariate normality is rejected; a robust estimator (MLR or MLM) or bootstrapping is recommended."))
+  t <- nueva_tabla(if (is.null(titulo)) tx("Evaluaci\u00f3n de la normalidad", "Assessment of normality") else titulo,
+                   c("Variable", tx("M\u00edn.", "Min."), tx("M\u00e1x.", "Max."), tx("Asimetr\u00eda", "Skewness"), "c.r.", tx("Curtosis", "Kurtosis"), "c.r."), cel, neg,
                    nota = nota, separadores = ncol(d),
                    datos = list(univariadas = data.frame(variable = names(d), asimetria = g1, cr_asimetria = z1,
                                                          curtosis = g2, cr_curtosis = z2, row.names = NULL),
                                 mardia = data.frame(prueba = c("asimetria", "curtosis"), coeficiente = c(m$b1, m$b2),
                                                     estadistico = c(m$chi, m$z), gl = c(m$gl, NA), p = c(m$p_asim, m$p_curt),
                                                     curtosis_exceso = c(NA, kmv))),
-                   extra = list(nueva_tabla("Pruebas de normalidad multivariada de Mardia",
-                                            c("Prueba", "Coeficiente", "Estad\u00edstico", "gl", "p"), cel2, nota = nota2)))
+                   extra = list(nueva_tabla(tx("Pruebas de normalidad multivariada de Mardia", "Mardia's tests of multivariate normality"),
+                                            c(tx("Prueba", "Test"), tx("Coeficiente", "Coefficient"), tx("Estad\u00edstico", "Statistic"), tx("gl", "df"), "p"), cel2, nota = nota2)))
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
 }
@@ -343,16 +346,15 @@ tabla_confiabilidad <- function(x, factores = NULL, etiquetas = NULL, decimales 
                paste0("[", f_apa(ic[, 1], decimales), ", ", f_apa(ic[, 2], decimales), "]"),
                ifelse(is.na(om), "\u2014", f_apa(om, decimales)),
                paste0(f_apa(rmin, decimales), "\u2013", f_apa(rmax, decimales)))
-  nota <- paste0("\u03b1 = alfa de Cronbach; IC 95 % de Feldt; \u03c9 = omega de McDonald",
-                 if (inherits(x, "lavaan")) ", calculado con las cargas del modelo" else ", calculado con un AFC de un factor",
-                 "; r \u00edtem-total = correlaci\u00f3n \u00edtem-total corregida (m\u00ednima\u2013m\u00e1xima). ",
-                 "Valores de \u03b1 y \u03c9 \u2265 .70 suelen considerarse aceptables (Nunnally y Bernstein, 1994) y ",
-                 "una correlaci\u00f3n \u00edtem-total \u2265 .30 adecuada.",
-                 if (any(is.na(om))) " \u2014 = omega no calculable con menos de 3 \u00edtems." else "",
-                 " n = ", min(vapply(res, `[[`, numeric(1), "n")), if (length(unique(vapply(res, `[[`, numeric(1), "n"))) > 1) " o m\u00e1s" else "",
-                 " casos completos.")
-  t <- nueva_tabla(if (is.null(titulo)) "Confiabilidad de las escalas" else titulo,
-                   c("Factor", "\u00cdtems", "\u03b1", "IC 95 %", "\u03c9", "r \u00edtem-total"), cel, nota = nota,
+  nota <- paste0(tx("\u03b1 = alfa de Cronbach; IC 95 % de Feldt; \u03c9 = omega de McDonald", "\u03b1 = Cronbach's alpha with Feldt's 95% CI; \u03c9 = McDonald's omega"),
+                 if (inherits(x, "lavaan")) tx(", calculado con las cargas del modelo", ", computed from the model loadings") else tx(", calculado con un AFC de un factor", ", computed from a one-factor CFA"),
+                 tx("; r \u00edtem-total = correlaci\u00f3n \u00edtem-total corregida (m\u00ednima\u2013m\u00e1xima). Valores de \u03b1 y \u03c9 \u2265 .70 suelen considerarse aceptables (Nunnally y Bernstein, 1994) y una correlaci\u00f3n \u00edtem-total \u2265 .30 adecuada.",
+                    "; item-total r = corrected item-total correlation (minimum\u2013maximum). \u03b1 and \u03c9 \u2265 .70 are usually considered acceptable (Nunnally & Bernstein, 1994), and item-total r \u2265 .30 adequate."),
+                 if (any(is.na(om))) tx(" \u2014 = omega no calculable con menos de 3 \u00edtems.", " \u2014 = omega cannot be computed with fewer than 3 items.") else "",
+                 " n = ", min(vapply(res, `[[`, numeric(1), "n")), if (length(unique(vapply(res, `[[`, numeric(1), "n"))) > 1) tx(" o m\u00e1s", " or more") else "",
+                 tx(" casos completos.", " complete cases."))
+  t <- nueva_tabla(if (is.null(titulo)) tx("Confiabilidad de las escalas", "Scale reliability") else titulo,
+                   c("Factor", tx("\u00cdtems", "Items"), "\u03b1", tx("IC 95 %", "95% CI"), "\u03c9", tx("r \u00edtem-total", "Item-total r")), cel, nota = nota,
                    datos = data.frame(factor = names(factores), items = k, alfa = a, ic_inf = ic[, 1], ic_sup = ic[, 2],
                                       omega = om, rit_min = rmin, rit_max = rmax, row.names = NULL))
   if (!is.null(archivo)) guardar_tabla(t, archivo)

@@ -85,25 +85,26 @@ tabla_cargas_afe <- function(x, umbral, ocultar_bajas, etiquetas, decimales, nfa
   if (ocultar_bajas) cel[abs(L) < umbral] <- ""
   cel <- cbind(renombrar(rownames(L), etiquetas), cel, f_apa(h2, decimales))
   neg <- cbind(FALSE, neg, FALSE)
-  pie <- rbind(c("Varianza explicada", f_num(A$ss, decimales), ""),
-               c("% de varianza", f_num(100 * A$prop, 1), ""),
-               c("% acumulado", f_num(100 * A$acum, 1), ""))
+  pie <- rbind(c(tx("Varianza explicada", "Explained variance"), f_num(A$ss, decimales), ""),
+               c(tx("% de varianza", "% of variance"), f_num(100 * A$prop, 1), ""),
+               c(tx("% acumulado", "Cumulative %"), f_num(100 * A$acum, 1), ""))
   cel <- rbind(cel, pie); neg <- rbind(neg, matrix(FALSE, 3, ncol(neg)))
   oblicua <- !is.null(A$Phi)
-  nota <- paste0(if (oblicua) "Matriz de patr\u00f3n. " else "", "M\u00e9todo: ", A$metodo, ". ",
+  nota <- paste0(if (oblicua) tx("Matriz de patr\u00f3n. ", "Pattern matrix. ") else "", tx("M\u00e9todo: ", "Method: "), A$metodo, ". ",
                  if (!is.null(A$n) && !is.na(A$n)) paste0("N = ", A$n, ". ") else "",
-                 if (ocultar_bajas) paste0("Se omiten cargas menores que ", f_apa(umbral, 2), ". ") else "",
-                 "En negritas, la carga m\u00e1s alta de cada \u00edtem. h\u00b2 = comunalidad.")
+                 if (ocultar_bajas) paste0(tx("Se omiten cargas menores que ", "Loadings below "), f_apa(umbral, 2), tx(". ", " are omitted. ")) else "",
+                 tx("En negritas, la carga m\u00e1s alta de cada \u00edtem. h\u00b2 = comunalidad.",
+                    "The highest loading of each item is in bold. h\u00b2 = communality."))
   extra <- list()
   if (oblicua) {
     P <- A$Phi; k <- ncol(P); cc <- matrix("", k, k)
     for (i in seq_len(k)) for (j in seq_len(k)) cc[i, j] <- if (i == j) "\u2014" else if (j < i) f_apa(P[i, j], decimales) else ""
     nf <- renombrar(fac, etiquetas)
-    extra[[1]] <- nueva_tabla("Correlaciones entre factores", c("Factor", nf), cbind(nf, cc))
+    extra[[1]] <- nueva_tabla(tx("Correlaciones entre factores", "Factor correlations"), c("Factor", nf), cbind(nf, cc))
   }
   datos <- data.frame(item = rownames(L), L, h2 = h2, row.names = NULL, check.names = FALSE)
-  nueva_tabla(if (is.null(titulo)) paste0("Cargas factoriales del an\u00e1lisis factorial exploratorio") else titulo,
-              c("\u00cdtem", renombrar(fac, etiquetas), "h\u00b2"), cel, neg, nota = nota,
+  nueva_tabla(if (is.null(titulo)) tx("Cargas factoriales del an\u00e1lisis factorial exploratorio", "Exploratory factor analysis loadings") else titulo,
+              c(tx("\u00cdtem", "Item"), renombrar(fac, etiquetas), "h\u00b2"), cel, neg, nota = nota,
               separadores = nrow(L), datos = datos, extra = extra)
 }
 
@@ -124,11 +125,11 @@ tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
   }, character(6)))
   datos <- data.frame(factor = s$lhs, item = s$rhs, carga = s$est.std, ee = s$se, p = s$pvalue,
                       r2 = unname(r2[s$rhs]))
-  nueva_tabla(if (is.null(titulo)) "Cargas factoriales estandarizadas" else titulo,
-              c("Factor", "\u00cdtem", "\u03bb", "EE", "p", "R\u00b2"), cel,
+  nueva_tabla(if (is.null(titulo)) tx("Cargas factoriales estandarizadas", "Standardized factor loadings") else titulo,
+              c("Factor", tx("\u00cdtem", "Item"), "\u03bb", tx("EE", "SE"), "p", "R\u00b2"), cel,
               alinear = c("l", "l", "c", "c", "c", "c"),
-              nota = paste0("\u03bb = carga factorial estandarizada; EE = error est\u00e1ndar; ",
-                            "R\u00b2 = proporci\u00f3n de varianza del \u00edtem explicada por su factor. N = ",
+              nota = paste0(tx("\u03bb = carga factorial estandarizada; EE = error est\u00e1ndar; R\u00b2 = proporci\u00f3n de varianza del \u00edtem explicada por su factor. N = ",
+                               "\u03bb = standardized factor loading; SE = standard error; R\u00b2 = proportion of item variance explained by its factor. N = "),
                             lavaan::lavInspect(fit, "ntotal"), "."),
               datos = datos)
 }
@@ -161,7 +162,7 @@ tabla_ajuste <- function(..., extra = NULL, titulo = NULL, archivo = NULL) {
   if (!length(fits) || !all(vapply(fits, inherits, logical(1), "lavaan")))
     stop("Pasa uno o varios modelos de lavaan.", call. = FALSE)
   nms <- names(fits); if (is.null(nms)) nms <- rep("", length(fits))
-  nms[nms == ""] <- paste("Modelo", which(nms == ""))
+  nms[nms == ""] <- paste(tx("Modelo", "Model"), which(nms == ""))
   extras_ok <- c("gfi", "agfi", "nfi", "pnfi", "aic", "bic")
   if (!all(extra %in% extras_ok)) stop("`extra` acepta: ", paste(extras_ok, collapse = ", "), ".", call. = FALSE)
 
@@ -186,16 +187,15 @@ tabla_ajuste <- function(..., extra = NULL, titulo = NULL, archivo = NULL) {
   cel <- cbind(nms, f_num(D$chisq, 2), formatC(D$df, format = "d"), f_p(D$pvalue),
                f_num(D$chisq / D$df, 2), f_apa(D$cfi, 3), f_apa(D$tli, 3),
                paste0(f_apa(D$rmsea, 3), " [", f_apa(D$lo, 3), ", ", f_apa(D$hi, 3), "]"), f_apa(D$srmr, 3))
-  cols <- c("Modelo", "\u03c7\u00b2", "gl", "p", "\u03c7\u00b2/gl", "CFI", "TLI", "RMSEA [IC 90 %]", "SRMR")
+  cols <- c(tx("Modelo", "Model"), "\u03c7\u00b2", tx("gl", "df"), "p", tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), "CFI", "TLI", tx("RMSEA [IC 90 %]", "RMSEA [90% CI]"), "SRMR")
   for (e in extra) {
     cel <- cbind(cel, if (e %in% c("aic", "bic")) f_num(D[[e]], 2) else f_apa(D[[e]], 3))
     cols <- c(cols, toupper(e))
   }
-  nota <- paste0(if (robusto) "Se usan los \u00edndices corregidos del estimador robusto. " else "",
-                 "Criterios de buen ajuste (Hu y Bentler, 1999): CFI y TLI \u2265 .95 (\u2265 .90 aceptable), ",
-                 "RMSEA \u2264 .06 (\u2264 .08 aceptable), SRMR \u2264 .08. Con muestras grandes la prueba ",
-                 "\u03c7\u00b2 suele ser significativa aunque el ajuste sea bueno.")
-  t <- nueva_tabla(if (is.null(titulo)) "\u00cdndices de ajuste" else titulo, cols, cel, nota = nota, datos = D)
+  nota <- paste0(if (robusto) tx("Se usan los \u00edndices corregidos del estimador robusto. ", "Robust (scaled) fit indices are reported. ") else "",
+                 tx("Criterios de buen ajuste (Hu y Bentler, 1999): CFI y TLI \u2265 .95 (\u2265 .90 aceptable), RMSEA \u2264 .06 (\u2264 .08 aceptable), SRMR \u2264 .08. Con muestras grandes la prueba \u03c7\u00b2 suele ser significativa aunque el ajuste sea bueno.",
+                    "Good-fit criteria (Hu & Bentler, 1999): CFI and TLI \u2265 .95 (\u2265 .90 acceptable), RMSEA \u2264 .06 (\u2264 .08 acceptable), SRMR \u2264 .08. With large samples the \u03c7\u00b2 test is usually significant even when fit is good."))
+  t <- nueva_tabla(if (is.null(titulo)) tx("\u00cdndices de ajuste", "Fit indices") else titulo, cols, cel, nota = nota, datos = D)
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
 }
@@ -261,15 +261,15 @@ tabla_validez <- function(fit, metodo = c("clasico", "semtools"), etiquetas = NU
   cumple <- sqrt(ave) > maxr
   nf <- renombrar(fac, etiquetas)
   cel <- cbind(nf, f_apa(cr, decimales), f_apa(ave, decimales), cc)
-  nota <- paste0(if (metodo == "semtools") "CR y AVE calculados con semTools. " else "", "CR = confiabilidad compuesta; AVE = varianza promedio extra\u00edda. En negritas, la ra\u00edz ",
-                 "cuadrada del AVE; debajo de la diagonal, correlaciones entre factores. Criterios: CR > .70, ",
-                 "AVE > .50 (Hair et al., 2014) y ra\u00edz del AVE mayor que las correlaciones del factor ",
-                 "(Fornell y Larcker, 1981). ",
-                 if (all(cumple)) "Todos los factores cumplen el criterio de Fornell-Larcker."
-                 else paste0("No cumplen el criterio de Fornell-Larcker: ", paste(nf[!cumple], collapse = ", "), "."))
+  nota <- paste0(if (metodo == "semtools") tx("CR y AVE calculados con semTools. ", "CR and AVE computed with semTools. ") else "",
+                 tx("CR = confiabilidad compuesta; AVE = varianza promedio extra\u00edda. En negritas, la ra\u00edz cuadrada del AVE; debajo de la diagonal, correlaciones entre factores. Criterios: CR > .70, AVE > .50 (Hair et al., 2014) y ra\u00edz del AVE mayor que las correlaciones del factor (Fornell y Larcker, 1981). ",
+                    "CR = composite reliability; AVE = average variance extracted. The square root of the AVE is in bold on the diagonal; factor correlations are below the diagonal. Criteria: CR > .70, AVE > .50 (Hair et al., 2014), and square root of the AVE greater than the factor's correlations (Fornell & Larcker, 1981). "),
+                 if (all(cumple)) tx("Todos los factores cumplen el criterio de Fornell-Larcker.", "All factors meet the Fornell-Larcker criterion.")
+                 else paste0(tx("No cumplen el criterio de Fornell-Larcker: ", "Factors not meeting the Fornell-Larcker criterion: "), paste(nf[!cumple], collapse = ", "), "."))
   datos <- data.frame(factor = fac, CR = cr, AVE = ave, raiz_AVE = sqrt(ave), r_maxima = maxr,
                       fornell_larcker = cumple, row.names = NULL)
-  t <- nueva_tabla(if (is.null(titulo)) "Confiabilidad compuesta, varianza promedio extra\u00edda y correlaciones entre factores" else titulo,
+  t <- nueva_tabla(if (is.null(titulo)) tx("Confiabilidad compuesta, varianza promedio extra\u00edda y correlaciones entre factores",
+                                          "Composite reliability, average variance extracted, and factor correlations") else titulo,
                    c("Factor", "CR", "AVE", nf), cel, cbind(matrix(FALSE, k, 3), neg),
                    nota = nota, datos = datos)
   if (!is.null(archivo)) guardar_tabla(t, archivo)

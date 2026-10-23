@@ -31,7 +31,7 @@ usarlo, paso a paso.
 9. [Tablas en formato APA](#tablas-en-formato-apa): descriptivos,
    factorabilidad, cargas, confiabilidad, validez, HTMT, método común, ajuste,
    comparación de modelos, invarianza, efectos, análisis de trayectorias paso a
-   paso, MANOVA y párrafo de método
+   paso, MANOVA, párrafo de método y resultados en inglés
 10. [Personalizar el diagrama](#personalizar-el-diagrama)
 11. [Guardar el diagrama](#guardar-el-diagrama)
 12. [Figuras para una revista](#figuras-para-una-revista)
@@ -306,13 +306,14 @@ horizontales y nota) y guardan sus valores numéricos en `$datos`.
 | Ajuste | `tabla_ajuste()` | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos |
 | | `tabla_criterios_ajuste()` | Cada índice contra criterios excelente/aceptable, e identificación del modelo |
 | | `tabla_modificacion()` | Índices de modificación |
+| | `tabla_residuales()` | Residuales de correlación (dónde ajusta mal el modelo) |
 | | `tabla_comparacion()` | Modelos alternativos con Δχ², ΔCFI, AIC y BIC |
 | | `tabla_invarianza()` | Invarianza configural, métrica, escalar y estricta |
 | Estructural | `tabla_parametros()` | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas |
 | | `tabla_efectos()` | Efectos directos, indirectos (bootstrap) y totales |
 | | `tabla_hipotesis()` | Cada hipótesis: se sostiene o se rechaza |
 | | `tabla_vif()` | Multicolinealidad entre predictores |
-| MANOVA | `tabla_manova()` | Pruebas multivariadas, supuestos, ANOVA de seguimiento y medias por grupo |
+| MANOVA | `tabla_manova()` | Pruebas multivariadas, supuestos, ANOVA de seguimiento, post hoc y medias por grupo |
 | Método | `parrafo_metodo()` | Párrafo de software y estimación con sus referencias |
 
 ### Descriptivos, datos perdidos y normalidad
@@ -533,6 +534,14 @@ liberarse si tiene sentido teórico:
 tabla_modificacion(fit, n = 5)
 ```
 
+Los **residuales de correlación** muestran qué pares de variables explica mal el
+modelo (|residual| > .10), algo que los índices globales no dicen y que los
+estándares de reporte recomiendan incluir:
+
+```{r}
+tabla_residuales(fit)
+```
+
 ### MANOVA de un factor
 
 ¿Difieren los grupos en un conjunto de variables dependientes? La tabla reúne
@@ -548,6 +557,12 @@ tabla_manova(iris, dependientes = c("Petal.Length", "Sepal.Length"), grupo = "Sp
 Si la M de Box es significativa (p < .001), reporta la traza de Pillai, que es
 la más robusta.
 
+Con tres o más grupos, la tabla incluye las **comparaciones post hoc** entre
+pares de grupos para cada variable dependiente, con su intervalo de confianza,
+*p* ajustado y *d* de Cohen. Con `posthoc = "auto"` (por omisión) se usa Tukey
+HSD si las matrices de covarianza son iguales y Games-Howell si no lo son; se
+puede fijar con `posthoc = "tukey"` o `posthoc = "games-howell"`.
+
 ### Párrafo de método
 
 Redacta el párrafo de análisis de datos (software, versiones, estimador,
@@ -559,6 +574,23 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 ```
 
 Con `archivo = "metodo.docx"` se guarda en Word.
+
+### Resultados en inglés
+
+Para una revista en inglés, escribe una vez al inicio del script:
+
+```{r}
+idioma_sem("en")
+tabla_ajuste(fit)
+```
+
+Títulos, encabezados, notas, el párrafo de método y sus referencias salen en
+inglés con los términos de APA (*M*, *SD*, *SE*, *df*, CI, *Note.*, *Table*).
+Los mensajes de ayuda en la consola siguen en español. Para volver:
+
+```{r}
+idioma_sem("es")
+```
 
 ### Guardar las tablas
 

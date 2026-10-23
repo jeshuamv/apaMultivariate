@@ -59,17 +59,19 @@ tabla_atipicos <- function(datos, variables = NULL, alfa = .001, n = 10, decimal
   neg <- matrix(FALSE, nrow(cel), 4); neg[p1[mostrar] <= alfa, ] <- TRUE
   # Atípicos univariados (|z| > 3)
   z <- scale(d); uni <- colSums(abs(z) > 3)
-  nota <- paste0("D\u00b2 = distancia de Mahalanobis al cuadrado (", k, " variables, N = ", N, "); p1 = P(\u03c7\u00b2(", k, ") \u2265 D\u00b2); ",
-                 "p2 = probabilidad de que la i-\u00e9sima D\u00b2 m\u00e1s grande alcance ese valor. Casos ordenados de m\u00e1s a menos alejado. ",
-                 if (length(at)) paste0("En negritas, ", length(at), " caso", if (length(at) > 1) "s" else "", " at\u00edpico",
-                                        if (length(at) > 1) "s" else "", " (p1 \u2264 ", f_apa(alfa, 3), "; Kline, 2011): fila",
-                                        if (length(at) > 1) "s " else " ", paste(filas[at][order(-D2[at])], collapse = ", "), ".")
-                 else paste0("Ning\u00fan caso tiene p1 \u2264 ", f_apa(alfa, 3), " (Kline, 2011)."),
-                 if (any(uni > 0)) paste0(" At\u00edpicos univariados (|z| > 3): ",
+  s_ <- if (length(at) > 1) "s" else ""
+  lista_at <- paste(filas[at][order(-D2[at])], collapse = ", ")
+  nota <- paste0(tx("D\u00b2 = distancia de Mahalanobis al cuadrado (", "D\u00b2 = squared Mahalanobis distance ("), k, " variables, N = ", N, "); p1 = P(\u03c7\u00b2(", k, ") \u2265 D\u00b2); ",
+                 tx("p2 = probabilidad de que la i-\u00e9sima D\u00b2 m\u00e1s grande alcance ese valor. Casos ordenados de m\u00e1s a menos alejado. ",
+                    "p2 = probability that the i-th largest D\u00b2 reaches that value. Cases are ordered from farthest to nearest. "),
+                 if (length(at)) (if (en()) paste0(length(at), " outlier", s_, " (p1 \u2264 ", f_apa(alfa, 3), "; Kline, 2011) in bold: row", s_, " ", lista_at, ".")
+                                  else paste0("En negritas, ", length(at), " caso", s_, " at\u00edpico", s_, " (p1 \u2264 ", f_apa(alfa, 3), "; Kline, 2011): fila", s_, " ", lista_at, "."))
+                 else paste0(tx("Ning\u00fan caso tiene p1 \u2264 ", "No case has p1 \u2264 "), f_apa(alfa, 3), " (Kline, 2011)."),
+                 if (any(uni > 0)) paste0(tx(" At\u00edpicos univariados (|z| > 3): ", " Univariate outliers (|z| > 3): "),
                                          paste0(names(uni)[uni > 0], " (", uni[uni > 0], ")", collapse = ", "), ".") else
-                   " Ninguna variable tiene valores con |z| > 3.")
-  t <- nueva_tabla(if (is.null(titulo)) "Casos m\u00e1s alejados del centroide (distancia de Mahalanobis)" else titulo,
-                   c("Fila", "D\u00b2", "p1", "p2"), cel, neg, alinear = c("l", "c", "c", "c"), nota = nota,
+                   tx(" Ninguna variable tiene valores con |z| > 3.", " No variable has values with |z| > 3."))
+  t <- nueva_tabla(if (is.null(titulo)) tx("Casos m\u00e1s alejados del centroide (distancia de Mahalanobis)", "Observations farthest from the centroid (Mahalanobis distance)") else titulo,
+                   c(tx("Fila", "Row"), "D\u00b2", "p1", "p2"), cel, neg, alinear = c("l", "c", "c", "c"), nota = nota,
                    datos = data.frame(fila = filas, D2 = D2, p1 = p1, p2 = p2, row.names = NULL))
   t$atipicos <- sort(filas[at]); t$univariados <- uni
   if (!is.null(archivo)) guardar_tabla(t, archivo)
@@ -115,11 +117,11 @@ tabla_vif <- function(fit, etiquetas = NULL, decimales = 2, titulo = NULL, archi
     c(y, renombrar(D$predictor[i], etiquetas), f_apa(D$tolerancia[i], decimales), f_num(D$vif[i], decimales))
   }, character(4)))
   neg <- matrix(FALSE, nrow(cel), 4); neg[D$vif > 5, 4] <- TRUE
-  nota <- paste0("VIF = factor de inflaci\u00f3n de la varianza (1/tolerancia), calculado con las correlaciones del modelo. ",
-                 "VIF > 5 (tolerancia < .20) indica multicolinealidad preocupante y VIF > 10, grave. ",
-                 if (any(D$vif > 5)) "En negritas, los valores que superan 5." else "Ning\u00fan predictor supera VIF = 5.")
-  t <- nueva_tabla(if (is.null(titulo)) "Diagn\u00f3stico de multicolinealidad" else titulo,
-                   c("Variable dependiente", "Predictor", "Tolerancia", "VIF"), cel, neg,
+  nota <- paste0(tx("VIF = factor de inflaci\u00f3n de la varianza (1/tolerancia), calculado con las correlaciones del modelo. VIF > 5 (tolerancia < .20) indica multicolinealidad preocupante y VIF > 10, grave. ",
+                    "VIF = variance inflation factor (1/tolerance), computed from the model correlations. VIF > 5 (tolerance < .20) indicates problematic multicollinearity and VIF > 10, severe. "),
+                 if (any(D$vif > 5)) tx("En negritas, los valores que superan 5.", "Values above 5 are in bold.") else tx("Ning\u00fan predictor supera VIF = 5.", "No predictor exceeds VIF = 5."))
+  t <- nueva_tabla(if (is.null(titulo)) tx("Diagn\u00f3stico de multicolinealidad", "Multicollinearity diagnostics") else titulo,
+                   c(tx("Variable dependiente", "Dependent variable"), "Predictor", tx("Tolerancia", "Tolerance"), "VIF"), cel, neg,
                    alinear = c("l", "l", "c", "c"), nota = nota, datos = D)
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t

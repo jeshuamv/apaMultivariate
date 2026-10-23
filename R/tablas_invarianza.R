@@ -2,6 +2,9 @@
 
 NIVELES_INV <- c(configural = "Configural", metrica = "M\u00e9trica", escalar = "Escalar", estricta = "Estricta")
 
+#' @noRd
+nombres_niveles <- function() if (en()) c(configural = "Configural", metrica = "Metric", escalar = "Scalar", estricta = "Strict") else NIVELES_INV
+
 # Parámetros cuya igualdad entre grupos más empeora el ajuste (pruebas de score)
 #' @noRd
 sugerir_liberar <- function(fit, nivel, cuantos = 3) {
@@ -121,37 +124,42 @@ tabla_invarianza <- function(modelo, datos, grupo, niveles = c("configural", "me
   # "parcial" solo desde el nivel cuyo tipo de parámetro se liberó
   desde <- if (is.null(liberar)) Inf else min(vapply(liberar, function(l)
     if (grepl("=~", l, fixed = TRUE)) 2 else if (grepl("~ *1$|\\|", l)) 3 else if (grepl("~~", l, fixed = TRUE)) 4 else 2, numeric(1)))
-  nom <- paste0(NIVELES_INV[niveles], ifelse(match(niveles, names(NIVELES_INV)) >= desde, " parcial", ""))
+  NV <- nombres_niveles()
+  nom <- paste0(NV[niveles], ifelse(match(niveles, names(NIVELES_INV)) >= desde, tx(" parcial", " (partial)"), ""))
   cel <- cbind(nom, f_num(I$chisq, 2), formatC(I$df, format = "d"), f_apa(I$cfi, 3), f_apa(I$rmsea, 3), f_apa(I$srmr, 3),
                ifelse(is.na(D[, 1]), "", paste0(f_num(D[, 1], 2), " (", formatC(D[, 2], format = "d"), ")")), f_p(D[, 3]),
                f_d(D[, 4]), f_d(D[, 5]), f_d(D[, 6]),
-               ifelse(is.na(sostiene), "\u2014", ifelse(sostiene, "Se sostiene", "No se sostiene")))
+               ifelse(is.na(sostiene), "\u2014", ifelse(sostiene, tx("Se sostiene", "Supported"), tx("No se sostiene", "Not supported"))))
   cel[1, 7:11] <- "\u2014"
   # Nivel más alto sostenido (en orden, hasta el primero que falla)
   falla <- which(!is.na(sostiene) & !sostiene)
   hasta <- if (length(falla)) falla[1] - 1 else k
   # los niveles posteriores a una falla no se interpretan
-  if (length(falla) && falla[1] < k) { cel[(falla[1] + 1):k, 12] <- "No se eval\u00faa"; sostiene[(falla[1] + 1):k] <- NA }
+  if (length(falla) && falla[1] < k) { cel[(falla[1] + 1):k, 12] <- tx("No se eval\u00faa", "Not tested"); sostiene[(falla[1] + 1):k] <- NA }
   ng <- lavaan::lavInspect(conf, "ngroups"); nn <- unlist(lavaan::lavInspect(conf, "nobs"))
   gn <- lavaan::lavInspect(conf, "group.label")
   sug <- if (length(falla)) sugerir_liberar(fits[[falla[1]]], niveles[falla[1]]) else character(0)
   crit_txt <- switch(criterio,
-    chen = "No se sostiene la invarianza si \u0394CFI < \u2212.010 junto con \u0394RMSEA > .015 o \u0394SRMR > .030 (m\u00e9trica) o > .010 (escalar y estricta) (Chen, 2007).",
-    cfi = "No se sostiene la invarianza si \u0394CFI < \u2212.010 (Cheung y Rensvold, 2002).",
-    chi2 = "No se sostiene la invarianza si la prueba \u0394\u03c7\u00b2 es significativa (p < .05).")
-  nota <- paste0("Grupos: ", paste0(gn, " (n = ", nn, ")", collapse = ", "), ". Cada modelo se compara con el anterior. ",
-                 if (any(as.logical(I$robusto))) "\u00cdndices y \u0394\u03c7\u00b2 corregidos del estimador robusto. " else "",
+    chen = tx("No se sostiene la invarianza si \u0394CFI < \u2212.010 junto con \u0394RMSEA > .015 o \u0394SRMR > .030 (m\u00e9trica) o > .010 (escalar y estricta) (Chen, 2007).",
+              "Invariance is not supported if \u0394CFI < \u2212.010 together with \u0394RMSEA > .015 or \u0394SRMR > .030 (metric) or > .010 (scalar and strict) (Chen, 2007)."),
+    cfi = tx("No se sostiene la invarianza si \u0394CFI < \u2212.010 (Cheung y Rensvold, 2002).", "Invariance is not supported if \u0394CFI < \u2212.010 (Cheung & Rensvold, 2002)."),
+    chi2 = tx("No se sostiene la invarianza si la prueba \u0394\u03c7\u00b2 es significativa (p < .05).", "Invariance is not supported if the \u0394\u03c7\u00b2 test is significant (p < .05)."))
+  nota <- paste0(tx("Grupos: ", "Groups: "), paste0(gn, " (n = ", nn, ")", collapse = ", "),
+                 tx(". Cada modelo se compara con el anterior. ", ". Each model is compared with the previous one. "),
+                 if (any(as.logical(I$robusto))) tx("\u00cdndices y \u0394\u03c7\u00b2 corregidos del estimador robusto. ", "Robust (scaled) indices and \u0394\u03c7\u00b2. ") else "",
                  crit_txt, " ",
-                 if (!is.null(liberar)) paste0("Par\u00e1metros liberados (invarianza parcial): ", paste(liberar, collapse = ", "), ". ") else "",
-                 if (hasta == k) paste0("Se sostiene la invarianza ", tolower(NIVELES_INV[niveles[k]]), ".")
-                 else paste0("Nivel m\u00e1s alto sostenido: ", tolower(NIVELES_INV[niveles[hasta]]), ". ",
-                             if (length(sug)) paste0("Para probar invarianza parcial, los par\u00e1metros cuya igualdad m\u00e1s empeora el ajuste son, en orden: ",
-                                                     paste(sug, collapse = "; "), ". Lib\u00e9relos de uno en uno, empezando por el primero (liberar = \"", sug[1],
-                                                     "\"), y vuelva a revisar la tabla.")
+                 if (!is.null(liberar)) paste0(tx("Par\u00e1metros liberados (invarianza parcial): ", "Freed parameters (partial invariance): "), paste(liberar, collapse = ", "), ". ") else "",
+                 if (hasta == k) (if (en()) paste0(NV[niveles[k]], " invariance is supported.") else paste0("Se sostiene la invarianza ", tolower(NV[niveles[k]]), "."))
+                 else paste0(tx("Nivel m\u00e1s alto sostenido: ", "Highest level supported: "), tolower(NV[niveles[hasta]]), ". ",
+                             if (length(sug)) paste0(tx("Para probar invarianza parcial, los par\u00e1metros cuya igualdad m\u00e1s empeora el ajuste son, en orden: ",
+                                                        "To test partial invariance, the parameters whose equality constraints most worsen fit are, in order: "),
+                                                     paste(sug, collapse = "; "),
+                                                     tx(". Lib\u00e9relos de uno en uno, empezando por el primero (liberar = \"", ". Free them one at a time, starting with the first (liberar = \""),
+                                                     sug[1], tx("\"), y vuelva a revisar la tabla.", "\"), and re-examine the table."))
                              else ""))
-  t <- nueva_tabla(if (is.null(titulo)) "Invarianza de medici\u00f3n entre grupos" else titulo,
-                   c("Modelo", "\u03c7\u00b2", "gl", "CFI", "RMSEA", "SRMR", "\u0394\u03c7\u00b2 (\u0394gl)", "p",
-                     "\u0394CFI", "\u0394RMSEA", "\u0394SRMR", "Decisi\u00f3n"),
+  t <- nueva_tabla(if (is.null(titulo)) tx("Invarianza de medici\u00f3n entre grupos", "Measurement invariance across groups") else titulo,
+                   c(tx("Modelo", "Model"), "\u03c7\u00b2", tx("gl", "df"), "CFI", "RMSEA", "SRMR", tx("\u0394\u03c7\u00b2 (\u0394gl)", "\u0394\u03c7\u00b2 (\u0394df)"), "p",
+                     "\u0394CFI", "\u0394RMSEA", "\u0394SRMR", tx("Decisi\u00f3n", "Decision")),
                    cel, nota = nota, datos = cbind(nivel = niveles, I, D, sostiene = sostiene))
   t$modelos <- fits; t$sugerencias <- sug
   if (!is.null(archivo)) guardar_tabla(t, archivo)

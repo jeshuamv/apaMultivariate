@@ -22,7 +22,8 @@ artículos y tesis. Esta guía muestra cómo usarlo, paso a paso.
 9.  [Tablas en formato APA](#tablas-en-formato-apa): descriptivos,
     factorabilidad, cargas, confiabilidad, validez, HTMT, método común,
     ajuste, comparación de modelos, invarianza, efectos, análisis de
-    trayectorias paso a paso, MANOVA y párrafo de método
+    trayectorias paso a paso, MANOVA, párrafo de método y resultados en
+    inglés
 10. [Personalizar el diagrama](#personalizar-el-diagrama)
 11. [Guardar el diagrama](#guardar-el-diagrama)
 12. [Figuras para una revista](#figuras-para-una-revista)
@@ -313,30 +314,31 @@ consola, se guardan en Word con formato APA (número, título en cursiva,
 solo líneas horizontales y nota) y guardan sus valores numéricos en
 `$datos`.
 
-| Etapa       | Función                    | Qué reporta                                                                   |
-|-------------|----------------------------|-------------------------------------------------------------------------------|
-| Datos       | `tabla_descriptivos()`     | n, M, DE, asimetría, curtosis y correlaciones                                 |
-|             | `tabla_perdidos()`         | Datos perdidos por variable y casos completos                                 |
-|             | `tabla_normalidad()`       | Normalidad: asimetría y curtosis con c.r. (como AMOS) y Mardia                |
-|             | `tabla_atipicos()`         | Atípicos multivariados (Mahalanobis, p1 y p2)                                 |
-| AFE         | `tabla_factorabilidad()`   | KMO, Bartlett y número de factores (Kaiser, análisis paralelo, MAP)           |
-|             | `tabla_cargas()`           | Cargas, comunalidades y varianza explicada                                    |
-| Medición    | `tabla_cargas()`           | Cargas estandarizadas, EE, *p* y R²                                           |
-|             | `tabla_confiabilidad()`    | Alfa (con IC), omega y correlaciones ítem-total                               |
-|             | `tabla_validez()`          | CR, AVE y criterio de Fornell-Larcker                                         |
-|             | `tabla_htmt()`             | Validez discriminante HTMT                                                    |
-|             | `tabla_metodo_comun()`     | Sesgo de método común (Harman y AFC de un factor)                             |
-| Ajuste      | `tabla_ajuste()`           | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos                             |
-|             | `tabla_criterios_ajuste()` | Cada índice contra criterios excelente/aceptable, e identificación del modelo |
-|             | `tabla_modificacion()`     | Índices de modificación                                                       |
-|             | `tabla_comparacion()`      | Modelos alternativos con Δχ², ΔCFI, AIC y BIC                                 |
-|             | `tabla_invarianza()`       | Invarianza configural, métrica, escalar y estricta                            |
-| Estructural | `tabla_parametros()`       | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas         |
-|             | `tabla_efectos()`          | Efectos directos, indirectos (bootstrap) y totales                            |
-|             | `tabla_hipotesis()`        | Cada hipótesis: se sostiene o se rechaza                                      |
-|             | `tabla_vif()`              | Multicolinealidad entre predictores                                           |
-| MANOVA      | `tabla_manova()`           | Pruebas multivariadas, supuestos, ANOVA de seguimiento y medias por grupo     |
-| Método      | `parrafo_metodo()`         | Párrafo de software y estimación con sus referencias                          |
+| Etapa       | Función                    | Qué reporta                                                                         |
+|-------------|----------------------------|-------------------------------------------------------------------------------------|
+| Datos       | `tabla_descriptivos()`     | n, M, DE, asimetría, curtosis y correlaciones                                       |
+|             | `tabla_perdidos()`         | Datos perdidos por variable y casos completos                                       |
+|             | `tabla_normalidad()`       | Normalidad: asimetría y curtosis con c.r. (como AMOS) y Mardia                      |
+|             | `tabla_atipicos()`         | Atípicos multivariados (Mahalanobis, p1 y p2)                                       |
+| AFE         | `tabla_factorabilidad()`   | KMO, Bartlett y número de factores (Kaiser, análisis paralelo, MAP)                 |
+|             | `tabla_cargas()`           | Cargas, comunalidades y varianza explicada                                          |
+| Medición    | `tabla_cargas()`           | Cargas estandarizadas, EE, *p* y R²                                                 |
+|             | `tabla_confiabilidad()`    | Alfa (con IC), omega y correlaciones ítem-total                                     |
+|             | `tabla_validez()`          | CR, AVE y criterio de Fornell-Larcker                                               |
+|             | `tabla_htmt()`             | Validez discriminante HTMT                                                          |
+|             | `tabla_metodo_comun()`     | Sesgo de método común (Harman y AFC de un factor)                                   |
+| Ajuste      | `tabla_ajuste()`           | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos                                   |
+|             | `tabla_criterios_ajuste()` | Cada índice contra criterios excelente/aceptable, e identificación del modelo       |
+|             | `tabla_modificacion()`     | Índices de modificación                                                             |
+|             | `tabla_residuales()`       | Residuales de correlación (dónde ajusta mal el modelo)                              |
+|             | `tabla_comparacion()`      | Modelos alternativos con Δχ², ΔCFI, AIC y BIC                                       |
+|             | `tabla_invarianza()`       | Invarianza configural, métrica, escalar y estricta                                  |
+| Estructural | `tabla_parametros()`       | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas               |
+|             | `tabla_efectos()`          | Efectos directos, indirectos (bootstrap) y totales                                  |
+|             | `tabla_hipotesis()`        | Cada hipótesis: se sostiene o se rechaza                                            |
+|             | `tabla_vif()`              | Multicolinealidad entre predictores                                                 |
+| MANOVA      | `tabla_manova()`           | Pruebas multivariadas, supuestos, ANOVA de seguimiento, post hoc y medias por grupo |
+| Método      | `parrafo_metodo()`         | Párrafo de software y estimación con sus referencias                                |
 
 ### Descriptivos, datos perdidos y normalidad
 
@@ -1021,6 +1023,33 @@ tabla_modificacion(fit, n = 5)
 #> la segunda columna.
 ```
 
+Los **residuales de correlación** muestran qué pares de variables
+explica mal el modelo (\|residual\| \> .10), algo que los índices
+globales no dicen y que los estándares de reporte recomiendan incluir:
+
+``` r
+tabla_residuales(fit)
+#> 
+#> Residuales de correlación
+#> ────────────────────────────────────────────────────────
+#> Variable   1     2     3     4     5     6     7     8  
+#> ────────────────────────────────────────────────────────
+#> 1. x1      —                                            
+#> 2. x2     -.03   —                                      
+#> 3. x3     -.01  .09    —                                
+#> 4. x4     .07   -.01  -.07   —                          
+#> 5. x5     -.01  -.03  -.15  .01    —                    
+#> 6. x6     .06   .03   -.03  -.01  .00    —              
+#> 7. x7     -.14  -.19  -.08  .04   -.04  -.01   —        
+#> 8. x8     -.04  -.05  -.01  -.07  -.04  -.02  .07    —  
+#> 9. x9     .15   .07   .15   .05   .07   .06   -.04  -.03
+#> ────────────────────────────────────────────────────────
+#> Nota. Residual = correlación observada menos la reproducida
+#> por el modelo. En negritas, |residual| > .10 (Kline, 2016):
+#> 5 de 36 pares. El residual más grande es el de x2 y x7
+#> (-.19). SRMR = .065.
+```
+
 ### MANOVA de un factor
 
 ¿Difieren los grupos en un conjunto de variables dependientes? La tabla
@@ -1077,6 +1106,24 @@ tabla_manova(iris, dependientes = c("Petal.Length", "Sepal.Length"), grupo = "Sp
 #> Bonferroni, cada ANOVA se evalúa con α = .05/2 = .025; en
 #> negritas, los significativos.
 #> 
+#> Comparaciones post hoc entre grupos
+#> ─────────────────────────────────────────────────────────────────────────────
+#> Variable      Comparación             Diferencia    IC 95 %       p       d  
+#> ─────────────────────────────────────────────────────────────────────────────
+#> Petal.Length  versicolor − setosa        2.80     [2.63, 2.97]  < .001  7.90 
+#>               virginica − setosa         4.09     [3.89, 4.29]  < .001  10.00
+#>               virginica − versicolor     1.29     [1.05, 1.54]  < .001  2.52 
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> Sepal.Length  versicolor − setosa        0.93     [0.72, 1.14]  < .001  2.10 
+#>               virginica − setosa         1.58     [1.34, 1.83]  < .001  3.08 
+#>               virginica − versicolor     0.65     [0.38, 0.93]  < .001  1.13 
+#> ─────────────────────────────────────────────────────────────────────────────
+#> Nota. Comparaciones por pares con Games-Howell (no se cumple la igualdad de
+#> matrices de covarianza; Games-Howell no supone varianzas iguales).
+#> Diferencia = media del segundo grupo menos la del primero; IC 95 % y p
+#> ajustados por comparaciones múltiples; d = d de Cohen (0.20 pequeño, 0.50
+#> mediano, 0.80 grande); en negritas, p < .05.
+#> 
 #> Medias (desviaciones estándar) por grupo
 #> ───────────────────────────────────────────────────
 #> Variable        setosa     versicolor    virginica 
@@ -1092,6 +1139,13 @@ tabla_manova(iris, dependientes = c("Petal.Length", "Sepal.Length"), grupo = "Sp
 Si la M de Box es significativa (p \< .001), reporta la traza de Pillai,
 que es la más robusta.
 
+Con tres o más grupos, la tabla incluye las **comparaciones post hoc**
+entre pares de grupos para cada variable dependiente, con su intervalo
+de confianza, *p* ajustado y *d* de Cohen. Con `posthoc = "auto"` (por
+omisión) se usa Tukey HSD si las matrices de covarianza son iguales y
+Games-Howell si no lo son; se puede fijar con `posthoc = "tukey"` o
+`posthoc = "games-howell"`.
+
 ### Párrafo de método
 
 Redacta el párrafo de análisis de datos (software, versiones, estimador,
@@ -1103,7 +1157,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 #> 
 #> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
 #> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
-#> Jorgensen et al., 2022) y diagramaSEM (versión 0.5.0; Moreno Valladares, 2026).
+#> Jorgensen et al., 2022) y diagramaSEM (versión 0.6.0; Moreno Valladares, 2026).
 #> El análisis factorial confirmatorio se estimó con una muestra de 301
 #> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
 #> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
@@ -1124,7 +1178,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 #>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
 #> 
 #> Moreno Valladares, J. (2026). diagramaSEM: Diagramas de trayectorias y tablas
-#>     APA para modelos lavaan y psych (Paquete de R, versión 0.5.0).
+#>     APA para modelos lavaan y psych (Paquete de R, versión 0.6.0).
 #>     https://github.com/jeshuamv/diagramaSEM.
 #> 
 #> R Core Team. (2024). R: A language and environment for statistical computing. R
@@ -1136,6 +1190,35 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 ```
 
 Con `archivo = "metodo.docx"` se guarda en Word.
+
+### Resultados en inglés
+
+Para una revista en inglés, escribe una vez al inicio del script:
+
+``` r
+idioma_sem("en")
+tabla_ajuste(fit)
+#> 
+#> Fit indices
+#> ──────────────────────────────────────────────────────────────────────
+#> Model     χ²    df    p     χ²/df  CFI   TLI    RMSEA [90% CI]    SRMR
+#> ──────────────────────────────────────────────────────────────────────
+#> Model 1  85.31  24  < .001  3.55   .931  .896  .092 [.071, .114]  .065
+#> ──────────────────────────────────────────────────────────────────────
+#> Note. Good-fit criteria (Hu & Bentler, 1999): CFI and TLI ≥ .95 (≥
+#> .90 acceptable), RMSEA ≤ .06 (≤ .08 acceptable), SRMR ≤ .08. With
+#> large samples the χ² test is usually significant even when fit is
+#> good.
+```
+
+Títulos, encabezados, notas, el párrafo de método y sus referencias
+salen en inglés con los términos de APA (*M*, *SD*, *SE*, *df*, CI,
+*Note.*, *Table*). Los mensajes de ayuda en la consola siguen en
+español. Para volver:
+
+``` r
+idioma_sem("es")
+```
 
 ### Guardar las tablas
 
@@ -1172,7 +1255,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-43-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-46-1.png" width="100%" />
 
 Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -1182,7 +1265,7 @@ Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-44-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-47-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados (y
 no se muestra R²):
@@ -1191,7 +1274,7 @@ no se muestra R²):
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-45-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-48-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -1199,13 +1282,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-46-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-49-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-46-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-49-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -1225,20 +1308,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-48-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-51-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-48-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-51-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-48-3.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-51-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -1251,7 +1334,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-49-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-52-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -1260,7 +1343,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-50-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-53-1.png" width="100%" />
 
 ## Guardar el diagrama
 

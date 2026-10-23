@@ -31,7 +31,7 @@ leer_afe <- function(x, nfactores = NULL) {
     Phi <- x$Phi
     if (!is.null(Phi)) dimnames(Phi) <- list(colnames(L), colnames(L))
     h2 <- if (!is.null(x$communality)) x$communality else rowSums(L^2)
-    metodo <- paste0("psych::fa (", x$fm, ", rotaci\u00f3n ", x$rotation, ")")
+    metodo <- paste0("psych::fa (", x$fm, tx(", rotaci\u00f3n ", ", rotation "), x$rotation, ")")
     n <- x$n.obs
   } else if (inherits(x, "lavaan")) {
     s <- lavaan::standardizedSolution(x)
@@ -43,7 +43,7 @@ leer_afe <- function(x, nfactores = NULL) {
     if (all(abs(Phi[upper.tri(Phi)]) < 1e-8)) Phi <- NULL
     h2 <- lavaan::lavInspect(x, "r2")[its]
     rot <- tryCatch(lavaan::lavInspect(x, "options")$rotation, error = function(e) "")
-    metodo <- paste0("lavaan::efa (rotaci\u00f3n ", rot, ")")
+    metodo <- paste0(tx("lavaan::efa (rotaci\u00f3n ", "lavaan::efa ("), rot, tx(")", " rotation)"))
     n <- lavaan::lavInspect(x, "nobs")
   } else stop("No se reconoce el objeto de an\u00e1lisis exploratorio.", call. = FALSE)
 

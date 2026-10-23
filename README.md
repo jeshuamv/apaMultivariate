@@ -191,13 +191,14 @@ un artículo o una tesis:
 | Ajuste | `tabla_ajuste(fit)` | χ², CFI, TLI, RMSEA, SRMR |
 | | `tabla_criterios_ajuste(fit)` | Cada índice (χ², χ²/gl, RMSEA, SRMR, CFI, TLI, GFI, PNFI, PRATIO) contra criterios excelente/aceptable, e identificación del modelo (p, q, gl) |
 | | `tabla_modificacion(fit)` | Índices de modificación |
+| | `tabla_residuales(fit)` | Residuales de correlación: dónde ajusta mal el modelo |
 | | `tabla_comparacion("A" = fit1, "B" = fit2)` | Modelos alternativos: Δχ², ΔCFI, AIC, BIC |
 | | `tabla_invarianza(modelo, datos, grupo = "sexo")` | Invarianza configural, métrica, escalar y estricta |
 | Estructural | `tabla_parametros(fit)` | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas |
 | | `tabla_efectos(fit)` | Efectos directos, indirectos (bootstrap) y totales |
 | | `tabla_hipotesis(fit, c(H1 = "X -> Y (+)"))` | Cada hipótesis: se sostiene o se rechaza |
 | | `tabla_vif(fit)` | Multicolinealidad entre predictores |
-| MANOVA | `tabla_manova(datos, c("Y1", "Y2"), "grupo")` | Pillai, Wilks, Hotelling, Roy con η²p; M de Box y demás supuestos; ANOVA de seguimiento |
+| MANOVA | `tabla_manova(datos, c("Y1", "Y2"), "grupo")` | Pillai, Wilks, Hotelling, Roy con η²p; M de Box y demás supuestos; ANOVA de seguimiento; post hoc (Tukey o Games-Howell) con *d* de Cohen |
 | Método | `parrafo_metodo(fit)` | Párrafo de software y estimación, con referencias APA |
 
 Todas se ven en la consola. Para Word:
@@ -218,6 +219,18 @@ cada tabla se cotejaron con `psych`, `semTools`, `lavaan`, `car`, `rstatix` y
 diagrama, ajuste, estimaciones, hipótesis, efectos y modelo alternativo) y un ejemplo de
 MANOVA. Los detalles y ejemplos de
 cada una están en la sección *Tablas en formato APA* de la [guía](guia/GUIA.md).
+
+### Resultados en inglés
+
+Para una revista en inglés, escribe esto una vez al inicio del script:
+
+```r
+idioma_sem("en")
+```
+
+Desde ahí, títulos, encabezados, notas, el párrafo de método y sus referencias salen en
+inglés, con los términos de APA (*M*, *SD*, *SE*, *df*, CI, *Note.*, *Table*). Para volver
+al español: `idioma_sem("es")`.
 
 ---
 

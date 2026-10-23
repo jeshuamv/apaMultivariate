@@ -8,6 +8,7 @@ tabla_manova(
   datos,
   dependientes,
   grupo,
+  posthoc = c("auto", "tukey", "games-howell", "ninguno"),
   alfa = 0.05,
   decimales = 2,
   titulo = NULL,
@@ -22,6 +23,9 @@ métricas).}
 
 \item{grupo}{Nombre de la variable independiente (el factor).}
 
+\item{posthoc}{\code{"auto"} (por omisión), \code{"tukey"}, \code{"games-howell"} o
+\code{"ninguno"}.}
+
 \item{alfa}{Nivel de significancia.}
 
 \item{decimales}{Número de decimales.}
@@ -31,12 +35,12 @@ métricas).}
 \item{archivo}{Si se indica, guarda la tabla.}
 }
 \value{
-Un objeto \code{tabla_apa} con cuatro partes; los valores están en
+Un objeto \code{tabla_apa} con varias partes; los valores están en
 \verb{$datos} y el modelo de \code{stats::manova()} en \verb{$modelo}.
 }
 \description{
 Análisis de varianza multivariado de un factor: ¿difieren los grupos en el
-conjunto de variables dependientes? La tabla tiene cuatro partes:
+conjunto de variables dependientes? La tabla tiene cinco partes:
 }
 \details{
 \enumerate{
@@ -54,11 +58,16 @@ dentro de cada grupo (Mahalanobis, p < .001) y multicolinealidad entre
 las variables dependientes (r < .90).
 \item \strong{ANOVA univariados} de seguimiento para cada variable dependiente,
 con la corrección de Bonferroni (\eqn{\alpha} / número de variables).
+\item \strong{Comparaciones post hoc} entre pares de grupos para cada variable
+dependiente (con tres o más grupos): diferencia de medias, intervalo de
+confianza al 95 \%, \emph{p} ajustado y \emph{d} de Cohen. Con \code{posthoc = "auto"}
+se usa Tukey HSD si se cumple la igualdad de matrices de covarianza y
+Games-Howell (que no supone varianzas iguales) si no se cumple.
 \item \strong{Descriptivos por grupo:} media y desviación estándar.
 }
 
 Con dos grupos, las cuatro pruebas equivalen a la \eqn{T^2} de Hotelling,
-que se informa en la nota.
+que se informa en la nota, y no hacen falta comparaciones post hoc.
 }
 \examples{
 tabla_manova(iris, c("Petal.Length", "Sepal.Length"), "Species")
