@@ -23,7 +23,7 @@ trazar <- function(G) {
     mx <- (a$x + b$x) / 2; my <- (a$y + b$y) / 2; dx <- b$x - a$x; dy <- b$y - a$y
 
     if (curvo || reciproca) {
-      ks <- if (reciproca) 0.12 else if (E$tipo[j] == "covres") c(0.35, 0.5, 0.7) else c(0.22, 0.35, 0.5, 0.7)
+      ks <- if (reciproca) 0.2 else if (E$tipo[j] == "covres") c(0.35, 0.5, 0.7) else c(0.22, 0.35, 0.5, 0.7)
       for (k in ks) {
         c1 <- c(mx - k * dy, my + k * dx); c2 <- c(mx + k * dy, my - k * dx)
         if (reciproca) ctrl <- c1 else {

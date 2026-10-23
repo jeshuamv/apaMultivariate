@@ -4,6 +4,7 @@
 
 #' @noRd
 formato_valor <- function(x, estandarizado, decimales) {
+  x <- round(x, decimales); x[x == 0] <- 0   # evita "-.00"
   s <- formatC(x, format = "f", digits = decimales)
   if (estandarizado) s <- sub("^(-?)0\\.", "\\1.", s)   # APA: sin cero inicial
   s

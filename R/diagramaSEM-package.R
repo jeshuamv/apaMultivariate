@@ -7,9 +7,10 @@
 #' Diagramas:
 #' \itemize{
 #'   \item [diagrama_sem()]: dibuja el diagrama de un AFE, AFC, análisis de
-#'     trayectorias o SEM.
-#'   \item [paleta_sem()]: elige o define los colores.
-#'   \item [guardar_diagrama()]: guarda en PNG, PDF, SVG, JPEG o TIFF.
+#'     trayectorias o SEM, en estilo clásico (AMOS), `"revista"` o `"color"`.
+#'   \item [paleta_sem()]: elige o define los colores del estilo clásico.
+#'   \item [guardar_diagrama()]: guarda en PDF, EPS, TIFF, PNG, SVG o JPEG,
+#'     con anchos de revista y revisión del tamaño del texto.
 #' }
 #'
 #' Tablas en formato APA:

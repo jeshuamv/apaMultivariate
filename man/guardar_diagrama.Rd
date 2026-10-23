@@ -4,30 +4,54 @@
 \alias{guardar_diagrama}
 \title{Guarda un diagrama en un archivo}
 \usage{
-guardar_diagrama(x, archivo, ancho = NULL, alto = NULL, res = 300)
+guardar_diagrama(x, archivo, ancho = NULL, alto = NULL, res = NULL)
 }
 \arguments{
 \item{x}{Objeto creado por \code{\link[=diagrama_sem]{diagrama_sem()}}.}
 
-\item{archivo}{Ruta del archivo.}
+\item{archivo}{Ruta del archivo: \code{.pdf}, \code{.eps}, \code{.tiff}, \code{.png}, \code{.svg}
+o \code{.jpg}.}
 
-\item{ancho, alto}{Medidas en pulgadas (opcionales). Si se da solo una, la
-otra se calcula para conservar la proporción.}
+\item{ancho}{Ancho de la figura: \code{"pagina"} (174 mm), \code{"columna"} (85 mm)
+o un número en pulgadas. Si se omite, se calcula según el diagrama.}
 
-\item{res}{Resolución en puntos por pulgada para formatos de imagen
-(300 por omisión, adecuada para publicación).}
+\item{alto}{Alto en pulgadas (opcional). Si se omite, se conserva la
+proporción.}
+
+\item{res}{Resolución en puntos por pulgada para las imágenes. Por
+omisión, 600 para \code{.tiff} y 300 para los demás.}
 }
 \value{
 Invisiblemente, la ruta del archivo.
 }
 \description{
-El formato se deduce de la extensión: \code{.png}, \code{.pdf}, \code{.svg}, \code{.jpg} /
-\code{.jpeg} o \code{.tiff}. Si no se indican medidas, se calculan a partir del
-tamaño del diagrama para que el texto quede legible.
+El formato se deduce de la extensión del archivo. Si no se indica el ancho,
+se calcula a partir del tamaño del diagrama.
 }
+\section{Para enviar a una revista}{
+
+Indique el ancho con que se imprimirá la figura: \code{ancho = "pagina"}
+(174 mm, a lo ancho de la página) o \code{ancho = "columna"} (85 mm, una
+columna). El texto queda del tamaño real que tendrá impreso, y la función
+avisa si los ítems o los valores quedan por debajo de 8 pt, el mínimo que
+piden APA y la mayoría de las revistas. Los diagramas con varios factores
+casi nunca caben legibles en una columna.
+
+Formatos recomendados:
+\itemize{
+\item \code{.pdf} o \code{.eps}: vectoriales, con las fuentes incrustadas. Se ven nítidos
+a cualquier tamaño; son los preferidos por Elsevier, Springer y Taylor &
+Francis.
+\item \code{.tiff}: imagen con compresión LZW, a 600 dpi por omisión (PLOS pide
+TIFF o EPS).
+\item \code{.png}: para Word, PowerPoint o tesis (300 dpi por omisión).
+\item \code{.svg} y \code{.jpg} también se aceptan.
+}
+}
+
 \examples{
 library(lavaan)
 fit <- cfa("F =~ x1 + x2 + x3 + x4", data = HolzingerSwineford1939)
-d <- diagrama_sem(fit, dibujar = FALSE)
-guardar_diagrama(d, file.path(tempdir(), "unifactorial.pdf"))
+d <- diagrama_sem(fit, estilo = "revista", dibujar = FALSE)
+guardar_diagrama(d, file.path(tempdir(), "figura1.pdf"), ancho = "pagina")
 }

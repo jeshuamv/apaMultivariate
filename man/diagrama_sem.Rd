@@ -17,6 +17,7 @@ diagrama_sem(
   etiquetas = NULL,
   lados = NULL,
   mover = NULL,
+  estilo = "clasico",
   paleta = paleta_sem(),
   degradado = TRUE,
   titulo = NULL,
@@ -25,6 +26,7 @@ diagrama_sem(
   umbral = 0.3,
   nfactores = NULL,
   archivo = NULL,
+  ancho = NULL,
   dibujar = TRUE
 )
 }
@@ -71,11 +73,22 @@ del diagrama (el ancho de un ítem es aproximadamente 1), p. ej.
 \code{list(Care = c(1, -0.5))}. Un constructo se mueve junto con sus ítems y
 errores.}
 
-\item{paleta}{Colores, creados con \code{\link[=paleta_sem]{paleta_sem()}}.}
+\item{estilo}{Aspecto del diagrama. Véase la sección \emph{Estilos}.
+\itemize{
+\item \code{"clasico"} (por omisión): el de AMOS, con degradado y la paleta elegida.
+\item \code{"revista"}: en grises, listo para publicar.
+\item \code{"color"}: como \code{"revista"}, pero cada factor y sus ítems con un color
+propio.
+}}
 
-\item{degradado}{Rellenar con degradado (\code{TRUE}) o con color sólido.}
+\item{paleta}{Colores, creados con \code{\link[=paleta_sem]{paleta_sem()}}. Solo en el estilo
+\code{"clasico"}.}
 
-\item{titulo}{Título opcional.}
+\item{degradado}{Rellenar con degradado (\code{TRUE}) o con color sólido. Solo
+en el estilo \code{"clasico"}.}
+
+\item{titulo}{Título opcional. Para un artículo conviene no ponerlo: en
+formato APA el número y el título de la figura van fuera de la imagen.}
 
 \item{prefijo_error}{Prefijo de los nombres de los errores (\code{"e"}).}
 
@@ -89,8 +102,11 @@ flecha se dibuja punteada.}
 \item{nfactores}{Solo para \code{lavaan::efa()} con varias soluciones: número de
 factores de la solución que se dibuja.}
 
-\item{archivo}{Si se indica, guarda el diagrama en ese archivo (\code{.png},
-\code{.pdf}, \code{.svg}, \code{.jpg} o \code{.tiff}) con \code{\link[=guardar_diagrama]{guardar_diagrama()}}.}
+\item{archivo}{Si se indica, guarda el diagrama en ese archivo (\code{.pdf},
+\code{.png}, \code{.tiff}, \code{.eps}, \code{.svg} o \code{.jpg}) con \code{\link[=guardar_diagrama]{guardar_diagrama()}}.}
+
+\item{ancho}{Ancho del archivo: \code{"pagina"} (174 mm), \code{"columna"} (85 mm) o
+un número en pulgadas. Véase \code{\link[=guardar_diagrama]{guardar_diagrama()}}.}
 
 \item{dibujar}{Si \code{TRUE} (por omisión) dibuja en la ventana de gráficos.}
 }
@@ -111,6 +127,22 @@ El tipo de modelo se detecta solo (AFC, segundo orden, bifactor, análisis de
 trayectorias o SEM completo) y el acomodo de los elementos se elige según
 el tipo; véase la sección \emph{Acomodos}.
 }
+\section{Estilos}{
+
+Los estilos \code{"revista"} y \code{"color"} siguen los requisitos habituales de las
+revistas (APA, Elsevier, Springer, Taylor & Francis, PLOS): letra sin
+serifa (Arial o Helvetica) más grande, líneas de 0.6 a 0.9 pt, relleno
+plano, sin sombras ni degradados, y los valores sobre un fondo blanco para
+que ninguna línea los cruce. Los errores y las correlaciones van en gris
+para que destaquen las cargas y los efectos. No se escriben los "1" de las
+flechas de error (se pueden explicar en la nota de la figura).
+
+El estilo \code{"color"} usa la paleta Okabe-Ito, distinguible por personas con
+daltonismo y legible si la revista imprime en blanco y negro. Muchas
+revistas publican en color sin costo en línea, pero cobran el color
+impreso; si no está seguro, use \code{"revista"}.
+}
+
 \section{Acomodos}{
 
 \describe{
@@ -140,10 +172,16 @@ modelo <- "visual  =~ x1 + x2 + x3
 fit <- cfa(modelo, data = HolzingerSwineford1939)
 diagrama_sem(fit)
 diagrama_sem(fit, acomodo = "dos_filas", paleta = paleta_sem("azul"))
+diagrama_sem(fit, estilo = "revista")
 diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad"), estrellas = TRUE)
 
 # Guardar en un archivo
 archivo <- file.path(tempdir(), "afc.png")
 diagrama_sem(fit, archivo = archivo, dibujar = FALSE)
+
+# Figura para un artículo: PDF a lo ancho de la página
+archivo <- file.path(tempdir(), "figura1.pdf")
+diagrama_sem(fit, estilo = "revista", archivo = archivo, ancho = "pagina",
+             dibujar = FALSE)
 }

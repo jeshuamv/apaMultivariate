@@ -8,6 +8,8 @@
   ítems, óvalos para los factores, círculos de error (`e1`, `e2`, …), cargas sobre las
   flechas y R² junto a cada variable. El paquete reconoce el tipo de modelo y acomoda
   todo solo.
+- **Tres estilos**: el clásico de AMOS y dos listos para publicar (`"revista"` en
+  grises y `"color"`), que cumplen lo que piden APA y las principales revistas.
 - **Tablas en formato APA**, listas para Word: cargas factoriales, índices de ajuste y
   validez (CR, AVE y Fornell-Larcker).
 
@@ -128,6 +130,45 @@ El archivo se guarda en tu carpeta de trabajo. Para saber cuál es, escribe `get
 
 ---
 
+## Estilos: clásico, revista y color
+
+```r
+diagrama_sem(fit)                       # clásico (el de AMOS)
+diagrama_sem(fit, estilo = "revista")   # en grises, para artículos
+diagrama_sem(fit, estilo = "color")     # un color por factor
+```
+
+<p align="center"><img src="man/figures/estilo_revista.png" width="760"></p>
+<p align="center"><img src="man/figures/estilo_color.png" width="760"></p>
+
+Los estilos `"revista"` y `"color"` usan letra más grande y sin serifa, relleno plano,
+errores y correlaciones en gris, y cada valor sobre un fondo blanco para que ninguna
+línea lo cruce. No escriben los "1" de las flechas de error (eso se aclara en la nota
+de la figura). Los colores se distinguen aun con daltonismo y se leen bien si la revista
+imprime en blanco y negro.
+
+## Para publicar en una revista
+
+Las revistas piden que el texto mida **al menos 8 pt ya impreso** y que la figura se
+entregue al ancho con que se publicará. Usa:
+
+```r
+diagrama_sem(fit, estilo = "revista", archivo = "figura1.pdf", ancho = "pagina")
+```
+
+- `ancho = "pagina"` (174 mm) sirve para casi cualquier modelo; `ancho = "columna"`
+  (85 mm) solo para modelos muy pequeños.
+- El paquete te dice el tamaño real del texto y **te avisa si queda por debajo de 8 pt**.
+- Formato: `.pdf` (el mejor en general), `.eps` si la revista lo pide, o `.tiff`
+  (se guarda a 600 ppp) si la revista pide imagen.
+- En formato APA el número y el título de la figura van **fuera de la imagen**
+  (escríbelos en Word), no con `titulo =`.
+
+Revisa siempre las instrucciones para autores de tu revista. Más detalles en la sección
+*Figuras para una revista* de la [guía](guia/GUIA.md).
+
+---
+
 ## Tablas para tu reporte
 
 Tres funciones crean las tablas que suelen pedirse en artículos y tesis. Se ven en la
@@ -160,7 +201,9 @@ varias.
 | Quiero… | Escribe |
 |---|---|
 | Cambiar los nombres que se ven | `diagrama_sem(fit, etiquetas = c(Factor1 = "Autoestima", item1 = "Ítem 1"))` |
-| Otros colores | `diagrama_sem(fit, paleta = paleta_sem("azul"))` |
+| Estilo para un artículo | `diagrama_sem(fit, estilo = "revista")` |
+| Un color por factor | `diagrama_sem(fit, estilo = "color")` |
+| Otros colores (estilo clásico) | `diagrama_sem(fit, paleta = paleta_sem("azul"))` |
 | Sin color (blanco y negro) | `diagrama_sem(fit, paleta = paleta_sem("blanco"))` |
 | Asteriscos de significancia | `diagrama_sem(fit, estrellas = TRUE)` |
 | Ocultar las correlaciones entre factores | `diagrama_sem(fit, correlaciones = FALSE)` |
@@ -171,7 +214,7 @@ varias.
 
 `etiquetas` también funciona en las tablas: `tabla_cargas(afe, etiquetas = c(MR1 = "Ansiedad"))`.
 
-Colores disponibles: `"lila"` (el de siempre), `"azul"`, `"verde"`, `"gris"`,
+Paletas del estilo clásico: `"lila"` (el de siempre), `"azul"`, `"verde"`, `"gris"`,
 `"durazno"` y `"blanco"`.
 
 ---
@@ -219,6 +262,9 @@ el Paso 1.
 
 **El diagrama se ve pequeño o amontonado en RStudio**: agranda el panel de gráficos o,
 mejor, guárdalo con `archivo = "..."`. En el archivo las medidas se ajustan solas.
+
+**Aviso "El texto queda en ... pt"**: la figura, al ancho indicado, tendría letra más
+chica de lo que aceptan las revistas. Usa `estilo = "revista"` y `ancho = "pagina"`.
 
 **Una flecha o un grupo de ítems quedó en mal lugar**: prueba otro `acomodo`
 (`"fila"`, `"dos_filas"`, `"arbol"`, `"izq_der"`, `"arriba_abajo"`) o consulta la

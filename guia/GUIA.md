@@ -17,10 +17,13 @@ artículos y tesis. Esta guía muestra cómo usarlo, paso a paso.
 6.  [Modelo de ecuaciones
     estructurales](#modelo-de-ecuaciones-estructurales)
 7.  [Análisis factorial exploratorio](#análisis-factorial-exploratorio)
-8.  [Tablas en formato APA](#tablas-en-formato-apa)
-9.  [Personalizar el diagrama](#personalizar-el-diagrama)
-10. [Guardar el diagrama](#guardar-el-diagrama)
-11. [Preguntas frecuentes](#preguntas-frecuentes)
+8.  [Estilos: clásico, revista y
+    color](#estilos-clásico-revista-y-color)
+9.  [Tablas en formato APA](#tablas-en-formato-apa)
+10. [Personalizar el diagrama](#personalizar-el-diagrama)
+11. [Guardar el diagrama](#guardar-el-diagrama)
+12. [Figuras para una revista](#figuras-para-una-revista)
+13. [Preguntas frecuentes](#preguntas-frecuentes)
 
 ## Instalación
 
@@ -258,6 +261,47 @@ afe2 <- efa(data = items, nfactors = 2:4)
 diagrama_sem(afe2, nfactores = 3)
 ```
 
+## Estilos: clásico, revista y color
+
+El argumento `estilo` cambia el aspecto del diagrama sin cambiar su
+contenido.
+
+| Estilo                    | Aspecto                                                                  | Para qué                                                  |
+|---------------------------|--------------------------------------------------------------------------|-----------------------------------------------------------|
+| `"clasico"` (por omisión) | El de AMOS: degradado, bordes negros, los “1” de los errores             | Clases, tareas, tesis                                     |
+| `"revista"`               | Grises, letra más grande, relleno plano, errores y correlaciones en gris | Artículos (sirve en cualquier revista)                    |
+| `"color"`                 | Como `"revista"`, pero cada factor y sus ítems con su propio color       | Presentaciones, carteles y revistas que publican en color |
+
+``` r
+diagrama_sem(fit, estilo = "revista")
+```
+
+<img src="GUIA_files/figure-gfm/unnamed-chunk-15-1.png" width="100%" />
+
+``` r
+diagrama_sem(fit, estilo = "color")
+```
+
+<img src="GUIA_files/figure-gfm/unnamed-chunk-16-1.png" width="100%" />
+
+Qué cambia en los estilos `"revista"` y `"color"`:
+
+- La letra es más grande y sin serifa (Arial o Helvetica, según el
+  equipo), y las cajas crecen para que quepa.
+- Las cargas y los efectos van en negro; los errores, las correlaciones
+  y las R² en gris, para que destaque lo importante.
+- Cada valor va sobre un fondo blanco, así que ninguna línea lo cruza.
+- Relleno plano, sin degradados ni sombras.
+- No se escriben los “1” de las flechas de error. Si su revista o su
+  profesor los pide, use el estilo `"clasico"` o explíquelo en la nota
+  de la figura (por ejemplo: *Las cargas de los errores se fijaron en
+  1*).
+
+Los colores del estilo `"color"` son de la paleta Okabe-Ito: se
+distinguen aun con daltonismo y siguen leyéndose si la revista imprime
+en blanco y negro. Con más de seis factores los colores se repiten. Las
+opciones `paleta` y `degradado` solo aplican al estilo `"clasico"`.
+
 ## Tablas en formato APA
 
 Tres funciones crean las tablas que suelen pedirse en un reporte. Todas
@@ -429,7 +473,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-21-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-23-1.png" width="100%" />
 
 Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -439,7 +483,7 @@ Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-22-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-24-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados (y
 no se muestra R²):
@@ -448,7 +492,7 @@ no se muestra R²):
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-23-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-25-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -456,13 +500,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-24-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-26-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-24-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-26-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -482,20 +526,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-26-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-28-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-26-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-28-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-26-3.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-28-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -508,7 +552,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-27-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-29-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -517,27 +561,82 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-28-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-30-1.png" width="100%" />
 
 ## Guardar el diagrama
 
 ``` r
-diagrama_sem(fit, archivo = "figura1.png")    # PNG a 300 ppp
-diagrama_sem(fit, archivo = "figura1.pdf")    # PDF vectorial
-diagrama_sem(fit, archivo = "figura1.svg")    # SVG (editable)
-
-d <- diagrama_sem(fit, dibujar = FALSE)
-guardar_diagrama(d, "figura1.tiff", ancho = 7)  # medidas en pulgadas
+diagrama_sem(fit, archivo = "figura1.png")    # imagen para Word o PowerPoint
+diagrama_sem(fit, archivo = "figura1.pdf")    # PDF vectorial (nítido a cualquier tamaño)
 ```
 
-Si no se indican medidas, se calculan solas para que el texto quede
-legible. Para publicaciones se recomienda PDF o PNG/TIFF a 300 ppp.
+Si no se indican medidas, se calculan solas según el tamaño del
+diagrama. También se aceptan `.tiff`, `.eps`, `.svg` y `.jpg`. Para
+guardar un diagrama que ya dibujó, use `guardar_diagrama()`:
+
+``` r
+d <- diagrama_sem(fit, estilo = "revista")
+guardar_diagrama(d, "figura1.pdf", ancho = "pagina")
+```
+
+## Figuras para una revista
+
+Las revistas piden que el texto de la figura mida **al menos 8 pt ya
+impresa** (APA pide de 8 a 14 pt, sin serifa) y que la figura se
+entregue al ancho con que se publicará. Por eso, para un artículo:
+
+``` r
+diagrama_sem(fit, estilo = "revista", archivo = "figura1.pdf", ancho = "pagina")
+```
+
+Al indicar `ancho`, el paquete informa el tamaño real del texto:
+
+    Figura de 174 x 62 mm; texto de los ítems y valores: 8.4 pt.
+
+Si queda por debajo de 8 pt, aparece un aviso con sugerencias.
+
+**`ancho`**
+
+- `"pagina"`: 174 mm, a lo ancho de la página. Es la opción adecuada
+  para casi cualquier modelo.
+- `"columna"`: 85 mm, una columna en revistas de dos columnas. Solo
+  alcanza para modelos muy pequeños (un factor con pocos ítems, una
+  trayectoria simple).
+- Un número: el ancho en pulgadas.
+
+**Formato**
+
+| Formato | Cuándo usarlo                                                                                                                    |
+|---------|----------------------------------------------------------------------------------------------------------------------------------|
+| `.pdf`  | La mejor opción en general: vectorial, con las fuentes incluidas. La aceptan Elsevier, Springer, Taylor & Francis, Wiley y SAGE. |
+| `.eps`  | Cuando la revista pide EPS (vectorial).                                                                                          |
+| `.tiff` | Cuando la revista pide imagen (por ejemplo PLOS). Se guarda a 600 ppp con compresión LZW.                                        |
+| `.png`  | Para Word, PowerPoint o la tesis (300 ppp).                                                                                      |
+
+**Formato APA del resto de la figura.** En APA el número de la figura
+(en negritas) y su título (en cursiva) van **arriba y fuera de la
+imagen**, y las notas debajo; escríbalos en Word, no con `titulo =`. Por
+ejemplo:
+
+> **Figura 1**  
+> *Modelo de medición de tres factores*  
+> \[diagrama\]  
+> *Nota.* Cargas estandarizadas. Los números junto a cada ítem son las
+> R². Las cargas de los errores se fijaron en 1. *N* = 301.
+
+Siempre revise las instrucciones para autores de la revista elegida:
+algunas piden otro ancho, otro formato o la figura en un archivo aparte.
 
 ## Preguntas frecuentes
 
 **El diagrama sale muy pequeño o el texto muy chico.** Guárdelo con
 `guardar_diagrama()`; en la ventana de RStudio el tamaño depende del
-panel. Para modelos grandes indique `ancho` y `alto`.
+panel. Para un artículo use `estilo = "revista"` y `ancho = "pagina"`
+(véase [Figuras para una revista](#figuras-para-una-revista)).
+
+**¿Qué estilo uso?** Para clases y tareas, el que prefiera. Para un
+artículo, `"revista"`; `"color"` si la revista publica en color o para
+una presentación.
 
 **Una flecha pasa por donde no quiero.** Pruebe otro `acomodo`, cambie
 el lado de los ítems con `lados` o desplace el constructo con `mover`.

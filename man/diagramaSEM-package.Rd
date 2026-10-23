@@ -14,9 +14,10 @@ estructurales, con la convención gráfica clásica de los programas de SEM.
 Diagramas:
 \itemize{
 \item \code{\link[=diagrama_sem]{diagrama_sem()}}: dibuja el diagrama de un AFE, AFC, análisis de
-trayectorias o SEM.
-\item \code{\link[=paleta_sem]{paleta_sem()}}: elige o define los colores.
-\item \code{\link[=guardar_diagrama]{guardar_diagrama()}}: guarda en PNG, PDF, SVG, JPEG o TIFF.
+trayectorias o SEM, en estilo clásico (AMOS), \code{"revista"} o \code{"color"}.
+\item \code{\link[=paleta_sem]{paleta_sem()}}: elige o define los colores del estilo clásico.
+\item \code{\link[=guardar_diagrama]{guardar_diagrama()}}: guarda en PDF, EPS, TIFF, PNG, SVG o JPEG,
+con anchos de revista y revisión del tamaño del texto.
 }
 
 Tablas en formato APA:

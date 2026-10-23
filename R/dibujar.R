@@ -56,6 +56,10 @@ dibujar_diagrama <- function(obj) {
   usr <- graphics::par("usr"); pin <- graphics::par("pin")
   f <- min(pin[1] / diff(usr[1:2]), pin[2] / diff(usr[3:4])) / PULG_POR_UNIDAD
   if (!is.null(op$titulo)) graphics::title(utf8_real(op$titulo), cex.main = 1, col.main = pal$texto)
+  if (!identical(op$estilo, "clasico") && !is.null(op$estilo)) {
+    dibujar_moderno(G, tr, op, f, obj$tipo)
+    return(invisible(obj))
+  }
 
   # Flechas
   debil <- if (!is.null(G$edges$debil)) G$edges$debil else rep(FALSE, length(tr))
