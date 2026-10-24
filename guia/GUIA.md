@@ -326,6 +326,7 @@ solo líneas horizontales y nota) y guardan sus valores numéricos en
 |             | `tabla_confiabilidad()`    | Alfa (con IC), omega y correlaciones ítem-total                                     |
 |             | `tabla_validez()`          | CR, AVE y criterio de Fornell-Larcker                                               |
 |             | `tabla_htmt()`             | Validez discriminante HTMT                                                          |
+|             | `tabla_bifactor()`         | Índices bifactor: ωH, ωHS, ECV, PUC, H y FD                                         |
 |             | `tabla_metodo_comun()`     | Sesgo de método común (Harman y AFC de un factor)                                   |
 | Ajuste      | `tabla_ajuste()`           | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos                                   |
 |             | `tabla_criterios_ajuste()` | Cada índice contra criterios excelente/aceptable, e identificación del modelo       |
@@ -337,6 +338,8 @@ solo líneas horizontales y nota) y guardan sus valores numéricos en
 |             | `tabla_efectos()`          | Efectos directos, indirectos (bootstrap) y totales                                  |
 |             | `tabla_hipotesis()`        | Cada hipótesis: se sostiene o se rechaza                                            |
 |             | `tabla_vif()`              | Multicolinealidad entre predictores                                                 |
+| Moderación  | `tabla_moderacion()`       | Moderación y mediación moderada (modelos 1, 7 y 14 de PROCESS)                      |
+|             | `grafica_interaccion()`    | Gráfica de pendientes simples                                                       |
 | MANOVA      | `tabla_manova()`           | Pruebas multivariadas, supuestos, ANOVA de seguimiento, post hoc y medias por grupo |
 | Método      | `parrafo_metodo()`         | Párrafo de software y estimación con sus referencias                                |
 
@@ -1146,6 +1149,127 @@ omisión) se usa Tukey HSD si las matrices de covarianza son iguales y
 Games-Howell si no lo son; se puede fijar con `posthoc = "tukey"` o
 `posthoc = "games-howell"`.
 
+### Modelos bifactor y de segundo orden
+
+Al validar una escala con un modelo bifactor, los revisores piden saber
+cuánto del puntaje total refleja el factor general y si las subescalas
+aportan algo propio:
+
+``` r
+segundo <- cfa(paste(modelo, "\n g =~ visual + textual + speed"),
+               data = HolzingerSwineford1939)
+tabla_bifactor(segundo)
+#> 
+#> Índices del modelo bifactor
+#> ───────────────────────────────────────────────
+#> Factor   Ítems  ω / ωS  ωH / ωHS  ECV   H   FD 
+#> ───────────────────────────────────────────────
+#> g          9     .84      .55     .40  .72  .79
+#> ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#> visual     3     .63      .15     .24  .23  .45
+#> textual    3     .89      .64     .72  .77  .86
+#> speed      3     .69      .49     .71  .57  .75
+#> ───────────────────────────────────────────────
+#> Nota. Índices obtenidos con la transformación de
+#> Schmid-Leiman del modelo de segundo orden. En la fila del
+#> factor general: ω = omega total, ωH = omega jerárquico, ECV
+#> = varianza común explicada por el factor general. En las
+#> subescalas: ωS, ωHS y ECV de la subescala. H =
+#> replicabilidad del factor; FD = determinación factorial.
+#> PUC = .75. Criterios: ωH ≥ .80, ECV ≥ .70 y PUC ≥ .70
+#> indican una escala esencialmente unidimensional (Rodriguez
+#> et al., 2016); H ≥ .80 (Hancock y Mueller, 2001) y FD ≥ .90
+#> (Gorsuch, 1983). En negritas, los valores que cumplen. La
+#> escala no es esencialmente unidimensional según estos
+#> criterios. Subescalas con ωHS < .50 (aportan poca
+#> confiabilidad propia más allá del factor general): visual,
+#> speed.
+```
+
+Con un modelo de segundo orden, como en el ejemplo, se usa la
+transformación de Schmid-Leiman. Un modelo bifactor se estima con los
+factores ortogonales:
+
+``` r
+bifactor <- "g =~ i1 + i2 + i3 + i4 + i5 + i6 + i7 + i8 + i9
+             F1 =~ i1 + i2 + i3
+             F2 =~ i4 + i5 + i6
+             F3 =~ i7 + i8 + i9"
+fit_bf <- cfa(bifactor, data = datos, orthogonal = TRUE, std.lv = TRUE)
+tabla_bifactor(fit_bf)
+```
+
+Criterios: ωH ≥ .80, ECV ≥ .70 y PUC ≥ .70 indican una escala
+esencialmente unidimensional; un ωHS bajo (\< .50) indica que la
+subescala aporta poca confiabilidad propia. Si el modelo tiene un caso
+Heywood (una varianza de error negativa), la tabla lo avisa y no calcula
+H ni FD.
+
+### Moderación y mediación moderada
+
+Al estilo del macro PROCESS de Hayes, con puntajes de escalas (sumas o
+promedios de los ítems). Moderación simple (modelo 1):
+
+``` r
+set.seed(1)
+d <- data.frame(apoyo = rnorm(300, 3, 1), autonomia = rnorm(300, 4, 1.5))
+d$compromiso <- 1 + .3 * d$apoyo + .2 * d$autonomia +
+                .25 * (d$apoyo - 3) * (d$autonomia - 4) + rnorm(300)
+mod <- tabla_moderacion(d, x = "apoyo", w = "autonomia", y = "compromiso")
+mod
+#> 
+#> Moderación: coeficientes de regresión
+#> ─────────────────────────────────────────────────────────────────────────
+#> Predictor                          B     EE     t      p       IC 95 %   
+#> ─────────────────────────────────────────────────────────────────────────
+#> Variable dependiente: compromiso                                         
+#>    apoyo                          0.34  0.07  5.09   < .001  [0.21, 0.47]
+#>    autonomia                      0.23  0.04  5.80   < .001  [0.15, 0.31]
+#>    apoyo × autonomia              0.21  0.04  5.28   < .001  [0.13, 0.29]
+#>    Constante                      2.65  0.06  41.98  < .001  [2.52, 2.77]
+#> ─────────────────────────────────────────────────────────────────────────
+#> Nota. B = coeficiente no estandarizado; EE = error estándar; IC 95 %
+#> basado en t. compromiso: R² = .213, F(3, 296) = 26.64, p < .001.
+#> Interacción: ΔR² = .074, F(1, 296) = 27.90, p < .001. Variables
+#> centradas en la media: apoyo, autonomia. N = 300.
+#> 
+#> Efecto condicional de apoyo sobre compromiso según autonomia
+#> ───────────────────────────────────────────────────────
+#> autonomia     Efecto   EE    t      p        IC 95 %   
+#> ───────────────────────────────────────────────────────
+#> −1 DE (2.42)   0.01   0.08  0.12   .904   [-0.16, 0.18]
+#> Media (3.98)   0.34   0.07  5.09  < .001  [0.21, 0.47] 
+#> +1 DE (5.55)   0.66   0.10  6.90  < .001  [0.47, 0.85] 
+#> ───────────────────────────────────────────────────────
+#> Nota. Pendientes simples. Valores de W: media y ±1 DE.
+#> Johnson-Neyman: el efecto de apoyo cambia de significancia
+#> (p = .05) cuando autonomia = 1.24 y 3.05.
+```
+
+La tabla da los coeficientes, el ΔR² de la interacción, las pendientes
+simples (efecto de X en la media de W y una DE arriba y abajo) y la
+región de Johnson-Neyman. La gráfica de la interacción:
+
+``` r
+grafica_interaccion(mod)
+```
+
+<img src="GUIA_files/figure-gfm/unnamed-chunk-44-1.png" width="60%" />
+
+Con `archivo = "figura2.pdf"` se guarda al ancho de una columna.
+
+Mediación moderada: `modelo = 7` cuando W modera X → M, y `modelo = 14`
+cuando W modera M → Y. La tabla da los efectos indirectos condicionales
+y el **índice de mediación moderada**, con intervalos bootstrap (5000
+remuestreos, como PROCESS):
+
+``` r
+tabla_moderacion(datos, x = "X", w = "W", m = "M", y = "Y", modelo = 7)
+```
+
+Si el intervalo del índice no incluye el 0, el efecto indirecto depende
+del moderador.
+
 ### Párrafo de método
 
 Redacta el párrafo de análisis de datos (software, versiones, estimador,
@@ -1157,7 +1281,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 #> 
 #> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
 #> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
-#> Jorgensen et al., 2022) y diagramaSEM (versión 0.6.0; Moreno Valladares, 2026).
+#> Jorgensen et al., 2022) y diagramaSEM (versión 0.7.0; Moreno Valladares, 2026).
 #> El análisis factorial confirmatorio se estimó con una muestra de 301
 #> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
 #> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
@@ -1178,7 +1302,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 #>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
 #> 
 #> Moreno Valladares, J. (2026). diagramaSEM: Diagramas de trayectorias y tablas
-#>     APA para modelos lavaan y psych (Paquete de R, versión 0.6.0).
+#>     APA para modelos lavaan y psych (Paquete de R, versión 0.7.0).
 #>     https://github.com/jeshuamv/diagramaSEM.
 #> 
 #> R Core Team. (2024). R: A language and environment for statistical computing. R
@@ -1255,7 +1379,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-46-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-51-1.png" width="100%" />
 
 Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -1265,7 +1389,7 @@ Use `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-47-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-52-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados (y
 no se muestra R²):
@@ -1274,7 +1398,7 @@ no se muestra R²):
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-48-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-53-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -1282,13 +1406,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-49-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-54-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-49-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-54-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -1308,20 +1432,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-51-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-56-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-51-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-56-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-51-3.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-56-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -1334,7 +1458,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-52-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -1343,7 +1467,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-53-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
 
 ## Guardar el diagrama
 

@@ -20,10 +20,12 @@
 #'     [tabla_normalidad()], [tabla_atipicos()], [tabla_vif()].
 #'   \item Análisis exploratorio: [tabla_factorabilidad()], [tabla_cargas()].
 #'   \item Medición: [tabla_cargas()], [tabla_confiabilidad()], [tabla_validez()],
-#'     [tabla_htmt()], [tabla_metodo_comun()].
+#'     [tabla_htmt()], [tabla_bifactor()], [tabla_metodo_comun()].
 #'   \item Ajuste: [tabla_ajuste()], [tabla_criterios_ajuste()], [tabla_comparacion()],
 #'     [tabla_modificacion()], [tabla_residuales()], [tabla_invarianza()].
 #'   \item Modelo estructural: [tabla_parametros()], [tabla_efectos()], [tabla_hipotesis()].
+#'   \item Moderación y mediación moderada: [tabla_moderacion()],
+#'     [grafica_interaccion()].
 #'   \item MANOVA: [tabla_manova()].
 #'   \item Redacción: [parrafo_metodo()].
 #'   \item Idioma (español o inglés): [idioma_sem()].

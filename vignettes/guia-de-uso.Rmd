@@ -302,6 +302,7 @@ horizontales y nota) y guardan sus valores numéricos en `$datos`.
 | | `tabla_confiabilidad()` | Alfa (con IC), omega y correlaciones ítem-total |
 | | `tabla_validez()` | CR, AVE y criterio de Fornell-Larcker |
 | | `tabla_htmt()` | Validez discriminante HTMT |
+| | `tabla_bifactor()` | Índices bifactor: ωH, ωHS, ECV, PUC, H y FD |
 | | `tabla_metodo_comun()` | Sesgo de método común (Harman y AFC de un factor) |
 | Ajuste | `tabla_ajuste()` | χ², CFI, TLI, RMSEA, SRMR de uno o varios modelos |
 | | `tabla_criterios_ajuste()` | Cada índice contra criterios excelente/aceptable, e identificación del modelo |
@@ -313,6 +314,8 @@ horizontales y nota) y guardan sus valores numéricos en `$datos`.
 | | `tabla_efectos()` | Efectos directos, indirectos (bootstrap) y totales |
 | | `tabla_hipotesis()` | Cada hipótesis: se sostiene o se rechaza |
 | | `tabla_vif()` | Multicolinealidad entre predictores |
+| Moderación | `tabla_moderacion()` | Moderación y mediación moderada (modelos 1, 7 y 14 de PROCESS) |
+| | `grafica_interaccion()` | Gráfica de pendientes simples |
 | MANOVA | `tabla_manova()` | Pruebas multivariadas, supuestos, ANOVA de seguimiento, post hoc y medias por grupo |
 | Método | `parrafo_metodo()` | Párrafo de software y estimación con sus referencias |
 
@@ -562,6 +565,72 @@ pares de grupos para cada variable dependiente, con su intervalo de confianza,
 *p* ajustado y *d* de Cohen. Con `posthoc = "auto"` (por omisión) se usa Tukey
 HSD si las matrices de covarianza son iguales y Games-Howell si no lo son; se
 puede fijar con `posthoc = "tukey"` o `posthoc = "games-howell"`.
+
+### Modelos bifactor y de segundo orden
+
+Al validar una escala con un modelo bifactor, los revisores piden saber cuánto
+del puntaje total refleja el factor general y si las subescalas aportan algo
+propio:
+
+```{r}
+segundo <- cfa(paste(modelo, "\n g =~ visual + textual + speed"),
+               data = HolzingerSwineford1939)
+tabla_bifactor(segundo)
+```
+
+Con un modelo de segundo orden, como en el ejemplo, se usa la transformación de
+Schmid-Leiman. Un modelo bifactor se estima con los factores ortogonales:
+
+```{r, eval = FALSE}
+bifactor <- "g =~ i1 + i2 + i3 + i4 + i5 + i6 + i7 + i8 + i9
+             F1 =~ i1 + i2 + i3
+             F2 =~ i4 + i5 + i6
+             F3 =~ i7 + i8 + i9"
+fit_bf <- cfa(bifactor, data = datos, orthogonal = TRUE, std.lv = TRUE)
+tabla_bifactor(fit_bf)
+```
+
+ Criterios:
+ωH ≥ .80, ECV ≥ .70 y PUC ≥ .70 indican una escala esencialmente
+unidimensional; un ωHS bajo (< .50) indica que la subescala aporta poca
+confiabilidad propia. Si el modelo tiene un caso Heywood (una varianza de error
+negativa), la tabla lo avisa y no calcula H ni FD.
+
+### Moderación y mediación moderada
+
+Al estilo del macro PROCESS de Hayes, con puntajes de escalas (sumas o
+promedios de los ítems). Moderación simple (modelo 1):
+
+```{r}
+set.seed(1)
+d <- data.frame(apoyo = rnorm(300, 3, 1), autonomia = rnorm(300, 4, 1.5))
+d$compromiso <- 1 + .3 * d$apoyo + .2 * d$autonomia +
+                .25 * (d$apoyo - 3) * (d$autonomia - 4) + rnorm(300)
+mod <- tabla_moderacion(d, x = "apoyo", w = "autonomia", y = "compromiso")
+mod
+```
+
+La tabla da los coeficientes, el ΔR² de la interacción, las pendientes simples
+(efecto de X en la media de W y una DE arriba y abajo) y la región de
+Johnson-Neyman. La gráfica de la interacción:
+
+```{r, fig.width = 4, fig.height = 3.2, out.width = "60%"}
+grafica_interaccion(mod)
+```
+
+Con `archivo = "figura2.pdf"` se guarda al ancho de una columna.
+
+Mediación moderada: `modelo = 7` cuando W modera X → M, y `modelo = 14` cuando
+W modera M → Y. La tabla da los efectos indirectos condicionales y el **índice
+de mediación moderada**, con intervalos bootstrap (5000 remuestreos, como
+PROCESS):
+
+```{r, eval = FALSE}
+tabla_moderacion(datos, x = "X", w = "W", m = "M", y = "Y", modelo = 7)
+```
+
+Si el intervalo del índice no incluye el 0, el efecto indirecto depende del
+moderador.
 
 ### Párrafo de método
 

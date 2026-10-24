@@ -186,6 +186,7 @@ un artículo o una tesis:
 | Medición | `tabla_cargas(fit)` | Cargas estandarizadas, EE, *p* y R² |
 | | `tabla_confiabilidad(fit)` | Alfa de Cronbach (con IC), omega de McDonald, correlaciones ítem-total |
 | | `tabla_validez(fit)` | CR, AVE y Fornell-Larcker |
+| | `tabla_bifactor(fit)` | Modelos bifactor o de segundo orden: ωH, ωHS, ECV, PUC, H y FD |
 | | `tabla_htmt(fit)` | Validez discriminante HTMT (la que hoy piden los revisores) |
 | | `tabla_metodo_comun(fit)` | Sesgo de método común (Harman y AFC de un factor) |
 | Ajuste | `tabla_ajuste(fit)` | χ², CFI, TLI, RMSEA, SRMR |
@@ -198,6 +199,7 @@ un artículo o una tesis:
 | | `tabla_efectos(fit)` | Efectos directos, indirectos (bootstrap) y totales |
 | | `tabla_hipotesis(fit, c(H1 = "X -> Y (+)"))` | Cada hipótesis: se sostiene o se rechaza |
 | | `tabla_vif(fit)` | Multicolinealidad entre predictores |
+| Moderación | `tabla_moderacion(datos, x = "X", w = "W", y = "Y")` | Moderación (modelo 1 de PROCESS) con pendientes simples y Johnson-Neyman; mediación moderada (modelos 7 y 14) con el índice de mediación moderada. `grafica_interaccion()` dibuja la interacción |
 | MANOVA | `tabla_manova(datos, c("Y1", "Y2"), "grupo")` | Pillai, Wilks, Hotelling, Roy con η²p; M de Box y demás supuestos; ANOVA de seguimiento; post hoc (Tukey o Games-Howell) con *d* de Cohen |
 | Método | `parrafo_metodo(fit)` | Párrafo de software y estimación, con referencias APA |
 

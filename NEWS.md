@@ -1,3 +1,15 @@
+# diagramaSEM 0.7.0
+
+* `tabla_moderacion()`: moderación y mediación moderada al estilo de PROCESS
+  (modelos 1, 7 y 14) con regresiones OLS y bootstrap de percentiles:
+  coeficientes, ΔR² de la interacción, pendientes simples, región de
+  Johnson-Neyman, efectos indirectos condicionales e índice de mediación
+  moderada.
+* `grafica_interaccion()`: gráfica de pendientes simples en estilo de revista.
+* `tabla_bifactor()`: ωH, ωHS, ωT, ωS, ECV, PUC, H y determinación factorial
+  para modelos bifactor y de segundo orden (Schmid-Leiman); avisa de casos
+  Heywood.
+
 # diagramaSEM 0.6.0
 
 * `idioma_sem("en")`: tablas, notas, párrafo de método y referencias en
