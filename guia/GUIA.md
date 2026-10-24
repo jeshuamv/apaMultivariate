@@ -3,9 +3,12 @@ Guía de uso de diagramaSEM
 
 `diagramaSEM` dibuja el diagrama de trayectorias de tus análisis
 factoriales (exploratorios y confirmatorios), de trayectorias y de
-ecuaciones estructurales, con la convención gráfica clásica de los
-programas de SEM, y crea las tablas en formato APA que suelen pedirse en
-artículos y tesis. Esta guía muestra cómo usarlo, paso a paso.
+ecuaciones estructurales, en el estilo clásico de AMOS o en estilos
+listos para revista, y crea, en español o en inglés, las tablas en
+formato APA que suelen pedirse en tareas, tesis y artículos: desde los
+descriptivos y los supuestos hasta la invarianza, la mediación, la
+moderación, los índices bifactor y la MANOVA, además del párrafo de
+método. Esta guía muestra cómo usarlo, paso a paso.
 
 ## Contenido
 
@@ -19,11 +22,28 @@ artículos y tesis. Esta guía muestra cómo usarlo, paso a paso.
 7.  [Análisis factorial exploratorio](#análisis-factorial-exploratorio)
 8.  [Estilos: clásico, revista y
     color](#estilos-clásico-revista-y-color)
-9.  [Tablas en formato APA](#tablas-en-formato-apa): descriptivos,
-    factorabilidad, cargas, confiabilidad, validez, HTMT, método común,
-    ajuste, comparación de modelos, invarianza, efectos, análisis de
-    trayectorias paso a paso, MANOVA, párrafo de método y resultados en
-    inglés
+9.  [Tablas en formato APA](#tablas-en-formato-apa)
+    - [Descriptivos, datos perdidos y
+      normalidad](#descriptivos-datos-perdidos-y-normalidad)
+    - [Antes de un análisis
+      exploratorio](#antes-de-un-análisis-exploratorio)
+    - [Cargas factoriales](#cargas-factoriales)
+    - [Confiabilidad y validez](#confiabilidad-y-validez)
+    - [Índices de ajuste y comparación de
+      modelos](#índices-de-ajuste-y-comparación-de-modelos)
+    - [Invarianza de medición](#invarianza-de-medición)
+    - [Efectos directos, indirectos y
+      totales](#efectos-directos-indirectos-y-totales)
+    - [Análisis de trayectorias y SEM paso a
+      paso](#análisis-de-trayectorias-y-sem-paso-a-paso)
+    - [MANOVA de un factor](#manova-de-un-factor)
+    - [Modelos bifactor y de segundo
+      orden](#modelos-bifactor-y-de-segundo-orden)
+    - [Moderación y mediación
+      moderada](#moderación-y-mediación-moderada)
+    - [Párrafo de método](#párrafo-de-método)
+    - [Resultados en inglés](#resultados-en-inglés)
+    - [Guardar las tablas](#guardar-las-tablas)
 10. [Personalizar el diagrama](#personalizar-el-diagrama)
 11. [Guardar el diagrama](#guardar-el-diagrama)
 12. [Figuras para una revista](#figuras-para-una-revista)
@@ -296,8 +316,8 @@ Qué cambia en los estilos `"revista"` y `"color"`:
   y las R² en gris, para que destaque lo importante.
 - Cada valor va sobre un fondo blanco, así que ninguna línea lo cruza.
 - Relleno plano, sin degradados ni sombras.
-- No se escriben los “1” de las flechas de error. Si su revista o su
-  profesor los pide, use el estilo `"clasico"` o explíquelo en la nota
+- No se escriben los “1” de las flechas de error. Si tu revista o tu
+  profesor los piden, usa el estilo `"clasico"` o explícalo en la nota
   de la figura (por ejemplo: *Las cargas de los errores se fijaron en
   1*).
 
@@ -1381,7 +1401,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
 
 <img src="GUIA_files/figure-gfm/unnamed-chunk-51-1.png" width="100%" />
 
-Use `"\n"` dentro de un nombre para partirlo en dos renglones.
+Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 
 ### Significancia, decimales y solución no estandarizada
 
@@ -1391,8 +1411,9 @@ diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 
 <img src="GUIA_files/figure-gfm/unnamed-chunk-52-1.png" width="100%" />
 
-Con `estandarizado = FALSE` se muestran los valores no estandarizados (y
-no se muestra R²):
+Con `estandarizado = FALSE` se muestran los valores no estandarizados y,
+como en AMOS, en lugar de la R² se escribe la varianza de cada variable
+exógena y de cada error:
 
 ``` r
 diagrama_sem(fit, estandarizado = FALSE)
@@ -1478,7 +1499,7 @@ diagrama_sem(fit, archivo = "figura1.pdf")    # PDF vectorial (nítido a cualqui
 
 Si no se indican medidas, se calculan solas según el tamaño del
 diagrama. También se aceptan `.tiff`, `.eps`, `.svg` y `.jpg`. Para
-guardar un diagrama que ya dibujó, use `guardar_diagrama()`:
+guardar un diagrama que ya dibujaste, usa `guardar_diagrama()`:
 
 ``` r
 d <- diagrama_sem(fit, estilo = "revista")
@@ -1521,7 +1542,7 @@ Si queda por debajo de 8 pt, aparece un aviso con sugerencias.
 
 **Formato APA del resto de la figura.** En APA el número de la figura
 (en negritas) y su título (en cursiva) van **arriba y fuera de la
-imagen**, y las notas debajo; escríbalos en Word, no con `titulo =`. Por
+imagen**, y las notas debajo; escríbelos en Word, no con `titulo =`. Por
 ejemplo:
 
 > **Figura 1**  
@@ -1530,32 +1551,53 @@ ejemplo:
 > *Nota.* Cargas estandarizadas. Los números junto a cada ítem son las
 > R². Las cargas de los errores se fijaron en 1. *N* = 301.
 
-Siempre revise las instrucciones para autores de la revista elegida:
+Siempre revisa las instrucciones para autores de la revista elegida:
 algunas piden otro ancho, otro formato o la figura en un archivo aparte.
 
 ## Preguntas frecuentes
 
-**El diagrama sale muy pequeño o el texto muy chico.** Guárdelo con
+**El diagrama sale muy pequeño o el texto muy chico.** Guárdalo con
 `guardar_diagrama()`; en la ventana de RStudio el tamaño depende del
-panel. Para un artículo use `estilo = "revista"` y `ancho = "pagina"`
+panel. Para un artículo usa `estilo = "revista"` y `ancho = "pagina"`
 (véase [Figuras para una revista](#figuras-para-una-revista)).
 
-**¿Qué estilo uso?** Para clases y tareas, el que prefiera. Para un
+**¿Qué estilo uso?** Para clases y tareas, el que prefieras. Para un
 artículo, `"revista"`; `"color"` si la revista publica en color o para
 una presentación.
 
-**Una flecha pasa por donde no quiero.** Pruebe otro `acomodo`, cambie
-el lado de los ítems con `lados` o desplace el constructo con `mover`.
+**Una flecha pasa por donde no quiero.** Prueba otro `acomodo`, cambia
+el lado de los ítems con `lados` o desplaza el constructo con `mover`.
 
 **El modelo es multigrupo.** Se dibuja un grupo a la vez con
 `grupo = 1`, `grupo = 2`, etc.
 
-**Aparece el aviso “El modelo no convergió”.** Revise el modelo en
+**Aparece el aviso “El modelo no convergió”.** Revisa el modelo en
 `lavaan`; el diagrama se dibuja, pero sus valores no son confiables.
 
 **`fa()` marca un error sobre `GPArotation`.** Instala el paquete con
 `install.packages("GPArotation")`; `psych` lo necesita para las
 rotaciones oblicuas.
 
-**El archivo `.rtf` se abre en otro programa.** Haz clic derecho →
-*Abrir con* → *Microsoft Word*.
+**El archivo `.docx` o `.rtf` se abre en otro programa.** Haz clic
+derecho → *Abrir con* → *Microsoft Word*.
+
+**Las tablas salieron en inglés (o en español) y no quería.** El idioma
+se elige con `idioma_sem("es")` o `idioma_sem("en")` y dura toda la
+sesión de R; al reiniciar R vuelve al español.
+
+**`tabla_moderacion()` o `tabla_efectos()` tardan.** Calculan intervalos
+con miles de remuestreos bootstrap; es normal que tarden de segundos a
+un par de minutos. Para probar puedes usar `bootstrap = 500` y, para el
+artículo, el valor por omisión.
+
+**Aparece el aviso “Caso Heywood” en `tabla_bifactor()`.** El modelo
+tiene una varianza de error negativa, algo común en modelos bifactor
+cuando un factor específico casi no tiene varianza propia. Los índices
+no son confiables: revisa ese factor (por ejemplo, prueba un modelo sin
+él o uno de segundo orden).
+
+**¿Qué tabla uso para mi tarea o artículo?** La tabla del inicio de la
+sección [Tablas en formato APA](#tablas-en-formato-apa) las ordena por
+etapa del análisis; la sección [Análisis de trayectorias y SEM paso a
+paso](#análisis-de-trayectorias-y-sem-paso-a-paso) muestra el orden
+habitual.

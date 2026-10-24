@@ -2,7 +2,7 @@
 
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 
-**Diagramas y tablas APA para tus análisis factoriales, de trayectorias y SEM, con una sola línea de código.**
+**Diagramas y tablas APA para tus análisis factoriales, de trayectorias, SEM, moderación y MANOVA, con una sola línea de código.**
 
 - **Diagramas** con el estilo clásico de los programas de SEM: rectángulos para los
   ítems, óvalos para los factores, círculos de error (`e1`, `e2`, …), cargas sobre las
@@ -10,12 +10,16 @@
   todo solo.
 - **Tres estilos**: el clásico de AMOS y dos listos para publicar (`"revista"` en
   grises y `"color"`), que cumplen lo que piden APA y las principales revistas.
-- **Tablas en formato APA**, listas para Word: descriptivos, factorabilidad, cargas,
-  confiabilidad, validez y HTMT, ajuste, comparación de modelos, invarianza de medición,
-  efectos indirectos y hasta el párrafo de método con sus referencias.
+- **Tablas en formato APA**, listas para Word: descriptivos y supuestos,
+  factorabilidad, cargas, confiabilidad, validez y HTMT, índices bifactor, ajuste,
+  comparación de modelos, invarianza de medición, efectos indirectos, hipótesis,
+  moderación y mediación moderada, MANOVA y hasta el párrafo de método con sus
+  referencias.
+- **En español o en inglés**, para tareas, tesis y artículos.
 
 Funciona con análisis **exploratorios** (`psych::fa()`, `lavaan::efa()`),
-**confirmatorios** (`cfa()`), de **trayectorias** y **SEM** (`sem()`).
+**confirmatorios** (`cfa()`), de **trayectorias** y **SEM** (`sem()`); las tablas de
+moderación y MANOVA trabajan directamente con tus datos.
 
 <p align="center"><img src="man/figures/afc_opciones.png" width="400"> <img src="man/figures/segundo_orden.png" width="400"></p>
 
@@ -128,6 +132,12 @@ diagrama_sem(fit, archivo = "mi_diagrama.pdf")   # PDF de alta calidad
 ```
 
 El archivo se guarda en tu carpeta de trabajo. Para saber cuál es, escribe `getwd()`.
+Si ya dibujaste el diagrama, también puedes guardarlo después:
+
+```r
+d <- diagrama_sem(fit)
+guardar_diagrama(d, "mi_diagrama.pdf")
+```
 
 ---
 
@@ -313,9 +323,19 @@ chica de lo que aceptan las revistas. Usa `estilo = "revista"` y `ancho = "pagin
 (`"fila"`, `"dos_filas"`, `"arbol"`, `"izq_der"`, `"arriba_abajo"`) o consulta la
 sección *Ajustes a mano* de la [guía](guia/GUIA.md).
 
-**`tabla_efectos()` tarda**: calcula intervalos con 1000 remuestreos bootstrap. Es
-normal que tarde de segundos a un par de minutos; con `bootstrap = 0` es inmediato
-(método delta), pero para un artículo conviene el bootstrap.
+**`tabla_efectos()` o `tabla_moderacion()` tardan**: calculan intervalos con miles de
+remuestreos bootstrap. Es normal que tarden de segundos a un par de minutos; para probar
+usa `bootstrap = 500` y, para el artículo, el valor por omisión.
+
+**Las tablas salieron en inglés**: el idioma dura toda la sesión de R. Vuelve al
+español con `idioma_sem("es")` (al reiniciar R también vuelve al español).
+
+**Aviso "Caso Heywood" en `tabla_bifactor()`**: el modelo tiene una varianza de error
+negativa y sus índices no son confiables; revisa el factor específico con cargas más
+bajas (es común en modelos bifactor).
+
+**El archivo `.docx` se abre en otro programa (por ejemplo, Pages en Mac)**: haz clic
+derecho → *Abrir con* → *Microsoft Word*.
 
 ¿Encontraste un error? Repórtalo en la pestaña
 [Issues](https://github.com/jeshuamv/diagramaSEM/issues) de esta página.
