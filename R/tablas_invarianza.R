@@ -98,8 +98,10 @@ tabla_invarianza <- function(modelo, datos, grupo, niveles = c("configural", "me
   if (!is.character(modelo)) stop("`modelo` debe ser la sintaxis de lavaan (texto) o un modelo de cfa().", call. = FALSE)
   if (!is.data.frame(datos) || !grupo %in% names(datos)) stop("`grupo` debe ser una columna de `datos`.", call. = FALSE)
   datos <- datos[!is.na(datos[[grupo]]), , drop = FALSE]
-  ajustar <- function(eq) do.call("cfa", envir = asNamespace("lavaan"), c(list(model = modelo, data = datos, group = grupo,
-                                                       group.equal = eq, group.partial = liberar), args), quote = FALSE)
+  ajustar <- function(eq) withCallingHandlers(
+    do.call("cfa", envir = asNamespace("lavaan"), c(list(model = modelo, data = datos, group = grupo,
+                                                       group.equal = eq, group.partial = liberar), args), quote = FALSE),
+    warning = function(w) if (grepl("observed_information", conditionMessage(w))) invokeRestart("muffleWarning"))
   conf <- ajustar(character(0))
   ordinal <- isTRUE(lavaan::lavInspect(conf, "categorical"))
   restr <- list(configural = character(0), metrica = "loadings",

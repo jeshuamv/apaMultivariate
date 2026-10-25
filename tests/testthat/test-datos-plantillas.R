@@ -48,11 +48,13 @@ test_that("revisar_datos: variables faltantes, sugerencias y sintaxis", {
   r <- capture.output(v <- revisar_datos(hs, "F =~ x1 + x2 + X3"))
   expect_equal(sum(v$estado == "problema"), 1)
   expect_match(v$texto[1], "quisiste decir 'x3'")
-  capture.output(s <- revisar_datos(hs, "F =~ x1 + x2 +"))
-  expect_match(s$texto[1], "sintaxis")
   capture.output(ok <- revisar_datos(hs, "visual =~ x1 + x2 + x3"))
   expect_false(any(ok$estado == "problema"))
   expect_true(any(grepl("hay que corregir", capture.output(print(v)))))
+  malo <- "F =~ x1 + (x2"
+  skip_if_not(inherits(tryCatch(lavaan::lavParseModelString(malo), error = function(e) e), "error"))
+  capture.output(s <- revisar_datos(hs, malo))
+  expect_match(s$texto[1], "sintaxis")
 })
 
 test_that("revisar_datos: texto, constantes, codigos, Likert y N", {

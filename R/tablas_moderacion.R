@@ -253,25 +253,17 @@ grafica_interaccion <- function(t, archivo = NULL, ancho = "columna", alto = NUL
     xl <- rango + desc_x + c(-1, 1) * 0.18 * diff(rango)
     graphics::plot(rango + desc_x, lineas[[1]], type = "n", xlim = xl, ylim = yl, xlab = nom[[pred]], ylab = nom[[dep]],
                    xaxt = "n", bty = "l", las = 1, cex.lab = 1, cex.axis = 0.9)
-    graphics::axis(1, at = rango + desc_x, labels = c(tx("Bajo (\u22121 DE)", "Low (\u22121 SD)"), tx("Alto (+1 DE)", "High (+1 SD)")), cex.axis = 0.9)
+    graphics::axis(1, at = rango + desc_x, labels = txt_disp(c(tx("Bajo (\u22121 DE)", "Low (\u22121 SD)"), tx("Alto (+1 DE)", "High (+1 SD)"))), cex.axis = 0.9)
     lt <- c(2, 1, 3)[seq_along(lineas)]; cols <- c("#1A1A1A", "#1A1A1A", "#6E6E6E")[seq_along(lineas)]
     if (length(lineas) == 2) { lt <- c(2, 1); cols <- c("#1A1A1A", "#1A1A1A") }
     for (i in seq_along(lineas)) graphics::lines(rango + desc_x, lineas[[i]], lty = lt[i], lwd = 1.6, col = cols[i])
     graphics::points(rep(rango + desc_x, length(lineas)), unlist(lineas), pch = 16, cex = 0.6)
     etq <- if (M$dic) paste(nom[[".W"]], "=", M$w_lab) else paste(nom[[".W"]], M$w_lab)
-    graphics::legend("topleft", legend = etq, lty = lt, lwd = 1.6, col = cols, bty = "n", cex = 0.85, seg.len = 2.5)
+    graphics::legend("topleft", legend = txt_disp(etq), lty = lt, lwd = 1.6, col = cols, bty = "n", cex = 0.85, seg.len = 2.5)
   }
   if (!is.null(archivo)) {
-    ext <- tolower(tools::file_ext(archivo)); cairo <- capabilities("cairo")
-    switch(ext,
-      png = grDevices::png(archivo, width = ancho, height = alto, units = "in", res = 300, pointsize = 9),
-      tiff = , tif = grDevices::tiff(archivo, width = ancho, height = alto, units = "in", res = 600, compression = "lzw", pointsize = 9),
-      pdf = if (cairo) grDevices::cairo_pdf(archivo, width = ancho, height = alto, pointsize = 9) else grDevices::pdf(archivo, width = ancho, height = alto, pointsize = 9),
-      eps = if (cairo) grDevices::cairo_ps(archivo, width = ancho, height = alto, pointsize = 9) else grDevices::postscript(archivo, width = ancho, height = alto, pointsize = 9, horizontal = FALSE, onefile = FALSE, paper = "special"),
-      svg = grDevices::svg(archivo, width = ancho, height = alto, pointsize = 9),
-      stop("Formato no reconocido: usa pdf, png, tiff, eps o svg.", call. = FALSE))
-    on.exit(grDevices::dev.off())
-  }
-  dibuja()
+    ext <- tolower(tools::file_ext(archivo))
+    con_dispositivo(archivo, ext, ancho, alto, dibuja, res = if (ext %in% c("tiff", "tif")) 600 else 300, pointsize = 9)
+  } else dibuja()
   invisible(data.frame(w = rep(M$w_orig, each = 2), x = rep(rango + desc_x, length(lineas)), y = unlist(lineas)))
 }

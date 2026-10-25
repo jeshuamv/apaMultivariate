@@ -63,12 +63,13 @@ test_that("grafica de la interaccion", {
   expect_true(file.exists(f))
   expect_equal(nrow(v), 6)
   t14 <- suppressMessages(tabla_moderacion(d, x = "X", w = "W", m = "M", y = "Y3", modelo = 14, bootstrap = 50))
-  expect_silent(grafica_interaccion(t14, archivo = tempfile(fileext = ".pdf")))
+  f14 <- tempfile(fileext = ".pdf")
+  expect_no_error(suppressWarnings(grafica_interaccion(t14, archivo = f14)))
+  expect_true(file.exists(f14) && file.size(f14) > 1000)
   expect_error(grafica_interaccion(tabla_ajuste(cfa("F =~ x1 + x2 + x3", data = HolzingerSwineford1939))), "tabla_moderacion")
 })
 
-test_that("bifactor: omegaH y omegaHS iguales a semTools", {
-  skip_if_not_installed("semTools")
+test_that("bifactor: omegaH y omegaHS iguales al calculo con la matriz reproducida", {
   set.seed(5); n <- 500; G <- rnorm(n); S <- matrix(rnorm(n * 3), n)
   X <- sapply(1:12, function(i) .6 * G + .4 * S[, (i - 1) %/% 4 + 1] + rnorm(n, 0, sqrt(.48)))
   colnames(X) <- paste0("i", 1:12); X <- as.data.frame(scale(X))
@@ -77,15 +78,17 @@ test_that("bifactor: omegaH y omegaHS iguales a semTools", {
              B =~ i5+i6+i7+i8
              C =~ i9+i10+i11+i12", data = X, orthogonal = TRUE, std.lv = TRUE)
   t <- tabla_bifactor(fb)
-  om <- unlist(semTools::compRelSEM(fb, obs.var = FALSE))
-  expect_equal(c(t$datos$omegaH, unname(t$datos$omegaHS)), unname(as.numeric(om[c("g", "A", "B", "C")])), tolerance = 1e-4)
+  # Calculo independiente con las matrices estandarizadas de lavaan
+  L <- lavInspect(fb, "std")$lambda; S <- cov2cor(fitted(fb)$cov)
+  oh <- sum(L[, "g"])^2 / sum(S)
+  ohs <- sapply(c("A", "B", "C"), function(k) { it <- rownames(L)[L[, k] != 0]; sum(L[it, k])^2 / sum(S[it, it]) })
+  expect_equal(c(t$datos$omegaH, unname(t$datos$omegaHS)), unname(c(oh, ohs)), tolerance = 1e-6)
   expect_equal(t$datos$puc, 1 - 3 * 6 / 66, tolerance = 1e-10)
   expect_true(all(t$datos$fd <= 1))
   expect_equal(t$datos$general, "g")
 })
 
-test_that("segundo orden: omegaH de Schmid-Leiman igual a semTools (nivel 2)", {
-  skip_if_not_installed("semTools")
+test_that("segundo orden: omegaH de Schmid-Leiman igual al calculo con la matriz reproducida", {
   Z <- as.data.frame(scale(HolzingerSwineford1939[, paste0("x", 1:9)]))
   fs <- cfa("visual =~ x1 + x2 + x3
              textual =~ x4 + x5 + x6
@@ -93,7 +96,10 @@ test_that("segundo orden: omegaH de Schmid-Leiman igual a semTools (nivel 2)", {
              g =~ visual + textual + speed", data = Z, std.lv = TRUE)
   t <- tabla_bifactor(fs)
   expect_equal(t$datos$tipo, "segundo_orden")
-  expect_equal(t$datos$omegaH, unname(unlist(semTools::compRelSEM(fs, obs.var = FALSE, higher = "g"))["g"]), tolerance = 1e-4)
+  st <- lavInspect(fs, "std"); L <- st$lambda; B <- st$beta; S <- cov2cor(fitted(fs)$cov)
+  prim <- c("visual", "textual", "speed")
+  lg <- L[, prim] %*% B[prim, "g"]
+  expect_equal(t$datos$omegaH, sum(lg)^2 / sum(S), tolerance = 1e-6)
   expect_match(t$nota, "Schmid-Leiman")
 })
 

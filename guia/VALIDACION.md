@@ -23,7 +23,7 @@ si alguna falla.
 | `tabla_comparacion()` | `lavaan::lavTestLRT()` (también la diferencia escalada con estimadores robustos) | Iguales |
 | `tabla_invarianza()` | Modelos multigrupo de `lavaan` y `lavTestLRT()` | Iguales |
 | `tabla_efectos()`, `tabla_hipotesis()` | Parámetros definidos con `:=` en `lavaan` (método delta) y bootstrap de `lavaan` | Iguales (bootstrap: intervalos parecidos, por el azar del remuestreo) |
-| `tabla_bifactor()` | `semTools::compRelSEM()` (ωH y ωHS; nivel 2 en segundo orden) | Iguales |
+| `tabla_bifactor()` | Fórmulas de Rodriguez et al. (2016) calculadas aparte con las matrices estandarizadas que reproduce `lavaan` (ωH, ωHS y Schmid-Leiman) | Iguales |
 | `tabla_moderacion()` | `lm()` (coeficientes, pendientes simples, Johnson-Neyman) y `lavaan` (índice de mediación moderada) | Iguales |
 | `tabla_manova()` | `manova()`, `TukeyHSD()` y Games-Howell; el ejemplo de clase con `iris` | Iguales |
 | `tabla_residuales()` | Correlación observada menos la reproducida por el modelo (`fitted()` de `lavaan`) | Iguales |

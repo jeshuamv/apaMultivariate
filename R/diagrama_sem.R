@@ -285,22 +285,7 @@ guardar_diagrama <- function(x, archivo, ancho = NULL, alto = NULL, res = NULL) 
 
   if (!is.null(nombre_ancho)) revisar_tamano(x, ancho, alto, W, H)
 
-  cairo <- capabilities("cairo")
-  switch(ext,
-    png  = grDevices::png(archivo, width = ancho, height = alto, units = "in", res = res),
-    jpg  = , jpeg = grDevices::jpeg(archivo, width = ancho, height = alto, units = "in", res = res, quality = 95),
-    tiff = , tif = grDevices::tiff(archivo, width = ancho, height = alto, units = "in", res = res, compression = "lzw"),
-    pdf  = if (cairo) grDevices::cairo_pdf(archivo, width = ancho, height = alto)
-           else grDevices::pdf(archivo, width = ancho, height = alto),
-    eps  = if (cairo) grDevices::cairo_ps(archivo, width = ancho, height = alto)
-           else grDevices::postscript(archivo, width = ancho, height = alto, horizontal = FALSE,
-                                      onefile = FALSE, paper = "special"),
-    svg  = {
-      if (!cairo) stop("Para guardar en SVG se necesita soporte de cairo en R.", call. = FALSE)
-      grDevices::svg(archivo, width = ancho, height = alto)
-    })
-  on.exit(grDevices::dev.off())
-  dibujar_diagrama(x)
+  con_dispositivo(archivo, ext, ancho, alto, function() dibujar_diagrama(x), res = res)
   invisible(archivo)
 }
 
