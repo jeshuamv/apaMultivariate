@@ -1,0 +1,413 @@
+---
+title: "Cómo interpretar y redactar los resultados"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Cómo interpretar y redactar los resultados}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+Esta guía acompaña a las tablas de `diagramaSEM`. Para cada una te dice **qué mirar**,
+**qué criterio usar**, **cómo redactarlo** en estilo APA y **qué errores evitar**. Los
+ejemplos de redacción del AFC usan los datos `HolzingerSwineford1939` de `lavaan`
+(con `plantilla("afc")` puedes reproducirlos); en las demás secciones los números son
+solo ilustrativos: sustitúyelos por los tuyos.
+
+Una advertencia antes de empezar: los puntos de corte (CFI ≥ .90, AVE > .50, etc.) son
+**convenciones**, no leyes. Úsalos como guía, cita de dónde vienen y, cuando un valor
+quede cerca del límite, dilo con honestidad en lugar de forzar la conclusión.
+
+## Contenido
+
+1. [Cómo se escriben los números en APA](#cómo-se-escriben-los-números-en-apa)
+2. [Datos y supuestos](#datos-y-supuestos)
+3. [Análisis factorial exploratorio](#análisis-factorial-exploratorio)
+4. [Análisis factorial confirmatorio](#análisis-factorial-confirmatorio)
+5. [Trayectorias y SEM](#trayectorias-y-sem)
+6. [Moderación y mediación moderada](#moderación-y-mediación-moderada)
+7. [MANOVA](#manova)
+8. [Errores comunes y prácticas cuestionables](#errores-comunes-y-prácticas-cuestionables)
+9. [Orden sugerido de la sección de resultados](#orden-sugerido-de-la-sección-de-resultados)
+
+---
+
+## Cómo se escriben los números en APA
+
+- **Sin cero inicial** en los valores que no pueden pasar de 1: correlaciones, cargas
+  estandarizadas, *p*, α, ω, CFI, RMSEA (*r* = .45, *p* = .003). **Con cero** en los
+  que sí pueden: *M* = 0.85, *B* = 0.32, *d* = 0.41.
+- **Dos decimales** en general; **tres** para *p* y, si quieres, para RMSEA y SRMR.
+- **El valor exacto de *p*** (*p* = .023), salvo cuando es muy pequeño: *p* < .001.
+  Nunca escribas *p* = .000.
+- **Cursivas** para los símbolos estadísticos en letras latinas: *M*, *DE*, *n*, *N*,
+  *p*, *r*, *t*, *F*, *B*, *d*. Las letras griegas (χ², β, α, ω, η²) van sin cursivas.
+- Los intervalos de confianza se escriben así: IC 95 % [0.12, 0.45].
+
+Las tablas del paquete ya siguen estas reglas; en el texto tienes que seguirlas tú.
+
+---
+
+## Datos y supuestos
+
+### Descriptivos — `tabla_descriptivos()`
+
+**Qué mirar.** Que las medias y desviaciones tengan sentido para la escala (una media de
+6 en una escala de 1 a 5 indica un error de captura) y que las correlaciones entre ítems
+de un mismo factor sean positivas y moderadas.
+
+**Cómo redactarlo.**
+
+> La Tabla 1 presenta los estadísticos descriptivos y las correlaciones entre las
+> variables. Todas las correlaciones entre los ítems de cada escala fueron positivas y
+> significativas (*r* = .30 a .72).
+
+### Datos perdidos — `tabla_perdidos()`
+
+**Criterio.** Con menos de 5 % de perdidos casi cualquier método da resultados
+parecidos. Con más, estima con información completa (`missing = "fiml"`) en lugar de
+eliminar casos.
+
+> El porcentaje de datos perdidos por variable fue de 0.3 % a 4.2 %. Los datos perdidos
+> se trataron con máxima verosimilitud con información completa (FIML).
+
+**Cuidado.** Eliminar los casos incompletos (*listwise*) sin decirlo es una práctica
+cuestionable: reporta siempre cuántos casos analizaste y por qué.
+
+### Normalidad — `tabla_normalidad()`
+
+**Qué mirar.** La asimetría y la curtosis de cada variable y, sobre todo, el coeficiente
+de Mardia (curtosis multivariada) y su razón crítica (c.r.).
+
+**Criterios.** |asimetría| < 2 y |curtosis| < 7 en cada variable (West et al., 1995);
+c.r. de Mardia < 5 o, con el criterio estricto, < 1.96 (Bentler, 2006).
+
+> La asimetría (−0.45 a 0.62) y la curtosis (−0.80 a 1.10) de los ítems estuvieron dentro
+> de los límites recomendados (West et al., 1995), pero el coeficiente de Mardia indicó
+> falta de normalidad multivariada (c.r. = 6.40). Por ello, el modelo se estimó con
+> máxima verosimilitud robusta (MLR).
+
+**Cuidado.** Si no hay normalidad multivariada, no basta con decirlo: cambia el
+estimador (`estimator = "MLR"`) y repórtalo. Con ítems de menos de cinco opciones de
+respuesta, usa `ordered = TRUE` (WLSMV).
+
+### Atípicos — `tabla_atipicos()`
+
+**Criterio.** Un caso con *p1* < .001 en la distancia de Mahalanobis (D²) es atípico
+multivariado.
+
+> Se identificaron tres casos atípicos multivariados (D² de Mahalanobis, *p* < .001). Los
+> resultados no cambiaron sustancialmente al excluirlos, por lo que se conservaron.
+
+**Cuidado.** No elimines atípicos solo porque mejoran el ajuste. Si los quitas, explica
+el motivo (por ejemplo, un patrón de respuesta inválido) y reporta los resultados con y
+sin ellos.
+
+### Multicolinealidad — `tabla_vif()`
+
+**Criterio.** VIF < 5 (o < 10, el criterio flexible) y tolerancia > .20.
+
+> No se encontró multicolinealidad entre los predictores (VIF = 1.12 a 2.35).
+
+---
+
+## Análisis factorial exploratorio
+
+### Factorabilidad y número de factores — `tabla_factorabilidad()`
+
+**Criterios.** KMO ≥ .60 (mejor ≥ .80) y prueba de Bartlett significativa. Para el número
+de factores, da más peso al **análisis paralelo** y a la **MAP de Velicer**; la regla de
+Kaiser (autovalores > 1) tiende a sobreestimarlo.
+
+> Los datos resultaron adecuados para el análisis factorial (KMO = .76; prueba de
+> Bartlett, χ²(36) = 904.10, *p* < .001). El análisis paralelo y la prueba MAP sugirieron
+> retener tres factores.
+
+### Cargas — `tabla_cargas(afe)`
+
+**Qué mirar.** Que cada ítem cargue ≥ .40 en un factor y poco (< .30) en los demás, y que
+los ítems de cada factor tengan un contenido común que le dé nombre.
+
+> Se realizó un análisis factorial exploratorio con extracción de máxima verosimilitud y
+> rotación oblimin. La solución de tres factores explicó 54 % de la varianza. Todos los
+> ítems cargaron en su factor esperado (λ = .45 a .89) sin cargas cruzadas mayores que
+> .30 (Tabla 2).
+
+**Cuidado.** Usa rotación **oblicua** (oblimin, promax) salvo que tengas razones para
+suponer factores independientes; en psicología casi siempre se correlacionan. Y no
+uses el mismo conjunto de datos para el AFE y para el AFC que lo "confirma": divide la
+muestra o usa otra.
+
+---
+
+## Análisis factorial confirmatorio
+
+### Ajuste — `tabla_criterios_ajuste()` o `tabla_ajuste()`
+
+**Qué mirar.** Varios índices a la vez, nunca uno solo: χ² (con sus gl y *p*), CFI, TLI,
+RMSEA con su intervalo y SRMR.
+
+**Criterios** (Hu y Bentler, 1999): CFI y TLI ≥ .95 (≥ .90 aceptable), RMSEA ≤ .06 y
+SRMR ≤ .08. Muchos autores aceptan un RMSEA de hasta .08 (Browne y Cudeck, 1993);
+`tabla_criterios_ajuste()` usa los criterios más estrictos y marca cuál cumple cada
+índice.
+
+**Cómo redactarlo** (modelo de tres factores de Holzinger y Swineford):
+
+> El modelo de tres factores mostró un ajuste mixto: χ²(24) = 85.31, *p* < .001;
+> CFI = .931; TLI = .896; RMSEA = .092, IC 90 % [.071, .114]; SRMR = .065. El CFI y el
+> SRMR fueron aceptables, pero el TLI y el RMSEA quedaron fuera de los criterios
+> recomendados (Hu y Bentler, 1999).
+
+**Cuidado.** La prueba χ² casi siempre es significativa con muestras grandes; repórtala
+de todos modos, pero no la uses sola para rechazar el modelo. Y no escribas "el modelo
+ajustó bien" si la mitad de los índices dicen lo contrario.
+
+### Cargas factoriales — `tabla_cargas(fit)`
+
+**Criterio.** Cargas estandarizadas ≥ .50 (idealmente ≥ .70) y significativas.
+
+> Todas las cargas factoriales estandarizadas fueron significativas (*p* < .001) y
+> variaron de .42 a .92 (Tabla 3). El ítem x2 presentó la carga más baja (λ = .42).
+
+### Confiabilidad — `tabla_confiabilidad()`
+
+**Criterio.** α y ω ≥ .70 (Nunnally y Bernstein, 1994); en investigación inicial se
+aceptan valores desde .60.
+
+> La consistencia interna fue alta para el factor textual (ω = .89) y moderada para los
+> factores visual (ω = .63) y velocidad (ω = .69), estos dos por debajo del criterio de
+> .70.
+
+**Cuidado.** Hoy los revisores prefieren el **omega** al alfa, porque el alfa supone que
+todos los ítems cargan igual. Reporta ambos si tu área lo acostumbra.
+
+### Validez convergente y discriminante — `tabla_validez()` y `tabla_htmt()`
+
+**Criterios.** Convergente: CR > .70 y AVE > .50 (Hair et al., 2014). Discriminante:
+raíz cuadrada del AVE mayor que las correlaciones del factor (Fornell y Larcker, 1981) y
+HTMT < .85 (Henseler et al., 2015).
+
+> El factor textual mostró validez convergente (CR = .89; AVE = .72), pero los factores
+> visual (AVE = .37) y velocidad (AVE = .43) no alcanzaron el criterio de .50. La validez
+> discriminante se sostuvo con ambos criterios: la raíz del AVE de cada factor superó sus
+> correlaciones con los demás y todos los valores HTMT fueron menores que .85
+> (.29 a .47).
+
+### Sesgo de método común — `tabla_metodo_comun()`
+
+**Criterio.** En la prueba de Harman, que un solo factor explique menos de 50 % de la
+varianza; y que el modelo de un factor ajuste claramente peor que el tuyo.
+
+> Para evaluar el sesgo de método común se aplicó la prueba de un factor de Harman: un
+> único factor explicó 35.7 % de la varianza. Además, el modelo de un factor ajustó peor
+> que el de tres factores, Δχ²(3) = 226.96, *p* < .001.
+
+**Cuidado.** La prueba de Harman es débil; preséntala como un indicio, no como prueba de
+que no hay sesgo.
+
+### Residuales e índices de modificación — `tabla_residuales()` y `tabla_modificacion()`
+
+**Qué mirar.** Residuales de correlación mayores que |.10|: indican pares de ítems que el
+modelo explica mal. Los índices de modificación (IM) dicen cuánto bajaría la χ² si
+liberaras un parámetro.
+
+> Cinco de los 36 residuales de correlación superaron |.10|; el mayor correspondió a x2
+> y x7 (−.19). Entre los índices de modificación, la covarianza entre los errores de x7 y
+> x8 (IM = 34.15) tenía justificación: ambos son tareas de velocidad con el mismo formato.
+> Al liberarla, el ajuste mejoró (CFI = .966; RMSEA = .066).
+
+**Cuidado.** Liberar parámetros uno tras otro hasta que el modelo ajuste ("pesca de
+índices de modificación") convierte el AFC en un análisis exploratorio. Solo libera lo
+que tenga una justificación teórica o metodológica, dilo en el texto y, si puedes,
+confírmalo en otra muestra.
+
+### Comparación de modelos — `tabla_comparacion()`
+
+**Qué mirar.** En modelos anidados, la prueba Δχ² (significativa: el modelo más complejo
+ajusta mejor) y el ΔCFI. En no anidados, el AIC y el BIC (más bajo es mejor).
+
+> El modelo de tres factores ajustó significativamente mejor que el de un factor,
+> Δχ²(3) = 226.96, *p* < .001, ΔCFI = .254, y presentó un AIC y un BIC menores.
+
+### Invarianza de medición — `tabla_invarianza()`
+
+**Criterio.** Cada nivel (configural → métrica → escalar → estricta) se sostiene si el
+ajuste no empeora demasiado: ΔCFI ≥ −.010 junto con ΔRMSEA ≤ .015 (Chen, 2007).
+
+> La invarianza configural, métrica y escalar se sostuvo entre hombres y mujeres
+> (ΔCFI ≥ −.006; ΔRMSEA ≤ .004), lo que permite comparar las medias latentes de ambos
+> grupos.
+
+**Cuidado.** Sin invarianza escalar no puedes comparar las medias de los grupos. Si
+liberas parámetros (invarianza parcial), di cuáles.
+
+### Modelos bifactor — `tabla_bifactor()`
+
+**Criterios** (Rodriguez et al., 2016): ωH ≥ .80, ECV ≥ .70 y PUC ≥ .70 indican que la
+escala es esencialmente unidimensional y que el puntaje total es interpretable. Un ωHS
+bajo (< .50) indica que la subescala no aporta mucho más allá del factor general.
+
+> El factor general explicó 72 % de la varianza común (ECV = .72; ωH = .83), y las
+> subescalas mostraron poca confiabilidad propia (ωHS = .12 a .31). Estos resultados
+> respaldan el uso del puntaje total, pero no el de las subescalas por separado.
+
+---
+
+## Trayectorias y SEM
+
+Repórtalo en **dos pasos** (Anderson y Gerbing, 1988): primero el modelo de medición
+(sección anterior) y después el estructural.
+
+### Coeficientes — `tabla_parametros()`
+
+**Qué mirar.** El signo, el tamaño y la significancia de cada trayectoria. Interpreta los
+coeficientes estandarizados (β): alrededor de .10 es pequeño, .30 mediano y .50 grande.
+Mira también el R² de cada variable dependiente.
+
+> La educación predijo positivamente el puntaje de examen (β = .70, *p* < .001), y este,
+> a su vez, predijo negativamente la fertilidad (β = −.31, *p* = .047). El modelo explicó
+> 49 % de la varianza del examen y 54 % de la fertilidad.
+
+### Efectos indirectos (mediación) — `tabla_efectos()`
+
+**Criterio.** Un efecto indirecto es significativo si su **intervalo de confianza
+bootstrap no incluye el cero**. No uses la prueba de Sobel ni el método de pasos de
+Baron y Kenny, que hoy se consideran superados (Hayes, 2018).
+
+> El efecto indirecto de la educación sobre la fertilidad a través del examen fue
+> significativo, β = −.22, IC 95 % [−.43, −.03] (5000 remuestreos bootstrap).
+
+**Cuidado.** Con datos transversales, "mediación" describe un patrón estadístico
+compatible con tu teoría, no una prueba de causalidad. Evita "X causa Y"; prefiere
+"X se asoció con" o "X predijo".
+
+### Hipótesis — `tabla_hipotesis()`
+
+La tabla dice si cada hipótesis se sostiene (signo esperado y *p* < .05, o IC que no
+incluye el cero en las indirectas).
+
+> Se sostuvieron las hipótesis 1, 3 y 4; la hipótesis 2 no se sostuvo, ya que el efecto
+> de la educación sobre la fertilidad no fue significativo (β = −.15, *p* = .310).
+
+**Cuidado.** "No se sostuvo" no significa "se demostró que no hay efecto"; puede faltar
+potencia estadística.
+
+---
+
+## Moderación y mediación moderada
+
+### Moderación — `tabla_moderacion()` y `grafica_interaccion()`
+
+**Qué mirar.** El coeficiente de la interacción X × W y el cambio en R² que aporta (ΔR²).
+Si es significativa, describe las **pendientes simples** (el efecto de X en valores bajos,
+medios y altos de W) y la región de significancia de **Johnson-Neyman**.
+
+> El apoyo predijo el compromiso (*B* = 0.30, *p* < .001), y la autonomía moderó esta
+> relación (*B* = 0.25, *p* < .001, ΔR² = .09). El efecto del apoyo fue mayor cuando la
+> autonomía era alta (+1 *DE*: *B* = 0.67, *p* < .001) que cuando era baja (−1 *DE*:
+> *B* = −0.08, *p* = .41). Según la técnica de Johnson-Neyman, el efecto fue significativo
+> cuando la autonomía era mayor que 3.52 (Figura 2).
+
+**Cuidado.** Centra las variables (el paquete lo hace por omisión) para que los efectos
+principales sean interpretables, y no interpretes los efectos principales como
+"generales" cuando la interacción es significativa.
+
+### Mediación moderada (modelos 7 y 14)
+
+**Criterio.** El **índice de mediación moderada** (Hayes, 2015): si su IC bootstrap no
+incluye el cero, el efecto indirecto depende del moderador.
+
+> El índice de mediación moderada fue significativo (índice = 0.15, IC 95 % [0.08, 0.23]):
+> el efecto indirecto del apoyo sobre la lealtad, a través de la satisfacción, aumentó a
+> medida que aumentaba la autonomía.
+
+---
+
+## MANOVA
+
+**Qué mirar, en este orden.**
+
+1. **Supuestos:** M de Box (con *p* < .001 se considera violado), normalidad y atípicos.
+2. **Prueba multivariada:** si se violó la M de Box o los grupos son desiguales, usa la
+   **traza de Pillai**, que es la más robusta; si no, puedes usar la lambda de Wilks.
+3. **Tamaño del efecto:** η²p (.01 pequeño, .06 mediano, .14 grande).
+4. **ANOVA de seguimiento** para cada variable dependiente, con corrección de Bonferroni
+   (α / número de variables).
+5. **Comparaciones post hoc** (Tukey si las varianzas son iguales, Games-Howell si no) con
+   la *d* de Cohen.
+
+> La prueba M de Box indicó heterogeneidad de las matrices de covarianza (*p* < .001),
+> por lo que se usó la traza de Pillai. La MANOVA mostró diferencias significativas entre
+> las especies en el conjunto de variables, *V* = 0.99, *F*(4, 294) = 71.83, *p* < .001,
+> η²p = .49. Los ANOVA de seguimiento (α corregida = .025) fueron significativos para
+> ambas variables, y las comparaciones de Games-Howell indicaron que las tres especies
+> difirieron entre sí (*d* = 1.12 a 7.95).
+
+---
+
+## Errores comunes y prácticas cuestionables
+
+- **Reportar solo los índices de ajuste que salen bien.** Reporta siempre el mismo
+  conjunto (χ², CFI, TLI, RMSEA con IC, SRMR), salgan como salgan.
+- **Pescar índices de modificación** hasta que el modelo ajuste, sin justificarlo.
+- **Eliminar casos o ítems sin decirlo**, o solo porque mejoran los resultados. Todo lo
+  que quites tiene que aparecer en el texto, con el motivo.
+- **Usar los mismos datos para el AFE y el AFC.** Divide la muestra o usa otra.
+- **Ignorar la falta de normalidad** o el carácter ordinal de los ítems. Cambia el
+  estimador y dilo.
+- **Lenguaje causal con datos transversales** ("X provoca Y"). Usa "se asoció" o
+  "predijo".
+- **Confundir "no significativo" con "no hay efecto".**
+- **Escribir *p* = .000** o reportar solo asteriscos: da el valor exacto.
+- **Olvidar el método:** el estimador, el software y sus versiones, el manejo de los
+  perdidos y el número de remuestreos bootstrap. `parrafo_metodo(fit)` lo escribe por ti.
+
+---
+
+## Orden sugerido de la sección de resultados
+
+1. Descriptivos, perdidos y supuestos (normalidad, atípicos).
+2. Modelo de medición: ajuste, cargas, confiabilidad, validez convergente y
+   discriminante, método común (y, si aplica, invarianza).
+3. Modelo estructural: ajuste, coeficientes y R², efectos indirectos, hipótesis.
+4. Análisis adicionales: modelos alternativos, moderación, MANOVA.
+
+En el método, incluye el párrafo de `parrafo_metodo()` (software, estimador, manejo de
+perdidos, bootstrap) y las referencias que trae.
+
+## Referencias
+
+- Anderson, J. C., & Gerbing, D. W. (1988). Structural equation modeling in practice: A
+  review and recommended two-step approach. *Psychological Bulletin, 103*(3), 411–423.
+- Bentler, P. M. (2006). *EQS 6 structural equations program manual*. Multivariate
+  Software.
+- Browne, M. W., & Cudeck, R. (1993). Alternative ways of assessing model fit. En K. A.
+  Bollen y J. S. Long (Eds.), *Testing structural equation models* (pp. 136–162). Sage.
+- Chen, F. F. (2007). Sensitivity of goodness of fit indexes to lack of measurement
+  invariance. *Structural Equation Modeling, 14*(3), 464–504.
+- Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation models with
+  unobservable variables and measurement error. *Journal of Marketing Research, 18*(1),
+  39–50.
+- Hair, J. F., Black, W. C., Babin, B. J., & Anderson, R. E. (2014). *Multivariate data
+  analysis* (7th ed.). Pearson.
+- Hayes, A. F. (2015). An index and test of linear moderated mediation. *Multivariate
+  Behavioral Research, 50*(1), 1–22.
+- Hayes, A. F. (2018). *Introduction to mediation, moderation, and conditional process
+  analysis* (2nd ed.). Guilford Press.
+- Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for assessing
+  discriminant validity in variance-based structural equation modeling. *Journal of the
+  Academy of Marketing Science, 43*(1), 115–135.
+- Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance
+  structure analysis. *Structural Equation Modeling, 6*(1), 1–55.
+- Nunnally, J. C., & Bernstein, I. H. (1994). *Psychometric theory* (3rd ed.).
+  McGraw-Hill.
+- Rodriguez, A., Reise, S. P., & Haviland, M. G. (2016). Evaluating bifactor models:
+  Calculating and interpreting statistical indices. *Psychological Methods, 21*(2),
+  137–150.
+- West, S. G., Finch, J. F., & Curran, P. J. (1995). Structural equation models with
+  nonnormal variables. En R. H. Hoyle (Ed.), *Structural equation modeling* (pp. 56–75).
+  Sage.

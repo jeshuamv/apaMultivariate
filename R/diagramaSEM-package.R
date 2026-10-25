@@ -4,6 +4,13 @@
 #' confirmatorios, análisis de trayectorias y modelos de ecuaciones
 #' estructurales, con la convención gráfica clásica de los programas de SEM.
 #'
+#' Para empezar:
+#' \itemize{
+#'   \item [leer_datos()]: lee Excel, SPSS, CSV, Stata, SAS o texto.
+#'   \item [revisar_datos()]: revisa los datos y el modelo antes de estimar.
+#'   \item [plantilla()]: crea un script comentado con todo el análisis.
+#' }
+#'
 #' Diagramas:
 #' \itemize{
 #'   \item [diagrama_sem()]: dibuja el diagrama de un AFE, AFC, análisis de

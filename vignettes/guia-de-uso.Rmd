@@ -95,25 +95,50 @@ Qué se ve en el diagrama:
 
 ## Con tus propios datos
 
-El procedimiento es siempre el mismo: leer los datos, escribir el modelo,
-estimarlo con `lavaan` y pasárselo a `diagrama_sem()`.
+El procedimiento es siempre el mismo: leer los datos, revisarlos, escribir el
+modelo, estimarlo con `lavaan` y pasárselo a `diagrama_sem()`.
 
 ```{r, eval = FALSE}
-datos <- read.csv("mis_datos.csv")      # o read_excel(), read_sav(), etc.
+datos <- leer_datos("mis_datos.xlsx")   # Excel, SPSS (.sav), CSV, Stata...
+# datos <- leer_datos()                 # o elige el archivo en una ventana
 
 modelo <- "
   Factor1 =~ item1 + item2 + item3
   Factor2 =~ item4 + item5 + item6
 "
+revisar_datos(datos, modelo)            # revisa nombres, perdidos, N...
 fit <- cfa(modelo, data = datos)        # sem() para trayectorias o SEM
 
 diagrama_sem(fit)
 ```
 
-Los nombres de los ítems en el modelo deben ser exactamente los nombres de las
-columnas de tus datos. Si `cfa()` o `sem()` marcan un error, el problema está
-en el modelo o en los datos, no en `diagramaSEM`; corrígelo primero en
-`lavaan`.
+`leer_datos()` reconoce el formato por la extensión del archivo, detecta si un
+CSV usa coma o punto y coma (y la coma decimal), quita las etiquetas de SPSS y
+convierte los nombres de columna con espacios o acentos en nombres que R
+acepta, avisándote de cada cambio. Si tus datos tienen códigos de dato perdido,
+indícalos: `leer_datos("encuesta.sav", perdidos = c(99, 999))`.
+
+`revisar_datos()` te avisa, antes de estimar, de lo que suele hacer fallar el
+análisis: nombres del modelo que no están en los datos (y te sugiere el
+correcto), errores de sintaxis, columnas de texto o constantes, códigos como 99
+que parecen datos perdidos, el porcentaje de perdidos, si los ítems son tipo
+Likert y qué estimador conviene, y el tamaño de la muestra.
+
+### Plantillas
+
+Si prefieres no escribir el código desde cero, `plantilla()` crea un script con
+todo el análisis explicado paso a paso; solo cambias lo marcado con
+`>>> CAMBIA AQUÍ <<<`:
+
+```{r, eval = FALSE}
+plantilla()                 # muestra las plantillas disponibles
+plantilla("afc")            # crea analisis_afc.R y lo abre en RStudio
+```
+
+Hay plantillas para `"afe"`, `"afc"`, `"trayectorias"`, `"sem"`,
+`"moderacion"` y `"manova"`, y cada una trae datos de ejemplo para probarla.
+Para saber cómo interpretar y redactar cada resultado, consulta la guía
+[Cómo interpretar y redactar los resultados](INTERPRETACION.md).
 
 ## Acomodo automático
 
@@ -832,6 +857,15 @@ Siempre revisa las instrucciones para autores de la revista elegida: algunas
 piden otro ancho, otro formato o la figura en un archivo aparte.
 
 ## Preguntas frecuentes
+
+**`cfa()` o `sem()` dicen que no encuentran una variable.** Un nombre del
+modelo no coincide con el de la columna (R distingue mayúsculas y minúsculas).
+Corre `revisar_datos(datos, modelo)`: te dice cuál es y te sugiere el nombre
+correcto.
+
+**No sé leer mi archivo de Excel o SPSS.** Usa `leer_datos("archivo.xlsx")` o
+`leer_datos()` sin nada para elegirlo en una ventana. Si dice que no encuentra
+el archivo, revisa tu carpeta de trabajo con `getwd()`.
 
 **El diagrama sale muy pequeño o el texto muy chico.** Guárdalo con
 `guardar_diagrama()`; en la ventana de RStudio el tamaño depende del panel.

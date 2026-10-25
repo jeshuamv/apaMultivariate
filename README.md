@@ -25,6 +25,26 @@ moderación y MANOVA trabajan directamente con tus datos.
 
 ---
 
+## Paso 0. Si nunca has usado R
+
+1. **Instala R** desde [cran.r-project.org](https://cran.r-project.org): elige tu
+   sistema (Windows, Mac o Linux) y descarga la versión más reciente.
+2. **Instala RStudio Desktop** (gratis) desde
+   [posit.co/download/rstudio-desktop](https://posit.co/download/rstudio-desktop/).
+   RStudio es el programa en el que vas a trabajar; R funciona por debajo.
+3. **Abre RStudio.** Verás la *consola* (abajo a la izquierda), donde se escriben las
+   instrucciones, y el panel de gráficos y archivos (abajo a la derecha).
+4. **Abre un script**: menú *File → New File → R Script*. Es un archivo de texto donde
+   guardas tus instrucciones para repetirlas después. Para ejecutar una línea, pon el
+   cursor en ella y presiona **Ctrl + Enter** (en Mac, **Cmd + Enter**).
+5. **Elige tu carpeta de trabajo**: menú *Session → Set Working Directory → Choose
+   Directory…* y selecciona la carpeta donde están tus datos. Ahí se guardarán los
+   diagramas y las tablas.
+
+Tres reglas que evitan la mayoría de los errores: R distingue mayúsculas de minúsculas
+(`Item1` no es `item1`), los textos van entre comillas (`"mis_datos.xlsx"`) y cada
+paréntesis que abres se tiene que cerrar.
+
 ## Paso 1. Instalar (solo la primera vez)
 
 Abre R o RStudio, copia estas líneas, pégalas en la consola y presiona Enter:
@@ -45,7 +65,63 @@ remotes::install_github("jeshuamv/diagramaSEM")
 install.packages(c("psych", "GPArotation"))
 ```
 
-## Paso 2. Dibujar tu modelo
+## Paso 2. Leer y revisar tus datos
+
+R no solo lee archivos `.csv`. Con `leer_datos()` puedes abrir **Excel** (`.xlsx`,
+`.xls`), **SPSS** (`.sav`), **CSV** (con coma o con punto y coma), **Stata** (`.dta`),
+**SAS** y texto (`.txt`). Sin nada entre los paréntesis se abre una ventana para elegir
+el archivo:
+
+```r
+library(lavaan)
+library(diagramaSEM)
+
+datos <- leer_datos()                          # se abre una ventana
+datos <- leer_datos("mis_datos.xlsx")          # o con el nombre del archivo
+datos <- leer_datos("encuesta.sav", perdidos = c(99, 999))   # códigos de dato perdido
+```
+
+`leer_datos()` detecta solo el formato, quita las etiquetas de SPSS y, si un nombre de
+columna tiene espacios o acentos (`Ítem 1`), lo cambia a uno que funciona en R
+(`Item_1`) y te avisa. También puedes usar el menú *File → Import Dataset* de RStudio.
+
+Antes de estimar, revisa los datos y el modelo:
+
+```r
+revisar_datos(datos, modelo)
+```
+
+```
+✖ Estas variables del modelo no están en los datos: 'item_2' (¿quisiste decir 'Item_2'?).
+✔ No hay datos perdidos.
+⚠ Las variables parecen ordinales (escala tipo Likert de hasta 5 puntos). Con 5 o más
+    categorías suele aceptarse tratarlas como continuas con estimator = "MLR".
+✔ Tamaño de la muestra: N = 312. Adecuada para la mayoría de los modelos.
+```
+
+Revisa errores de escritura en el modelo, columnas con texto, valores constantes,
+códigos como 99 que parecen datos perdidos, el porcentaje de perdidos, si los ítems son
+tipo Likert (y qué estimador conviene) y el tamaño de la muestra.
+
+## La forma más fácil: una plantilla
+
+`plantilla()` crea un script con **todo el análisis**, paso por paso y explicado:
+leer los datos, revisarlos, estimar, revisar supuestos, dibujar el diagrama, hacer las
+tablas y guardarlas en Word. Solo cambias lo marcado con `>>> CAMBIA AQUÍ <<<`.
+
+```r
+plantilla("afc")            # análisis factorial confirmatorio
+plantilla("afe")            # exploratorio
+plantilla("trayectorias")   # path
+plantilla("sem")            # medición + estructural
+plantilla("moderacion")     # moderación y mediación moderada
+plantilla("manova")
+```
+
+El script se guarda en tu carpeta de trabajo (`analisis_afc.R`, …) y se abre en RStudio.
+Cada plantilla trae datos de ejemplo para probarla antes de usar los tuyos.
+
+## Paso 3. Dibujar tu modelo
 
 Cada vez que abras R, carga los paquetes, estima tu modelo como siempre y pásaselo a
 `diagrama_sem()`. Elige la plantilla que corresponde a tu análisis y cambia los nombres
@@ -55,7 +131,7 @@ por los tuyos (deben ser iguales a los nombres de las columnas de tus datos).
 library(lavaan)
 library(diagramaSEM)
 
-datos <- read.csv("mis_datos.csv")      # tus datos
+datos <- leer_datos("mis_datos.xlsx")   # tus datos
 ```
 
 ### Análisis factorial confirmatorio (AFC)
@@ -124,7 +200,7 @@ fit <- cfa(modelo, data = HolzingerSwineford1939)
 diagrama_sem(fit)
 ```
 
-## Paso 3. Guardar el diagrama
+## Paso 4. Guardar el diagrama
 
 ```r
 diagrama_sem(fit, archivo = "mi_diagrama.png")   # imagen para Word o PowerPoint
@@ -298,6 +374,8 @@ d
 
 - **[Guía de uso completa](guia/GUIA.md)**: cada tipo de análisis, todas las opciones
   y todas las tablas, con ejemplos e imágenes.
+- **[Cómo interpretar y redactar los resultados](guia/INTERPRETACION.md)**: qué mirar en
+  cada tabla, los criterios, ejemplos de redacción en APA y errores comunes.
 - **Ayuda dentro de R**: `?diagrama_sem` o el nombre de cualquier tabla, por ejemplo
   `?tabla_invarianza`.
 
@@ -305,6 +383,20 @@ d
 
 **`could not find function "diagrama_sem"`** (no se encuentra la función): falta
 cargar el paquete. Escribe `library(diagramaSEM)`.
+
+**`could not find function "leer_datos"` o `"plantilla"`**: tienes una versión vieja del
+paquete. Reinstálalo con `remotes::install_github("jeshuamv/diagramaSEM")`.
+
+**`object 'datos' not found`** (no se encuentra el objeto): falta correr la línea que
+lee los datos, o la escribiste con otro nombre. Corre los pasos en orden.
+
+**`No encuentro el archivo`**: el archivo no está en tu carpeta de trabajo. Escribe
+`getwd()` para ver cuál es, cámbiala en *Session → Set Working Directory* o usa
+`leer_datos()` sin nada para elegirlo en una ventana.
+
+**`... not found in the data` o `object '...' not found` al estimar**: un nombre del
+modelo no coincide con el de la columna. Corre `revisar_datos(datos, modelo)`: te dice
+cuál y te sugiere el nombre correcto.
 
 **`there is no package called 'diagramaSEM'`**: el paquete no está instalado. Repite
 el Paso 1.

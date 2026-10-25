@@ -1,7 +1,7 @@
 Package: diagramaSEM
 Type: Package
 Title: Diagramas de Trayectorias y Tablas APA para Modelos 'lavaan' y 'psych'
-Version: 0.7.0
+Version: 0.8.0
 Authors@R: person("Jeshua", "Moreno Valladares", email = "jeshuamv@gmail.com",
                   role = c("aut", "cre"))
 URL: https://github.com/jeshuamv/diagramaSEM
@@ -24,8 +24,8 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Language: es
 Depends: R (>= 4.0.0)
-Imports: lavaan (>= 0.6-9), graphics, grDevices, stats, tools, utils, zip
-Suggests: testthat (>= 3.0.0), knitr, rmarkdown, psych, GPArotation, semTools
+Imports: lavaan (>= 0.6-9), graphics, grDevices, haven, readxl, stats, tools, utils, zip
+Suggests: rstudioapi, writexl, testthat (>= 3.0.0), knitr, rmarkdown, psych, GPArotation, semTools
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 RoxygenNote: 7.3.1

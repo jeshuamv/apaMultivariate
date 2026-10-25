@@ -83,7 +83,7 @@ fit <- cfa(modelo, data = HolzingerSwineford1939)
 diagrama_sem(fit)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
 
 Qué se ve en el diagrama:
 
@@ -97,25 +97,54 @@ Qué se ve en el diagrama:
 
 ## Con tus propios datos
 
-El procedimiento es siempre el mismo: leer los datos, escribir el
-modelo, estimarlo con `lavaan` y pasárselo a `diagrama_sem()`.
+El procedimiento es siempre el mismo: leer los datos, revisarlos,
+escribir el modelo, estimarlo con `lavaan` y pasárselo a
+`diagrama_sem()`.
 
 ``` r
-datos <- read.csv("mis_datos.csv")      # o read_excel(), read_sav(), etc.
+datos <- leer_datos("mis_datos.xlsx")   # Excel, SPSS (.sav), CSV, Stata...
+# datos <- leer_datos()                 # o elige el archivo en una ventana
 
 modelo <- "
   Factor1 =~ item1 + item2 + item3
   Factor2 =~ item4 + item5 + item6
 "
+revisar_datos(datos, modelo)            # revisa nombres, perdidos, N...
 fit <- cfa(modelo, data = datos)        # sem() para trayectorias o SEM
 
 diagrama_sem(fit)
 ```
 
-Los nombres de los ítems en el modelo deben ser exactamente los nombres
-de las columnas de tus datos. Si `cfa()` o `sem()` marcan un error, el
-problema está en el modelo o en los datos, no en `diagramaSEM`;
-corrígelo primero en `lavaan`.
+`leer_datos()` reconoce el formato por la extensión del archivo, detecta
+si un CSV usa coma o punto y coma (y la coma decimal), quita las
+etiquetas de SPSS y convierte los nombres de columna con espacios o
+acentos en nombres que R acepta, avisándote de cada cambio. Si tus datos
+tienen códigos de dato perdido, indícalos:
+`leer_datos("encuesta.sav", perdidos = c(99, 999))`.
+
+`revisar_datos()` te avisa, antes de estimar, de lo que suele hacer
+fallar el análisis: nombres del modelo que no están en los datos (y te
+sugiere el correcto), errores de sintaxis, columnas de texto o
+constantes, códigos como 99 que parecen datos perdidos, el porcentaje de
+perdidos, si los ítems son tipo Likert y qué estimador conviene, y el
+tamaño de la muestra.
+
+### Plantillas
+
+Si prefieres no escribir el código desde cero, `plantilla()` crea un
+script con todo el análisis explicado paso a paso; solo cambias lo
+marcado con `>>> CAMBIA AQUÍ <<<`:
+
+``` r
+plantilla()                 # muestra las plantillas disponibles
+plantilla("afc")            # crea analisis_afc.R y lo abre en RStudio
+```
+
+Hay plantillas para `"afe"`, `"afc"`, `"trayectorias"`, `"sem"`,
+`"moderacion"` y `"manova"`, y cada una trae datos de ejemplo para
+probarla. Para saber cómo interpretar y redactar cada resultado,
+consulta la guía [Cómo interpretar y redactar los
+resultados](INTERPRETACION.md).
 
 ## Acomodo automático
 
@@ -150,7 +179,7 @@ Para elegir otro:
 diagrama_sem(fit, acomodo = "dos_filas")
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
 
 ## Segundo orden
 
@@ -160,7 +189,7 @@ fit2 <- cfa(paste(modelo, "\n Mental =~ visual + textual + speed"),
 diagrama_sem(fit2)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
 
 Los constructos de primer orden llevan su propio error (perturbación) y
 su R², que indica cuánto de su varianza explica el factor general.
@@ -191,7 +220,7 @@ diagrama_sem(fit3, etiquetas = c(Education = "Educación", Examination = "Examen
                                  Fertility = "Fecundidad", Catholic = "Católicos"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
 
 Cómo se lee:
 
@@ -235,7 +264,7 @@ fit4 <- sem("ind60 =~ x1 + x2 + x3
 diagrama_sem(fit4)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-11-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
 
 Cada constructo coloca sus ítems donde menos estorban a las flechas
 entre constructos. Las covarianzas entre errores se dibujan como arcos
@@ -253,7 +282,7 @@ afe <- fa(items, nfactors = 3, rotate = "oblimin", fm = "ml")
 diagrama_sem(afe)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
 
 En un exploratorio cada ítem carga en todos los factores, así que el
 diagrama muestra solo lo importante:
@@ -275,7 +304,7 @@ Los nombres `ML1`, `ML2`… los pone `psych`; cámbialos con `etiquetas`:
 diagrama_sem(afe, etiquetas = c(ML1 = "Verbal", ML2 = "Velocidad", ML3 = "Visual"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
 
 Con `lavaan::efa()` es igual. Si pediste varias soluciones (por ejemplo,
 `nfactors = 2:4`), indica cuál dibujar:
@@ -300,13 +329,13 @@ contenido.
 diagrama_sem(fit, estilo = "revista")
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-15-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-16-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, estilo = "color")
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-16-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-17-1.png" width="100%" />
 
 Qué cambia en los estilos `"revista"` y `"color"`:
 
@@ -914,7 +943,7 @@ como en AMOS, la varianza de cada variable exógena y de cada error):
 diagrama_sem(fit3, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-34-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-35-1.png" width="100%" />
 
 **3. Ajuste e identificación.** Cada índice contra los criterios
 excelente y aceptable, con su fuente, y la identificación del modelo
@@ -1274,7 +1303,7 @@ región de Johnson-Neyman. La gráfica de la interacción:
 grafica_interaccion(mod)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-44-1.png" width="60%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-45-1.png" width="60%" />
 
 Con `archivo = "figura2.pdf"` se guarda al ancho de una columna.
 
@@ -1301,7 +1330,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 #> 
 #> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
 #> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
-#> Jorgensen et al., 2022) y diagramaSEM (versión 0.7.0; Moreno Valladares, 2026).
+#> Jorgensen et al., 2022) y diagramaSEM (versión 0.8.0; Moreno Valladares, 2026).
 #> El análisis factorial confirmatorio se estimó con una muestra de 301
 #> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
 #> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
@@ -1322,7 +1351,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 #>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
 #> 
 #> Moreno Valladares, J. (2026). diagramaSEM: Diagramas de trayectorias y tablas
-#>     APA para modelos lavaan y psych (Paquete de R, versión 0.7.0).
+#>     APA para modelos lavaan y psych (Paquete de R, versión 0.8.0).
 #>     https://github.com/jeshuamv/diagramaSEM.
 #> 
 #> R Core Team. (2024). R: A language and environment for statistical computing. R
@@ -1399,7 +1428,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-51-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-52-1.png" width="100%" />
 
 Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -1409,7 +1438,7 @@ Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-52-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-53-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados y,
 como en AMOS, en lugar de la R² se escribe la varianza de cada variable
@@ -1419,7 +1448,7 @@ exógena y de cada error:
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-53-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-54-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -1427,13 +1456,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-54-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-55-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-54-2.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-55-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -1453,20 +1482,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-56-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-56-2.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-57-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-56-3.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-57-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -1479,7 +1508,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -1488,7 +1517,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
+<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
 
 ## Guardar el diagrama
 
@@ -1555,6 +1584,16 @@ Siempre revisa las instrucciones para autores de la revista elegida:
 algunas piden otro ancho, otro formato o la figura en un archivo aparte.
 
 ## Preguntas frecuentes
+
+**`cfa()` o `sem()` dicen que no encuentran una variable.** Un nombre
+del modelo no coincide con el de la columna (R distingue mayúsculas y
+minúsculas). Corre `revisar_datos(datos, modelo)`: te dice cuál es y te
+sugiere el nombre correcto.
+
+**No sé leer mi archivo de Excel o SPSS.** Usa
+`leer_datos("archivo.xlsx")` o `leer_datos()` sin nada para elegirlo en
+una ventana. Si dice que no encuentra el archivo, revisa tu carpeta de
+trabajo con `getwd()`.
 
 **El diagrama sale muy pequeño o el texto muy chico.** Guárdalo con
 `guardar_diagrama()`; en la ventana de RStudio el tamaño depende del

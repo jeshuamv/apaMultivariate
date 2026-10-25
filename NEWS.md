@@ -1,3 +1,22 @@
+# diagramaSEM 0.8.0
+
+Pensada para quien empieza con R.
+
+* `leer_datos()`: lee Excel, SPSS, CSV (con coma o punto y coma, y coma
+  decimal), Stata, SAS y texto; sin argumentos abre una ventana para elegir el
+  archivo. Quita las etiquetas de SPSS, marca los códigos de dato perdido
+  (`perdidos = c(99)`) y corrige los nombres de columna con espacios o acentos.
+* `revisar_datos()`: revisión previa con mensajes claros: nombres del modelo
+  que no están en los datos (con sugerencias), errores de sintaxis, columnas de
+  texto o constantes, posibles códigos de perdido, porcentaje de perdidos,
+  ítems tipo Likert y tamaño de la muestra.
+* `plantilla()`: scripts comentados, paso a paso, para AFE, AFC, trayectorias,
+  SEM, moderación y MANOVA, con datos de ejemplo.
+* Nueva guía *Cómo interpretar y redactar los resultados*
+  (`guia/INTERPRETACION.md`): criterios, ejemplos de redacción en APA y errores
+  comunes para cada tabla.
+* README con un "Paso 0" para instalar R y RStudio.
+
 # diagramaSEM 0.7.0
 
 * `tabla_moderacion()`: moderación y mediación moderada al estilo de PROCESS
