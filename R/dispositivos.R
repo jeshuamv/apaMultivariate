@@ -20,7 +20,7 @@ con_dispositivo <- function(archivo, ext, ancho, alto, dibujar, res = 300, point
   intento <- function(cairo) {
     if (file.exists(archivo)) unlink(archivo)
     d0 <- grDevices::dev.list()
-    abierto <- tryCatch({ abrir(cairo); TRUE },
+    abierto <- tryCatch({ if (cairo) abrir(TRUE) else suppressWarnings(abrir(FALSE)); TRUE },
                         warning = function(w) FALSE,
                         error = function(e) if (grepl("Formato|SVG", conditionMessage(e))) stop(e) else FALSE)
     nuevos <- setdiff(grDevices::dev.list(), d0)
