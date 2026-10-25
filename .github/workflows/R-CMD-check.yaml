@@ -40,3 +40,16 @@ jobs:
           upload-snapshots: true
           build_args: 'c("--no-manual")'
           args: 'c("--no-manual", "--as-cran")'
+
+      - name: Mostrar errores del check
+        if: failure()
+        shell: bash
+        run: |
+          for f in $(find check -name "00check.log" 2>/dev/null); do
+            msg=$(grep -A25 -E "ERROR|WARNING" "$f" | head -60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=00check::$msg"
+          done
+          for f in $(find check -name "*.Rout.fail" 2>/dev/null); do
+            msg=$(tail -60 "$f" | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=tests::$msg"
+          done
