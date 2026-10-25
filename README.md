@@ -1,6 +1,6 @@
 # apaMultivariate
 
-[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE) [![R-CMD-check](https://github.com/jeshuamv/apaMultivariate/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jeshuamv/apaMultivariate/actions/workflows/R-CMD-check.yaml)
 
 **Tablas APA y diagramas para tus análisis factoriales, de trayectorias, SEM, moderación y MANOVA, con una sola línea de código.**
 

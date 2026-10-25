@@ -33,6 +33,9 @@ Revisión completa antes de compartirlo:
   aplica a modelos de un factor; `tabla_modificacion()` avisa cuando el modelo
   tiene restricciones de igualdad; `parrafo_metodo()` funciona con modelos
   multigrupo.
+* Los diagramas y la gráfica de la interacción se guardan en PDF, EPS y TIFF
+  también en Mac sin XQuartz (si cairo no está disponible se usa el
+  dispositivo estándar de R).
 * Word: columnas más anchas para textos con flechas y símbolos.
 * Las tablas avisan cuando son más anchas que la consola.
 * Hoja de referencia de una página (`guia/hoja_referencia.pdf`), sección "Lo
