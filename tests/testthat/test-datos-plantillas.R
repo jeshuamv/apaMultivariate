@@ -79,3 +79,39 @@ test_that("plantilla crea el script sin sobrescribir", {
   expect_error(plantilla("anova"), "No hay plantilla")
   expect_message(plantilla(), "Plantillas disponibles")
 })
+
+test_that("quitar_atipicos coincide con el procedimiento de clase", {
+  X <- HolzingerSwineford1939
+  v <- paste0("x", 1:9)
+  D2 <- mahalanobis(X[, v], colMeans(X[, v]), var(X[, v]))
+  esperado <- which(D2 > qchisq(.999, 9))
+  r <- suppressMessages(quitar_atipicos(X, "F =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9"))
+  expect_equal(attr(r, "atipicos"), unname(esperado))
+  expect_equal(nrow(r), nrow(X) - length(esperado))
+  f <- lavaan::cfa("F =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9", data = X)
+  expect_equal(attr(suppressMessages(quitar_atipicos(X, f)), "atipicos"), unname(esperado))
+  expect_message(quitar_atipicos(X, v), "Se quitaron 2")
+  expect_error(quitar_atipicos(f), "data.frame")
+})
+
+test_that("revisar_modelo detecta los problemas habituales", {
+  HS <- lavaan::HolzingerSwineford1939
+  capture.output(ok <- revisar_modelo(lavaan::cfa("v =~ x1 + x2 + x3\n t =~ x4 + x5 + x6", data = HS)))
+  expect_false(any(ok$estado == "problema"))
+  capture.output(ni <- revisar_modelo(suppressWarnings(lavaan::cfa("F =~ x1 + x2", data = HS))))
+  expect_match(paste(ni$texto, collapse = " "), "no está identificado")
+  capture.output(gl0 <- revisar_modelo(lavaan::cfa("F =~ x1 + x2 + x3", data = HS)))
+  expect_match(gl0$texto[1], "exactamente identificado")
+  Z <- as.data.frame(scale(HS[, paste0("x", 1:9)]))
+  hw <- suppressWarnings(lavaan::cfa("g =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9
+    visual =~ x1 + x2 + x3
+    textual =~ x4 + x5 + x6
+    speed =~ x7 + x8 + x9", data = Z, orthogonal = TRUE, std.lv = TRUE))
+  capture.output(h <- revisar_modelo(hw))
+  expect_match(paste(h$texto, collapse = " "), "Heywood")
+  capture.output(nc <- revisar_modelo(suppressWarnings(lavaan::cfa("A =~ x1 + x2 + x3 + x4\n B =~ x5 + x6", data = HS,
+                                                                   control = list(iter.max = 2)))))
+  expect_match(nc$texto[1], "no convergi")
+  expect_true(any(grepl("Revisión del modelo", capture.output(print(h)))))
+  expect_error(revisar_modelo(HS), "lavaan")
+})

@@ -233,13 +233,14 @@ revisar_datos <- function(datos, modelo = NULL, variables = NULL) {
 #' @export
 print.revision_datos <- function(x, ...) {
   marca <- c(bien = "\u2714", aviso = "\u26a0", problema = "\u2716")
-  cat("\nRevisi\u00f3n de los datos\n\n")
+  modelo <- identical(attr(x, "titulo"), "Revisi\u00f3n del modelo")
+  cat("\n", if (is.null(attr(x, "titulo"))) "Revisi\u00f3n de los datos" else attr(x, "titulo"), "\n\n", sep = "")
   for (i in seq_len(nrow(x))) {
     lineas <- strwrap(x$texto[i], width = 76, exdent = 4)
     cat(marca[[x$estado[i]]], " ", paste(lineas, collapse = "\n"), "\n", sep = "")
   }
   np <- sum(x$estado == "problema")
-  cat("\n", if (np) paste0(np, " problema", if (np > 1) "s" else "", " que hay que corregir antes de estimar el modelo.")
-      else "Todo listo para estimar el modelo.", "\n", sep = "")
+  cat("\n", if (np) paste0(np, " problema", if (np > 1) "s" else "", if (modelo) " que hay que resolver antes de interpretar los resultados." else " que hay que corregir antes de estimar el modelo.")
+      else if (modelo) "La estimaci\u00f3n no muestra problemas; ya puedes revisar el ajuste y las tablas." else "Todo listo para estimar el modelo.", "\n", sep = "")
   invisible(x)
 }

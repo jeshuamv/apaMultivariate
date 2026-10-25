@@ -1,9 +1,9 @@
 Cómo interpretar y redactar los resultados
 ================
 
-Esta guía acompaña a las tablas de `diagramaSEM`. Para cada una te dice
-**qué mirar**, **qué criterio usar**, **cómo redactarlo** en estilo APA
-y **qué errores evitar**. Los ejemplos de redacción del AFC usan los
+Esta guía acompaña a las tablas de `apaMultivariate`. Para cada una te
+dice **qué mirar**, **qué criterio usar**, **cómo redactarlo** en estilo
+APA y **qué errores evitar**. Los ejemplos de redacción del AFC usan los
 datos `HolzingerSwineford1939` de `lavaan` (con `plantilla("afc")`
 puedes reproducirlos); en las demás secciones los números son solo
 ilustrativos: sustitúyelos por los tuyos.
@@ -87,8 +87,9 @@ todo, el coeficiente de Mardia (curtosis multivariada) y su razón
 crítica (c.r.).
 
 **Criterios.** \|asimetría\| \< 2 y \|curtosis\| \< 7 en cada variable
-(West et al., 1995); c.r. de Mardia \< 5 o, con el criterio estricto, \<
-1.96 (Bentler, 2006).
+(West et al., 1995); c.r. de Mardia \< 1.96 (el criterio estricto, el
+que marca `tabla_normalidad()`); muchos autores aceptan valores de hasta
+5 (Bentler, 2006).
 
 > La asimetría (−0.45 a 0.62) y la curtosis (−0.80 a 1.10) de los ítems
 > estuvieron dentro de los límites recomendados (West et al., 1995),
@@ -161,10 +162,12 @@ para el AFC que lo “confirma”: divide la muestra o usa otra.
 **Qué mirar.** Varios índices a la vez, nunca uno solo: χ² (con sus gl y
 *p*), CFI, TLI, RMSEA con su intervalo y SRMR.
 
-**Criterios** (Hu y Bentler, 1999): CFI y TLI ≥ .95 (≥ .90 aceptable),
-RMSEA ≤ .06 y SRMR ≤ .08. Muchos autores aceptan un RMSEA de hasta .08
-(Browne y Cudeck, 1993); `tabla_criterios_ajuste()` usa los criterios
-más estrictos y marca cuál cumple cada índice.
+**Criterios:** CFI y TLI ≥ .95 (≥ .90 aceptable) y SRMR ≤ .08 (Hu y
+Bentler, 1999); RMSEA ≤ .06 (Hu y Bentler, 1999), con hasta .08 como
+aceptable (Browne y Cudeck, 1993). `tabla_criterios_ajuste()` usa estos
+criterios y marca cuál cumple cada índice; si tu curso o tu revista usan
+otros, cámbialos con `cortes`, y para un artículo puedes quitar la
+columna de evaluación con `evaluacion = FALSE`.
 
 **Cómo redactarlo** (modelo de tres factores de Holzinger y Swineford):
 
@@ -194,7 +197,7 @@ significativas.
 inicial se aceptan valores desde .60.
 
 > La consistencia interna fue alta para el factor textual (ω = .89) y
-> moderada para los factores visual (ω = .63) y velocidad (ω = .69),
+> moderada para los factores visual (ω = .61) y velocidad (ω = .69),
 > estos dos por debajo del criterio de .70.
 
 **Cuidado.** Hoy los revisores prefieren el **omega** al alfa, porque el

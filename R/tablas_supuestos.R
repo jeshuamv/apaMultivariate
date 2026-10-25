@@ -98,6 +98,7 @@ tabla_atipicos <- function(datos, variables = NULL, alfa = .001, n = 10, decimal
 #' tabla_vif(sem("Y ~ X1 + X2", data = d))
 #' @export
 tabla_vif <- function(fit, etiquetas = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(fit)
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   pe <- lavaan::parameterEstimates(fit); if ("group" %in% names(pe)) pe <- pe[pe$group == 1, ]
   reg <- pe[pe$op == "~", ]
@@ -125,4 +126,55 @@ tabla_vif <- function(fit, etiquetas = NULL, decimales = 2, titulo = NULL, archi
                    alinear = c("l", "l", "c", "c"), nota = nota, datos = D)
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
+}
+
+#' Quitar los casos atípicos multivariados
+#'
+#' Devuelve tus datos sin los casos atípicos multivariados: los que tienen una
+#' distancia de Mahalanobis (D²) con \eqn{p < .001} (Kline, 2016), el criterio
+#' conservador habitual. Los números de fila de los casos quitados quedan en
+#' `attr(resultado, "atipicos")`.
+#'
+#' Quitar atípicos es una decisión que debes justificar y reportar (cuántos
+#' casos y con qué criterio). Revísalos antes con [tabla_atipicos()] y, si
+#' puedes, compara los resultados con y sin ellos.
+#'
+#' @param datos `data.frame` con tus datos.
+#' @param modelo Las variables con las que se calcula la distancia: un modelo
+#'   estimado con `lavaan`, la sintaxis del modelo (texto) o un vector con los
+#'   nombres de las columnas. Sin indicarlo, se usan todas las columnas
+#'   numéricas.
+#' @param alfa Nivel de significancia de la distancia de Mahalanobis.
+#' @return Los datos sin los casos atípicos.
+#' @examples
+#' library(lavaan)
+#' modelo <- "visual =~ x1 + x2 + x3
+#'            textual =~ x4 + x5 + x6"
+#' datos2 <- quitar_atipicos(HolzingerSwineford1939, modelo)
+#' attr(datos2, "atipicos")
+#' @export
+quitar_atipicos <- function(datos, modelo = NULL, alfa = .001) {
+  if (!is.data.frame(datos)) stop("`datos` debe ser un data.frame (tus datos originales, no el modelo).", call. = FALSE)
+  vars <- if (inherits(modelo, "lavaan")) lavaan::lavNames(modelo, "ov")
+          else if (is.character(modelo) && length(modelo) == 1 && grepl("~", modelo)) {
+            vm <- variables_del_modelo(modelo)
+            if (inherits(vm, "error")) stop("La sintaxis del modelo tiene un error; rev\u00edsala con revisar_datos(datos, modelo).", call. = FALSE)
+            vm$observadas
+          } else if (is.character(modelo)) modelo
+          else names(datos)[vapply(datos, is.numeric, logical(1))]
+  falta <- setdiff(vars, names(datos))
+  if (length(falta)) stop("Estas variables no est\u00e1n en los datos: ", paste(falta, collapse = ", "), ".", call. = FALSE)
+  d <- datos[, vars, drop = FALSE]
+  no_num <- vars[!vapply(d, is.numeric, logical(1))]
+  if (length(no_num)) stop("Estas variables no son num\u00e9ricas: ", paste(no_num, collapse = ", "), ".", call. = FALSE)
+  ok <- which(stats::complete.cases(d))
+  if (length(vars) < 2) stop("Se necesitan al menos dos variables.", call. = FALSE)
+  D2 <- stats::mahalanobis(d[ok, , drop = FALSE], colMeans(d[ok, , drop = FALSE]), stats::cov(d[ok, , drop = FALSE]))
+  at <- ok[stats::pchisq(D2, length(vars), lower.tail = FALSE) < alfa]
+  res <- if (length(at)) datos[-at, , drop = FALSE] else datos
+  message(if (length(at)) paste0("Se quitaron ", length(at), " casos at\u00edpicos multivariados (D\u00b2 de Mahalanobis, p < ", sub("^0", "", format(alfa)),
+                                  "); quedan ", nrow(res), " de ", nrow(datos), ". Rep\u00f3rtalo en tu m\u00e9todo.")
+          else "No hay casos at\u00edpicos multivariados; los datos no cambian.")
+  attr(res, "atipicos") <- at
+  res
 }

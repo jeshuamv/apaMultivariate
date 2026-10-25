@@ -1,3 +1,3 @@
 library(testthat)
-library(diagramaSEM)
-test_check("diagramaSEM")
+library(apaMultivariate)
+test_check("apaMultivariate")

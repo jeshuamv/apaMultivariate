@@ -1,8 +1,11 @@
-# diagramaSEM
+# apaMultivariate
 
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 
-**Diagramas y tablas APA para tus análisis factoriales, de trayectorias, SEM, moderación y MANOVA, con una sola línea de código.**
+**Tablas APA y diagramas para tus análisis factoriales, de trayectorias, SEM, moderación y MANOVA, con una sola línea de código.**
+
+*Multivariate analysis, APA-ready.* Antes se llamaba `diagramaSEM`; si lo tenías
+instalado, consulta [cómo actualizar](#si-tenías-diagramasem).
 
 - **Diagramas** con el estilo clásico de los programas de SEM: rectángulos para los
   ítems, óvalos para los factores, círculos de error (`e1`, `e2`, …), cargas sobre las
@@ -51,7 +54,7 @@ Abre R o RStudio, copia estas líneas, pégalas en la consola y presiona Enter:
 
 ```r
 install.packages("remotes")
-remotes::install_github("jeshuamv/diagramaSEM")
+remotes::install_github("jeshuamv/apaMultivariate")
 ```
 
 - Necesitas conexión a internet.
@@ -74,7 +77,7 @@ el archivo:
 
 ```r
 library(lavaan)
-library(diagramaSEM)
+library(apaMultivariate)
 
 datos <- leer_datos()                          # se abre una ventana
 datos <- leer_datos("mis_datos.xlsx")          # o con el nombre del archivo
@@ -103,6 +106,18 @@ Revisa errores de escritura en el modelo, columnas con texto, valores constantes
 códigos como 99 que parecen datos perdidos, el porcentaje de perdidos, si los ítems son
 tipo Likert (y qué estimador conviene) y el tamaño de la muestra.
 
+Después de estimar el modelo, revisa que la estimación no haya tenido problemas:
+
+```r
+fit <- cfa(modelo, data = datos)
+revisar_modelo(fit)
+```
+
+`revisar_modelo()` explica en español los avisos que `lavaan` da en inglés (el modelo
+no convergió, no está identificado, varianzas negativas o *casos Heywood*, factores
+con correlación de 1) y qué hacer con cada uno, y señala las cargas bajas o no
+significativas.
+
 ## La forma más fácil: una plantilla
 
 `plantilla()` crea un script con **todo el análisis**, paso por paso y explicado:
@@ -129,7 +144,7 @@ por los tuyos (deben ser iguales a los nombres de las columnas de tus datos).
 
 ```r
 library(lavaan)
-library(diagramaSEM)
+library(apaMultivariate)
 
 datos <- leer_datos("mis_datos.xlsx")   # tus datos
 ```
@@ -189,7 +204,7 @@ Este código funciona tal cual, porque los datos vienen incluidos en `lavaan`:
 
 ```r
 library(lavaan)
-library(diagramaSEM)
+library(apaMultivariate)
 
 modelo <- "
   visual  =~ x1 + x2 + x3
@@ -267,6 +282,7 @@ un artículo o una tesis:
 | | `tabla_perdidos(datos)` | Datos perdidos por variable |
 | | `tabla_normalidad(datos)` | Normalidad: asimetría y curtosis con c.r. (como AMOS) y Mardia |
 | | `tabla_atipicos(datos)` | Atípicos multivariados (Mahalanobis, p1 y p2) |
+| | `quitar_atipicos(datos, modelo)` | Devuelve los datos sin los atípicos (*p* < .001) y te dice cuántos quitó |
 | AFE | `tabla_factorabilidad(datos)` | KMO, Bartlett y cuántos factores retener (Kaiser, análisis paralelo, MAP) |
 | | `tabla_cargas(afe)` | Cargas, comunalidades, varianza explicada |
 | Medición | `tabla_cargas(fit)` | Cargas estandarizadas, EE, *p* y R² |
@@ -276,7 +292,7 @@ un artículo o una tesis:
 | | `tabla_htmt(fit)` | Validez discriminante HTMT (la que hoy piden los revisores) |
 | | `tabla_metodo_comun(fit)` | Sesgo de método común (Harman y AFC de un factor) |
 | Ajuste | `tabla_ajuste(fit)` | χ², CFI, TLI, RMSEA, SRMR |
-| | `tabla_criterios_ajuste(fit)` | Cada índice (χ², χ²/gl, RMSEA, SRMR, CFI, TLI, GFI, PNFI, PRATIO) contra criterios excelente/aceptable, e identificación del modelo (p, q, gl) |
+| | `tabla_criterios_ajuste(fit)` | Cada índice (χ², χ²/gl, RMSEA, SRMR, CFI, TLI, GFI, PNFI, PRATIO) contra criterios excelente/aceptable (cámbialos con `cortes`), e identificación del modelo (p, q, gl) |
 | | `tabla_modificacion(fit)` | Índices de modificación |
 | | `tabla_residuales(fit)` | Residuales de correlación: dónde ajusta mal el modelo |
 | | `tabla_comparacion("A" = fit1, "B" = fit2)` | Modelos alternativos: Δχ², ΔCFI, AIC, BIC |
@@ -376,16 +392,38 @@ d
   y todas las tablas, con ejemplos e imágenes.
 - **[Cómo interpretar y redactar los resultados](guia/INTERPRETACION.md)**: qué mirar en
   cada tabla, los criterios, ejemplos de redacción en APA y errores comunes.
+- **[Hoja de referencia](guia/hoja_referencia.pdf)** (una página, para imprimir): de tus
+  datos al Word en pocas líneas.
+- **[Cómo se verificó](guia/VALIDACION.md)**: contra qué paquetes y scripts de clase se
+  compararon los resultados.
+- **Para citarlo**: `citation("apaMultivariate")`.
 - **Ayuda dentro de R**: `?diagrama_sem` o el nombre de cualquier tabla, por ejemplo
   `?tabla_invarianza`.
+
+## Lo que no hace (todavía)
+
+- **No estima los modelos**: eso lo hacen `lavaan` y `psych`. El paquete revisa,
+  dibuja y presenta sus resultados.
+- **Modelos multigrupo**: se comparan con `tabla_invarianza()`. Las demás tablas
+  describen un solo grupo; estima el modelo con los datos de cada grupo.
+- **Moderación con variables observadas** (puntajes de las escalas), como PROCESS; no
+  hace interacciones entre variables latentes.
+- **MANOVA de un factor**; no hace diseños factoriales ni de medidas repetidas.
+- **No cubre** modelos multinivel, de crecimiento, teoría de respuesta al ítem ni análisis
+  de redes.
+- **Diagramas complejos**: en modelos con muchas relaciones cruzadas, el acomodo
+  automático puede necesitar ajustes a mano (`lados`, `mover`, `acomodo`).
+- **Es una versión de prueba (0.x).** Los resultados se verificaron contra otros
+  paquetes, pero si encuentras algo raro, repórtalo en
+  [Issues](https://github.com/jeshuamv/apaMultivariate/issues).
 
 ## Problemas frecuentes
 
 **`could not find function "diagrama_sem"`** (no se encuentra la función): falta
-cargar el paquete. Escribe `library(diagramaSEM)`.
+cargar el paquete. Escribe `library(apaMultivariate)`.
 
 **`could not find function "leer_datos"` o `"plantilla"`**: tienes una versión vieja del
-paquete. Reinstálalo con `remotes::install_github("jeshuamv/diagramaSEM")`.
+paquete. Reinstálalo con `remotes::install_github("jeshuamv/apaMultivariate")`.
 
 **`object 'datos' not found`** (no se encuentra el objeto): falta correr la línea que
 lee los datos, o la escribiste con otro nombre. Corre los pasos en orden.
@@ -398,7 +436,12 @@ lee los datos, o la escribiste con otro nombre. Corre los pasos en orden.
 modelo no coincide con el de la columna. Corre `revisar_datos(datos, modelo)`: te dice
 cuál y te sugiere el nombre correcto.
 
-**`there is no package called 'diagramaSEM'`**: el paquete no está instalado. Repite
+**Mi omega o mi AVE no coinciden con los de `semTools`**: hay varias fórmulas.
+`tabla_confiabilidad()` calcula ω igual que `semTools::compRelSEM()`; `tabla_validez()`
+usa las fórmulas clásicas de Fornell y Larcker, y con `metodo = "semtools"` da los de
+`semTools`. Detalles en las preguntas frecuentes de la [guía](guia/GUIA.md).
+
+**`there is no package called 'apaMultivariate'`**: el paquete no está instalado. Repite
 el Paso 1.
 
 **`there is no package called 'remotes'`**: corre primero `install.packages("remotes")`.
@@ -430,7 +473,19 @@ bajas (es común en modelos bifactor).
 derecho → *Abrir con* → *Microsoft Word*.
 
 ¿Encontraste un error? Repórtalo en la pestaña
-[Issues](https://github.com/jeshuamv/diagramaSEM/issues) de esta página.
+[Issues](https://github.com/jeshuamv/apaMultivariate/issues) de esta página.
+
+## Si tenías diagramaSEM
+
+El paquete cambió de nombre; las funciones son las mismas. Instala el nuevo y
+cambia la línea `library()` de tus scripts:
+
+```r
+remotes::install_github("jeshuamv/apaMultivariate")
+library(apaMultivariate)          # antes: library(diagramaSEM)
+```
+
+Puedes desinstalar el anterior con `remove.packages("diagramaSEM")`.
 
 ## Licencia
 

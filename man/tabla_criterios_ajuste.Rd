@@ -7,6 +7,8 @@
 tabla_criterios_ajuste(
   fit,
   indices = c("chi2", "chi2gl", "rmsea", "srmr", "cfi", "tli", "gfi", "pnfi", "pratio"),
+  cortes = NULL,
+  evaluacion = TRUE,
   titulo = NULL,
   archivo = NULL
 )
@@ -16,6 +18,12 @@ tabla_criterios_ajuste(
 
 \item{indices}{Índices que se incluyen. Kline (2011) recomienda reportar
 siempre \eqn{\chi^2}, RMSEA, GFI, CFI y SRMR.}
+
+\item{cortes}{Lista para cambiar los puntos de corte de algún índice:
+\code{chi2gl}, \code{rmsea}, \code{srmr}, \code{cfi}, \code{tli}, \code{gfi}, \code{pnfi} o \code{pratio}, cada
+uno con dos valores (excelente, aceptable).}
+
+\item{evaluacion}{Si es \code{FALSE}, no se incluye la columna de evaluación.}
 
 \item{titulo}{Título de la tabla.}
 
@@ -37,7 +45,7 @@ Criterios usados:\tabular{llll}{
    Índice \tab Excelente \tab Aceptable \tab Fuente \cr
    \eqn{\chi^2} \tab p > .05 \tab  \tab Hair et al. (2014); Kline (2011) \cr
    \eqn{\chi^2}/gl \tab \eqn{\le} 2 \tab \eqn{\le} 3 \tab Hair et al. (2014) \cr
-   RMSEA \tab \eqn{\le} .05 \tab \eqn{\le} .06 \tab Kline (2011); Hu y Bentler (1999) \cr
+   RMSEA \tab \eqn{\le} .06 \tab \eqn{\le} .08 \tab Hu y Bentler (1999); Browne y Cudeck (1993) \cr
    SRMR \tab \eqn{\le} .08 \tab \eqn{\le} .10 \tab Hu y Bentler (1999); Hair et al. (2014) \cr
    CFI, TLI \tab \eqn{\ge} .95 \tab \eqn{\ge} .90 \tab Hu y Bentler (1999); Hair et al. (2014) \cr
    GFI \tab \eqn{\ge} .95 \tab \eqn{\ge} .90 \tab Hair et al. (2014) \cr
@@ -47,6 +55,12 @@ Criterios usados:\tabular{llll}{
 
 Con estimadores robustos se usan las versiones corregidas de
 \eqn{\chi^2}, RMSEA, CFI y TLI.
+
+Si tu curso o tu revista usan otros puntos de corte, cámbialos con
+\code{cortes}, por ejemplo \code{cortes = list(rmsea = c(.05, .06))} (primero el de
+excelente y después el de aceptable). Para un artículo puedes quitar la
+columna de evaluación con \code{evaluacion = FALSE}: muchos metodólogos
+prefieren reportar los valores y los criterios sin calificarlos.
 }
 \examples{
 library(lavaan)

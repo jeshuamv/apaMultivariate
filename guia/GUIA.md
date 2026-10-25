@@ -1,7 +1,7 @@
-Guía de uso de diagramaSEM
+Guía de uso de apaMultivariate
 ================
 
-`diagramaSEM` dibuja el diagrama de trayectorias de tus análisis
+`apaMultivariate` dibuja el diagrama de trayectorias de tus análisis
 factoriales (exploratorios y confirmatorios), de trayectorias y de
 ecuaciones estructurales, en el estilo clásico de AMOS o en estilos
 listos para revista, y crea, en español o en inglés, las tablas en
@@ -55,7 +55,7 @@ Solo la primera vez, con conexión a internet:
 
 ``` r
 install.packages("remotes")
-remotes::install_github("jeshuamv/diagramaSEM")
+remotes::install_github("jeshuamv/apaMultivariate")
 ```
 
 Para análisis exploratorios con `psych` instala también:
@@ -68,7 +68,7 @@ En cada sesión de R se cargan los dos paquetes:
 
 ``` r
 library(lavaan)
-library(diagramaSEM)
+library(apaMultivariate)
 ```
 
 ## El primer diagrama
@@ -83,7 +83,7 @@ fit <- cfa(modelo, data = HolzingerSwineford1939)
 diagrama_sem(fit)
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
 
 Qué se ve en el diagrama:
 
@@ -111,9 +111,16 @@ modelo <- "
 "
 revisar_datos(datos, modelo)            # revisa nombres, perdidos, N...
 fit <- cfa(modelo, data = datos)        # sem() para trayectorias o SEM
+revisar_modelo(fit)                     # ¿hubo problemas al estimar?
 
 diagrama_sem(fit)
 ```
+
+`revisar_modelo()` traduce los avisos de `lavaan` (en inglés) a mensajes
+claros con qué hacer: si el modelo no convergió o no está identificado,
+si hay varianzas negativas (*casos Heywood*), cargas estandarizadas
+mayores que 1, factores con correlación de 1 o muy alta, factores con
+uno o dos ítems, y cargas bajas o no significativas.
 
 `leer_datos()` reconoce el formato por la extensión del archivo, detecta
 si un CSV usa coma o punto y coma (y la coma decimal), quita las
@@ -154,7 +161,7 @@ imprimir el resultado se ve qué decidió:
 ``` r
 d <- diagrama_sem(fit, dibujar = FALSE)
 d
-#> Diagrama de diagramaSEM
+#> Diagrama de apaMultivariate
 #>   Tipo de modelo: análisis factorial confirmatorio 
 #>   Acomodo:        fila 
 #>   Constructos:    3  | Variables observadas: 9  | Errores: 9 
@@ -179,7 +186,7 @@ Para elegir otro:
 diagrama_sem(fit, acomodo = "dos_filas")
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
 
 ## Segundo orden
 
@@ -189,7 +196,7 @@ fit2 <- cfa(paste(modelo, "\n Mental =~ visual + textual + speed"),
 diagrama_sem(fit2)
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
 
 Los constructos de primer orden llevan su propio error (perturbación) y
 su R², que indica cuánto de su varianza explica el factor general.
@@ -220,7 +227,7 @@ diagrama_sem(fit3, etiquetas = c(Education = "Educación", Examination = "Examen
                                  Fertility = "Fecundidad", Catholic = "Católicos"))
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
 
 Cómo se lee:
 
@@ -264,7 +271,7 @@ fit4 <- sem("ind60 =~ x1 + x2 + x3
 diagrama_sem(fit4)
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
 
 Cada constructo coloca sus ítems donde menos estorban a las flechas
 entre constructos. Las covarianzas entre errores se dibujan como arcos
@@ -282,7 +289,7 @@ afe <- fa(items, nfactors = 3, rotate = "oblimin", fm = "ml")
 diagrama_sem(afe)
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
 
 En un exploratorio cada ítem carga en todos los factores, así que el
 diagrama muestra solo lo importante:
@@ -304,7 +311,7 @@ Los nombres `ML1`, `ML2`… los pone `psych`; cámbialos con `etiquetas`:
 diagrama_sem(afe, etiquetas = c(ML1 = "Verbal", ML2 = "Velocidad", ML3 = "Visual"))
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
 
 Con `lavaan::efa()` es igual. Si pediste varias soluciones (por ejemplo,
 `nfactors = 2:4`), indica cuál dibujar:
@@ -329,13 +336,13 @@ contenido.
 diagrama_sem(fit, estilo = "revista")
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-16-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-16-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, estilo = "color")
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-17-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-17-1.png" width="100%" />
 
 Qué cambia en los estilos `"revista"` y `"color"`:
 
@@ -369,6 +376,7 @@ solo líneas horizontales y nota) y guardan sus valores numéricos en
 |             | `tabla_perdidos()`         | Datos perdidos por variable y casos completos                                       |
 |             | `tabla_normalidad()`       | Normalidad: asimetría y curtosis con c.r. (como AMOS) y Mardia                      |
 |             | `tabla_atipicos()`         | Atípicos multivariados (Mahalanobis, p1 y p2)                                       |
+|             | `quitar_atipicos()`        | Los datos sin los atípicos                                                          |
 | AFE         | `tabla_factorabilidad()`   | KMO, Bartlett y número de factores (Kaiser, análisis paralelo, MAP)                 |
 |             | `tabla_cargas()`           | Cargas, comunalidades y varianza explicada                                          |
 | Medición    | `tabla_cargas()`           | Cargas estandarizadas, EE, *p* y R²                                                 |
@@ -520,8 +528,16 @@ at$atipicos          # filas de los atípicos
 #> [1] 163 180
 ```
 
-Si decides excluirlos, `items[-at$atipicos, ]` da los datos sin ellos;
-repórtalo y compara los resultados con y sin esos casos.
+Si decides excluirlos, `quitar_atipicos()` devuelve los datos sin ellos
+y te dice cuántos quitó (el mismo criterio, *p* \< .001). Puedes
+indicarle el modelo para que use solo sus variables:
+
+``` r
+datos2 <- quitar_atipicos(datos, modelo)
+fit2 <- cfa(modelo, data = datos2)
+```
+
+Repórtalo y, si puedes, compara los resultados con y sin esos casos.
 
 ### Antes de un análisis exploratorio
 
@@ -564,20 +580,25 @@ tabla_factorabilidad(items)
 #> ──────────────────────────────────────────────────
 #> N.º  Componentes  Aleatorios  Factores  Aleatorios
 #> ──────────────────────────────────────────────────
-#> 1       3.22         1.35       2.71       0.41   
-#> 2       1.64         1.26       1.07       0.29   
-#> 3       1.37         1.16       0.66       0.19   
-#> 4       0.70         1.08      -0.03       0.11   
-#> 5       0.58         1.04      -0.06       0.06   
-#> 6       0.50         0.98      -0.10       0.00   
-#> 7       0.47         0.92      -0.16      -0.05   
-#> 8       0.29         0.87      -0.18      -0.11   
-#> 9       0.24         0.81      -0.24      -0.17   
+#> 1       3.22         1.35       2.70       1.06   
+#> 2       1.64         1.26       0.92       0.27   
+#> 3       1.37         1.16       0.45       0.19   
+#> 4       0.70         1.08       0.01       0.12   
+#> 5       0.58         1.04      -0.02       0.06   
+#> 6       0.50         0.98      -0.22       0.01   
+#> 7       0.47         0.92      -0.36      -0.05   
+#> 8       0.29         0.87      -0.40      -0.10   
+#> 9       0.24         0.81      -0.50      -0.16   
 #> ──────────────────────────────────────────────────
 #> Nota. En negritas, autovalores observados mayores que los
-#> aleatorios. Factores: autovalores de la matriz reducida
-#> (correlaciones múltiples al cuadrado en la diagonal).
+#> aleatorios. Factores: autovalores de la solución factorial
+#> (fm = "ml"), como en psych::fa.parallel().
 ```
+
+El análisis paralelo de factores se calcula igual que
+`psych::fa.parallel()` con el método de extracción `fm` (por defecto
+`"ml"`); usa el mismo método que en tu análisis factorial, por ejemplo
+`tabla_factorabilidad(items, fm = "pa")`.
 
 ### Cargas factoriales
 
@@ -661,13 +682,14 @@ tabla_confiabilidad(fit)
 #> ──────────────────────────────────────────────────
 #> Factor   Ítems   α    IC 95 %     ω   r ítem-total
 #> ──────────────────────────────────────────────────
-#> visual     3    .63  [.55, .69]  .63    .37–.48   
+#> visual     3    .63  [.55, .69]  .61    .37–.48   
 #> textual    3    .88  [.86, .90]  .89    .77–.79   
 #> speed      3    .69  [.62, .74]  .69    .46–.57   
 #> ──────────────────────────────────────────────────
 #> Nota. α = alfa de Cronbach; IC 95 % de Feldt; ω = omega de
-#> McDonald, calculado con las cargas del modelo; r ítem-total
-#> = correlación ítem-total corregida (mínima–máxima). Valores
+#> McDonald, calculado con las cargas del modelo y la varianza
+#> observada de la suma de los ítems; r ítem-total =
+#> correlación ítem-total corregida (mínima–máxima). Valores
 #> de α y ω ≥ .70 suelen considerarse aceptables (Nunnally y
 #> Bernstein, 1994) y una correlación ítem-total ≥ .30
 #> adecuada. n = 301 casos completos.
@@ -735,9 +757,12 @@ tabla_metodo_comun(fit)
 #> Factor único de Harman  Primer componente: 35.7 % de la varianza             < 50 %                                     No hay un factor general dominante     
 #> AFC de un factor        CFI = .677, RMSEA = .187; Δχ²(3) = 226.96, p < .001  Peor que el modelo propuesto (CFI = .931)  El sesgo de método no explica los datos
 #> ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#> Nota. Pruebas según Podsakoff et al. (2003). Harman: análisis de componentes principales sin rotar de los 9 ítems. AFC de un factor: todos los ítems en un
-#> factor, comparado con el modelo propuesto (Δχ² y ΔCFI). Estas pruebas son poco sensibles: un resultado favorable no descarta por completo el sesgo de método
-#> común.
+#> Nota. Pruebas según Podsakoff et al. (2003). Harman: análisis de componentes
+#> principales sin rotar de los 9 ítems. AFC de un factor: todos los ítems en un
+#> factor, comparado con el modelo propuesto (Δχ² y ΔCFI). Estas pruebas son
+#> poco sensibles: un resultado favorable no descarta por completo el sesgo de
+#> método común.
+#> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
 ```
 
 ### Índices de ajuste y comparación de modelos
@@ -775,9 +800,11 @@ tabla_comparacion("Un factor" = un_factor, "Tres factores" = fit)
 #> Un factor      312.26  27  .677  .569  .187   .143  7,738.4  7,805.2      —         —       —      —   
 #> Tres factores  85.31   24  .931  .896  .092   .065  7,517.5  7,595.3  226.96 (3)  < .001  +.254  -.095 
 #> ───────────────────────────────────────────────────────────────────────────────────────────────────────
-#> Nota. Diferencias respecto del modelo anterior. Δχ² válida solo para modelos anidados. Un ΔCFI menor
-#> que −.010 junto con un ΔRMSEA mayor que .015 indica un ajuste apreciablemente peor (Chen, 2007). AIC y
-#> BIC: menor es mejor; el AIC más bajo es el de Tres factores y también el BIC.
+#> Nota. Diferencias respecto del modelo anterior. Δχ² válida solo para modelos
+#> anidados. Un ΔCFI menor que −.010 junto con un ΔRMSEA mayor que .015 indica
+#> un ajuste apreciablemente peor (Chen, 2007). AIC y BIC: menor es mejor; el
+#> AIC más bajo es el de Tres factores y también el BIC.
+#> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
 ```
 
 La Δχ² solo es válida si un modelo es una versión restringida del otro
@@ -801,12 +828,14 @@ tabla_invarianza(modelo, HolzingerSwineford1939, grupo = "school")
 #> Escalar     164.10  60  .882  .107   .082  40.06 (6)  < .001  -.038  +.015   +.011  No se sostiene
 #> Estricta    181.51  69  .873  .104   .088  17.41 (9)   .043   -.009  -.003   +.006   No se evalúa 
 #> ──────────────────────────────────────────────────────────────────────────────────────────────────
-#> Nota. Grupos: Pasteur (n = 156), Grant-White (n = 145). Cada modelo se compara con el anterior.
-#> No se sostiene la invarianza si ΔCFI < −.010 junto con ΔRMSEA > .015 o ΔSRMR > .030 (métrica) o >
-#> .010 (escalar y estricta) (Chen, 2007). Nivel más alto sostenido: métrica. Para probar invarianza
-#> parcial, los parámetros cuya igualdad más empeora el ajuste son, en orden: x3 ~ 1; x7 ~ 1; x2 ~
-#> 1. Libérelos de uno en uno, empezando por el primero (liberar = "x3 ~ 1"), y vuelva a revisar la
-#> tabla.
+#> Nota. Grupos: Pasteur (n = 156), Grant-White (n = 145). Cada modelo se
+#> compara con el anterior. No se sostiene la invarianza si ΔCFI < −.010 junto
+#> con ΔRMSEA > .015 o ΔSRMR > .030 (métrica) o > .010 (escalar y estricta)
+#> (Chen, 2007). Nivel más alto sostenido: métrica. Para probar invarianza
+#> parcial, los parámetros cuya igualdad más empeora el ajuste son, en orden: x3
+#> ~ 1; x7 ~ 1; x2 ~ 1. Libérelos de uno en uno, empezando por el primero
+#> (liberar = "x3 ~ 1"), y vuelva a revisar la tabla.
+#> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
 ```
 
 Cada nivel se compara con el anterior con el criterio de Chen (2007);
@@ -826,10 +855,12 @@ tabla_invarianza(modelo, HolzingerSwineford1939, grupo = "school", liberar = "x3
 #> Escalar parcial   144.58  59  .903  .098   .077  20.54 (5)  < .001  -.018  +.005   +.006  Se sostiene
 #> Estricta parcial  162.12  68  .894  .096   .083  17.55 (9)   .041   -.010  -.002   +.006  Se sostiene
 #> ─────────────────────────────────────────────────────────────────────────────────────────────────────
-#> Nota. Grupos: Pasteur (n = 156), Grant-White (n = 145). Cada modelo se compara con el anterior. No
-#> se sostiene la invarianza si ΔCFI < −.010 junto con ΔRMSEA > .015 o ΔSRMR > .030 (métrica) o > .010
-#> (escalar y estricta) (Chen, 2007). Parámetros liberados (invarianza parcial): x3 ~ 1. Se sostiene la
-#> invarianza estricta.
+#> Nota. Grupos: Pasteur (n = 156), Grant-White (n = 145). Cada modelo se
+#> compara con el anterior. No se sostiene la invarianza si ΔCFI < −.010 junto
+#> con ΔRMSEA > .015 o ΔSRMR > .030 (métrica) o > .010 (escalar y estricta)
+#> (Chen, 2007). Parámetros liberados (invarianza parcial): x3 ~ 1. Se sostiene
+#> la invarianza estricta.
+#> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
 ```
 
 Con ítems ordinales agrega `ordered = TRUE` (se igualan los umbrales);
@@ -861,9 +892,9 @@ tabla_efectos(fit3, bootstrap = 500)
 #>    Education → Fertility                -0.79  0.16  [-1.05, -0.39]  -.61        
 #> ─────────────────────────────────────────────────────────────────────────────────
 #> Nota. B = coeficiente no estandarizado; EE = error estándar; IC 95 % por
-#> bootstrap de percentiles con 500 remuestreos; β = coeficiente estandarizado. Los
-#> valores p de los efectos directos son los de lavaan; para los indirectos y
-#> totales la significancia se juzga por el intervalo. En negritas, efectos
+#> bootstrap de percentiles con 500 remuestreos; β = coeficiente estandarizado.
+#> Los valores p de los efectos directos son los de lavaan; para los indirectos
+#> y totales la significancia se juzga por el intervalo. En negritas, efectos
 #> indirectos cuyo intervalo no incluye el 0 (significativos).
 #> 
 #> Varianza explicada de las variables endógenas
@@ -943,7 +974,7 @@ como en AMOS, la varianza de cada variable exógena y de cada error):
 diagrama_sem(fit3, estandarizado = FALSE)
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-35-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-36-1.png" width="100%" />
 
 **3. Ajuste e identificación.** Cada índice contra los criterios
 excelente y aceptable, con su fuente, y la identificación del modelo
@@ -953,23 +984,25 @@ excelente y aceptable, con su fuente, y la identificación del modelo
 tabla_criterios_ajuste(fit3)
 #> 
 #> Evaluación del ajuste del modelo
-#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#> Índice                    Valor            Excelente  Aceptable   Evaluación   Fuente                                 
-#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#> χ²               26.66 (gl = 1, p < .001)   p > .05              No adecuado   Hair et al. (2014); Kline (2011)       
-#> χ²/gl                     26.66               ≤ 2        ≤ 3     No aceptable  Hair et al. (2014)                     
-#> RMSEA [IC 90 %]     .739 [.513, .993]        ≤ .05      ≤ .06    No aceptable  Kline (2011); Hu y Bentler (1999)      
-#> SRMR                       .156              ≤ .08      ≤ .10    No aceptable  Hu y Bentler (1999); Hair et al. (2014)
-#> CFI                        .725              ≥ .95      ≥ .90    No aceptable  Hu y Bentler (1999); Hair et al. (2014)
-#> TLI (NNFI)                -.375              ≥ .95      ≥ .90    No aceptable  Tabachnick y Fidell (2013)             
-#> GFI                        .879              ≥ .95      ≥ .90    No aceptable  Hair et al. (2014)                     
-#> PNFI                       .146                         ≥ .50    No aceptable  Mulaik et al. (1989)                   
-#> PRATIO                     .200                         ≥ .50    No aceptable  Mulaik et al. (1989)                   
-#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#> Nota. RMSEA = error cuadrático medio de aproximación; SRMR = raíz del residuo cuadrático medio estandarizado; CFI =
-#> índice de ajuste comparativo; TLI = índice de Tucker-Lewis; GFI = índice de bondad de ajuste; PNFI = índice de ajuste
-#> normado parsimonioso; PRATIO = razón de parsimonia. La prueba χ² es sensible al tamaño de la muestra; con muestras
-#> grandes suele ser significativa aunque el ajuste sea bueno.
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Índice                    Valor            Excelente  Aceptable   Evaluación   Fuente                                     
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> χ²               26.66 (gl = 1, p < .001)   p > .05              No adecuado   Hair et al. (2014); Kline (2011)           
+#> χ²/gl                     26.66               ≤ 2        ≤ 3     No aceptable  Hair et al. (2014)                         
+#> RMSEA [IC 90 %]     .739 [.513, .993]        ≤ .06      ≤ .08    No aceptable  Hu y Bentler (1999); Browne y Cudeck (1993)
+#> SRMR                       .156              ≤ .08      ≤ .10    No aceptable  Hu y Bentler (1999); Hair et al. (2014)    
+#> CFI                        .725              ≥ .95      ≥ .90    No aceptable  Hu y Bentler (1999); Hair et al. (2014)    
+#> TLI (NNFI)                -.375              ≥ .95      ≥ .90    No aceptable  Tabachnick y Fidell (2013)                 
+#> GFI                        .879              ≥ .95      ≥ .90    No aceptable  Hair et al. (2014)                         
+#> PNFI                       .146                         ≥ .50    No aceptable  Mulaik et al. (1989)                       
+#> PRATIO                     .200                         ≥ .50    No aceptable  Mulaik et al. (1989)                       
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. RMSEA = error cuadrático medio de aproximación; SRMR = raíz del residuo
+#> cuadrático medio estandarizado; CFI = índice de ajuste comparativo; TLI =
+#> índice de Tucker-Lewis; GFI = índice de bondad de ajuste; PNFI = índice de
+#> ajuste normado parsimonioso; PRATIO = razón de parsimonia. La prueba χ² es
+#> sensible al tamaño de la muestra; con muestras grandes suele ser
+#> significativa aunque el ajuste sea bueno.
 #> 
 #> Identificación del modelo y tamaño de la muestra
 #> ───────────────────────────────────────────────────────────────────────────────────────
@@ -981,10 +1014,20 @@ tabla_criterios_ajuste(fit3)
 #> Tamaño de la muestra (N)     47                                                        
 #> Razón N:q                   7.8:1  Baja (< 10:1)                                       
 #> ───────────────────────────────────────────────────────────────────────────────────────
-#> Nota. gl > 0: modelo sobreidentificado (el deseable); gl = 0: exactamente identificado
-#> (χ² = 0, el ajuste no puede evaluarse); gl < 0: subidentificado (no puede estimarse).
-#> Razón N:q: se recomiendan al menos 10 casos por parámetro y, de preferencia, 20
-#> (Kline, 2011).
+#> Nota. gl > 0: modelo sobreidentificado (el deseable); gl = 0: exactamente
+#> identificado (χ² = 0, el ajuste no puede evaluarse); gl < 0: subidentificado
+#> (no puede estimarse). Razón N:q: se recomiendan al menos 10 casos por
+#> parámetro y, de preferencia, 20 (Kline, 2011).
+#> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
+```
+
+Los criterios son los de Hu y Bentler (1999) y Browne y Cudeck (1993).
+Si tu curso o tu revista usan otros, cámbialos con `cortes`, y para un
+artículo puedes quitar la columna de evaluación:
+
+``` r
+tabla_criterios_ajuste(fit3, cortes = list(rmsea = c(.05, .06)))   # excelente, aceptable
+tabla_criterios_ajuste(fit3, evaluacion = FALSE)
 ```
 
 **4. Estimaciones**, agrupadas como en AMOS (pesos de regresión,
@@ -1041,9 +1084,10 @@ tabla_hipotesis(fit3, c(H1 = "Education -> Examination (+)",
 #> H3         Catholic → Fertility (+)             Directo    .36        < .001       Se sostiene
 #> H4         Education → Examination → Fertility  Indirecto  -.02  IC [-0.52, 0.23]  Se rechaza 
 #> ──────────────────────────────────────────────────────────────────────────────────────────────
-#> Nota. β = coeficiente estandarizado. Efectos directos: se sostienen si p < .05. Efectos
-#> indirectos: se sostienen si el intervalo de confianza al 95 % (bootstrap con 500 remuestreos)
-#> no incluye el 0. Si la hipótesis indica un signo (+ o −), el efecto debe tener ese signo.
+#> Nota. β = coeficiente estandarizado. Efectos directos: se sostienen si p <
+#> .05. Efectos indirectos: se sostienen si el intervalo de confianza al 95 %
+#> (bootstrap con 500 remuestreos) no incluye el 0. Si la hipótesis indica un
+#> signo (+ o −), el efecto debe tener ese signo.
 ```
 
 **6. Efectos directos, indirectos y totales** con `tabla_efectos()`
@@ -1142,10 +1186,12 @@ tabla_manova(iris, dependientes = c("Petal.Length", "Sepal.Length"), grupo = "Sp
 #> Atípicos multivariados por grupo (Mahalanobis)  Ninguno                                D² > 13.82 (p < .001)  Se cumple   
 #> Multicolinealidad entre variables dependientes  |r| máxima = .87                       < .90                  Se cumple   
 #> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#> Nota. La M de Box es muy sensible a la falta de normalidad, por eso se evalúa con α = .001. Si no se cumple la igualdad
-#> de matrices de covarianza, use la traza de Pillai, procure grupos de tamaño similar y un nivel de significancia más
-#> estricto. La linealidad entre pares de variables dependientes se revisa con diagramas de dispersión; la independencia de
-#> las observaciones, con el diseño del estudio.
+#> Nota. La M de Box es muy sensible a la falta de normalidad, por eso se evalúa
+#> con α = .001. Si no se cumple la igualdad de matrices de covarianza, use la
+#> traza de Pillai, procure grupos de tamaño similar y un nivel de significancia
+#> más estricto. La linealidad entre pares de variables dependientes se revisa
+#> con diagramas de dispersión; la independencia de las observaciones, con el
+#> diseño del estudio.
 #> 
 #> ANOVA univariados de seguimiento
 #> ─────────────────────────────────────────────
@@ -1186,6 +1232,7 @@ tabla_manova(iris, dependientes = c("Petal.Length", "Sepal.Length"), grupo = "Sp
 #> n                 50           50           50     
 #> ───────────────────────────────────────────────────
 #> Nota. Valores: M (DE).
+#> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
 ```
 
 Si la M de Box es significativa (p \< .001), reporta la traza de Pillai,
@@ -1303,7 +1350,7 @@ región de Johnson-Neyman. La gráfica de la interacción:
 grafica_interaccion(mod)
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-45-1.png" width="60%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-47-1.png" width="60%" />
 
 Con `archivo = "figura2.pdf"` se guarda al ancho de una columna.
 
@@ -1326,12 +1373,12 @@ datos perdidos y criterios de ajuste) con sus referencias en formato
 APA. Es un punto de partida para adaptar:
 
 ``` r
-parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
+parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 #> 
 #> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
 #> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
-#> Jorgensen et al., 2022) y diagramaSEM (versión 0.8.0; Moreno Valladares, 2026).
-#> El análisis factorial confirmatorio se estimó con una muestra de 301
+#> Jorgensen et al., 2022) y apaMultivariate (versión 0.9.0; Moreno Valladares,
+#> 2026). El análisis factorial confirmatorio se estimó con una muestra de 301
 #> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
 #> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
 #> error cuadrático medio de aproximación (RMSEA) con su intervalo de confianza al
@@ -1350,9 +1397,9 @@ parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
 #>     semTools: Useful tools for structural equation modeling (Paquete de R,
 #>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
 #> 
-#> Moreno Valladares, J. (2026). diagramaSEM: Diagramas de trayectorias y tablas
-#>     APA para modelos lavaan y psych (Paquete de R, versión 0.8.0).
-#>     https://github.com/jeshuamv/diagramaSEM.
+#> Moreno Valladares, J. (2026). apaMultivariate: Tablas y diagramas APA para
+#>     análisis multivariado (Paquete de R, versión 0.9.0).
+#>     https://github.com/jeshuamv/apaMultivariate.
 #> 
 #> R Core Team. (2024). R: A language and environment for statistical computing. R
 #>     Foundation for Statistical Computing. https://www.R-project.org/
@@ -1428,7 +1475,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-52-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-54-1.png" width="100%" />
 
 Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -1438,7 +1485,7 @@ Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-53-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-55-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados y,
 como en AMOS, en lugar de la R² se escribe la varianza de cada variable
@@ -1448,7 +1495,7 @@ exógena y de cada error:
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-54-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-56-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -1456,13 +1503,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-55-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-55-2.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-57-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -1482,20 +1529,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-57-2.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-57-3.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -1508,7 +1555,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-60-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -1517,7 +1564,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="/home/claude/diagramaSEM/guia/GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-61-1.png" width="100%" />
 
 ## Guardar el diagrama
 
@@ -1584,6 +1631,25 @@ Siempre revisa las instrucciones para autores de la revista elegida:
 algunas piden otro ancho, otro formato o la figura en un archivo aparte.
 
 ## Preguntas frecuentes
+
+**Mi omega o mi AVE no coinciden con los de `semTools`.** Hay varias
+fórmulas. `tabla_confiabilidad()` calcula ω igual que
+`semTools::compRelSEM()`. `tabla_validez()` usa las fórmulas clásicas de
+Fornell y Larcker con las cargas estandarizadas (las de Hair et al.),
+que dan valores un poco distintos; con
+`tabla_validez(fit, metodo = "semtools")` obtienes los de `compRelSEM()`
+y `AVE()`. Reporta cuál usaste.
+
+**El análisis paralelo no coincide con `fa.parallel()`.** Usa el mismo
+método de extracción (`tabla_factorabilidad(datos, fm = "ml")` equivale
+a `fa.parallel(datos, fm = "ml")`). Como usa datos aleatorios, los
+autovalores aleatorios cambian un poco en cada corrida; el número de
+factores casi nunca.
+
+**Una tabla dice que el modelo es multigrupo.** Las tablas de cargas,
+validez, confiabilidad, etc. describen un solo grupo. Para comparar
+grupos usa `tabla_invarianza()`; para las tablas de un grupo, estima el
+modelo solo con los datos de ese grupo.
 
 **`cfa()` o `sem()` dicen que no encuentran una variable.** Un nombre
 del modelo no coincide con el de la columna (R distingue mayúsculas y

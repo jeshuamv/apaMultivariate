@@ -7,7 +7,7 @@
 parrafo_metodo(
   fit,
   bootstrap = NULL,
-  paquetes = c("diagramaSEM"),
+  paquetes = c("apaMultivariate"),
   archivo = NULL
 )
 }
@@ -18,7 +18,7 @@ parrafo_metodo(
 \code{\link[=tabla_efectos]{tabla_efectos()}}), número de remuestreos para mencionarlo.}
 
 \item{paquetes}{Otros paquetes que se usaron y deben citarse: cualquiera de
-\code{"semTools"}, \code{"psych"} y \code{"diagramaSEM"}.}
+\code{"semTools"}, \code{"psych"} y \code{"apaMultivariate"}.}
 
 \item{archivo}{Si se indica, guarda el texto en \code{.docx} o \code{.txt}.}
 }

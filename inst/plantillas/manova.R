@@ -1,14 +1,14 @@
 # =============================================================================
-#  MANOVA DE UN FACTOR  -  plantilla de diagramaSEM
+#  MANOVA DE UN FACTOR  -  plantilla de apaMultivariate
 # =============================================================================
 #  ¿Difieren los grupos en un conjunto de variables dependientes?
 #  Cómo usar: corre cada bloque con Ctrl + Enter (Mac: Cmd + Enter) y cambia
 #  solo lo marcado con  >>> CAMBIA AQUÍ <<<
 #  Guía de interpretación:
-#  https://github.com/jeshuamv/diagramaSEM/blob/main/guia/INTERPRETACION.md
+#  https://github.com/jeshuamv/apaMultivariate/blob/main/guia/INTERPRETACION.md
 # =============================================================================
 
-library(diagramaSEM)
+library(apaMultivariate)
 # idioma_sem("en")          # quita el # si necesitas las tablas en inglés
 
 

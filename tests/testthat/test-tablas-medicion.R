@@ -77,3 +77,13 @@ test_that("las tablas del grupo 2 se guardan en un solo docx", {
                  tabla_factorabilidad(HS[, v9], iteraciones = 20), archivo = f)
   expect_true(file.size(f) > 2000)
 })
+
+test_that("analisis paralelo de factores coincide con psych::fa.parallel", {
+  skip_if_not_installed("psych")
+  X <- lavaan::HolzingerSwineford1939[, paste0("x", 1:9)]
+  fp <- suppressMessages(suppressWarnings(psych::fa.parallel(X, fm = "ml", plot = FALSE)))
+  t <- tabla_factorabilidad(X, fm = "ml", iteraciones = 30)
+  expect_equal(t$datos$autovalores_reducidos, fp$fa.values, tolerance = 1e-6)
+  expect_equal(unname(t$datos$factores["paralelo_factores"]), fp$nfact)
+  expect_match(t$extra[[2]]$nota, "fa.parallel")
+})

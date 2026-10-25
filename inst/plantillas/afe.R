@@ -1,5 +1,5 @@
 # =============================================================================
-#  ANÁLISIS FACTORIAL EXPLORATORIO (AFE)  -  plantilla de diagramaSEM
+#  ANÁLISIS FACTORIAL EXPLORATORIO (AFE)  -  plantilla de apaMultivariate
 # =============================================================================
 #  Cómo usar esta plantilla:
 #   1. Corre cada bloque en orden: pon el cursor en una línea y presiona
@@ -7,14 +7,14 @@
 #   2. Solo cambia lo que está marcado con  >>> CAMBIA AQUÍ <<<
 #   3. Las líneas que empiezan con # son comentarios: R no las ejecuta.
 #  Guía de interpretación:
-#  https://github.com/jeshuamv/diagramaSEM/blob/main/guia/INTERPRETACION.md
+#  https://github.com/jeshuamv/apaMultivariate/blob/main/guia/INTERPRETACION.md
 # =============================================================================
 
 # La primera vez instala estos paquetes (quita el # y corre la línea una sola vez):
 # install.packages(c("psych", "GPArotation"))
 
 library(psych)
-library(diagramaSEM)
+library(apaMultivariate)
 # idioma_sem("en")          # quita el # si necesitas las tablas en inglés
 
 

@@ -141,3 +141,16 @@ test_that("todas las tablas nuevas se guardan en Word", {
                  archivo = f)
   expect_true(file.size(f) > 3000)
 })
+
+test_that("criterios de ajuste: cortes propios y sin evaluacion", {
+  f <- lavaan::cfa("v =~ x1 + x2 + x3
+                    t =~ x4 + x5 + x6
+                    s =~ x7 + x8 + x9", data = lavaan::HolzingerSwineford1939)
+  a <- tabla_criterios_ajuste(f)
+  expect_equal(unname(a$celdas["rmsea", 3:4]), c("≤ .06", "≤ .08"))
+  b <- tabla_criterios_ajuste(f, cortes = list(rmsea = c(.05, .10)))
+  expect_equal(unname(b$celdas["rmsea", 5]), "Aceptable")
+  e <- tabla_criterios_ajuste(f, evaluacion = FALSE)
+  expect_equal(ncol(e$celdas), 5); expect_false(any(grepl("Evaluaci", e$columnas)))
+  expect_error(tabla_criterios_ajuste(f, cortes = list(foo = 1)), "No reconozco")
+})

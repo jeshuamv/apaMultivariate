@@ -45,7 +45,7 @@ paleta_sem <- function(nombre = "lila", latente = NULL, observada = NULL, error 
 
 #' @export
 print.paleta_sem <- function(x, ...) {
-  cat("Paleta de diagramaSEM:", attr(x, "nombre"), "\n")
+  cat("Paleta de apaMultivariate:", attr(x, "nombre"), "\n")
   cat("  latente:  ", paste(x$latente, collapse = " -> "), "\n")
   cat("  observada:", paste(x$observada, collapse = " -> "), "\n")
   cat("  error:    ", paste(x$error, collapse = " -> "), "\n")

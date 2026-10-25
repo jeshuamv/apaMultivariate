@@ -1,0 +1,11 @@
+bibentry(
+  bibtype = "Manual",
+  title = "{apaMultivariate}: Tablas y diagramas APA para análisis multivariado",
+  author = person("Jeshua", "Moreno Valladares"),
+  year = "2026",
+  note = paste("Paquete de R, versión", utils::packageVersion("apaMultivariate")),
+  url = "https://github.com/jeshuamv/apaMultivariate",
+  textVersion = paste0("Moreno Valladares, J. (", "2026",
+                       "). apaMultivariate: Tablas y diagramas APA para análisis multivariado (Paquete de R, versión ",
+                       utils::packageVersion("apaMultivariate"), "). https://github.com/jeshuamv/apaMultivariate")
+)

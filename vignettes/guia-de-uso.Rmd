@@ -1,8 +1,8 @@
 ---
-title: "Guía de uso de diagramaSEM"
+title: "Guía de uso de apaMultivariate"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Guía de uso de diagramaSEM}
+  %\VignetteIndexEntry{Guía de uso de apaMultivariate}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,7 +12,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height
                       dpi = 90, out.width = "100%")
 ```
 
-`diagramaSEM` dibuja el diagrama de trayectorias de tus análisis factoriales
+`apaMultivariate` dibuja el diagrama de trayectorias de tus análisis factoriales
 (exploratorios y confirmatorios), de trayectorias y de ecuaciones estructurales,
 en el estilo clásico de AMOS o en estilos listos para revista, y crea, en
 español o en inglés, las tablas en formato APA que suelen pedirse en tareas,
@@ -56,7 +56,7 @@ Solo la primera vez, con conexión a internet:
 
 ```{r, eval = FALSE}
 install.packages("remotes")
-remotes::install_github("jeshuamv/diagramaSEM")
+remotes::install_github("jeshuamv/apaMultivariate")
 ```
 
 Para análisis exploratorios con `psych` instala también:
@@ -69,7 +69,7 @@ En cada sesión de R se cargan los dos paquetes:
 
 ```{r, message = FALSE}
 library(lavaan)
-library(diagramaSEM)
+library(apaMultivariate)
 ```
 
 ## El primer diagrama
@@ -108,9 +108,16 @@ modelo <- "
 "
 revisar_datos(datos, modelo)            # revisa nombres, perdidos, N...
 fit <- cfa(modelo, data = datos)        # sem() para trayectorias o SEM
+revisar_modelo(fit)                     # ¿hubo problemas al estimar?
 
 diagrama_sem(fit)
 ```
+
+`revisar_modelo()` traduce los avisos de `lavaan` (en inglés) a mensajes claros
+con qué hacer: si el modelo no convergió o no está identificado, si hay
+varianzas negativas (*casos Heywood*), cargas estandarizadas mayores que 1,
+factores con correlación de 1 o muy alta, factores con uno o dos ítems, y
+cargas bajas o no significativas.
 
 `leer_datos()` reconoce el formato por la extensión del archivo, detecta si un
 CSV usa coma o punto y coma (y la coma decimal), quita las etiquetas de SPSS y
@@ -334,6 +341,7 @@ horizontales y nota) y guardan sus valores numéricos en `$datos`.
 | | `tabla_perdidos()` | Datos perdidos por variable y casos completos |
 | | `tabla_normalidad()` | Normalidad: asimetría y curtosis con c.r. (como AMOS) y Mardia |
 | | `tabla_atipicos()` | Atípicos multivariados (Mahalanobis, p1 y p2) |
+| | `quitar_atipicos()` | Los datos sin los atípicos |
 | AFE | `tabla_factorabilidad()` | KMO, Bartlett y número de factores (Kaiser, análisis paralelo, MAP) |
 | | `tabla_cargas()` | Cargas, comunalidades y varianza explicada |
 | Medición | `tabla_cargas()` | Cargas estandarizadas, EE, *p* y R² |
@@ -391,8 +399,16 @@ at
 at$atipicos          # filas de los atípicos
 ```
 
-Si decides excluirlos, `items[-at$atipicos, ]` da los datos sin ellos; repórtalo
-y compara los resultados con y sin esos casos.
+Si decides excluirlos, `quitar_atipicos()` devuelve los datos sin ellos y te
+dice cuántos quitó (el mismo criterio, *p* < .001). Puedes indicarle el modelo
+para que use solo sus variables:
+
+```{r, eval = FALSE}
+datos2 <- quitar_atipicos(datos, modelo)
+fit2 <- cfa(modelo, data = datos2)
+```
+
+Repórtalo y, si puedes, compara los resultados con y sin esos casos.
 
 ### Antes de un análisis exploratorio
 
@@ -402,6 +418,10 @@ criterios:
 ```{r}
 tabla_factorabilidad(items)
 ```
+
+El análisis paralelo de factores se calcula igual que `psych::fa.parallel()`
+con el método de extracción `fm` (por defecto `"ml"`); usa el mismo método que
+en tu análisis factorial, por ejemplo `tabla_factorabilidad(items, fm = "pa")`.
 
 ### Cargas factoriales
 
@@ -544,6 +564,15 @@ parámetros, gl):
 tabla_criterios_ajuste(fit3)
 ```
 
+Los criterios son los de Hu y Bentler (1999) y Browne y Cudeck (1993). Si tu
+curso o tu revista usan otros, cámbialos con `cortes`, y para un artículo puedes
+quitar la columna de evaluación:
+
+```{r, eval = FALSE}
+tabla_criterios_ajuste(fit3, cortes = list(rmsea = c(.05, .06)))   # excelente, aceptable
+tabla_criterios_ajuste(fit3, evaluacion = FALSE)
+```
+
 **4. Estimaciones**, agrupadas como en AMOS (pesos de regresión, covarianzas,
 varianzas), con la razón crítica (C.R.):
 
@@ -677,7 +706,7 @@ datos perdidos y criterios de ajuste) con sus referencias en formato APA. Es
 un punto de partida para adaptar:
 
 ```{r}
-parrafo_metodo(fit, paquetes = c("semTools", "diagramaSEM"))
+parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 ```
 
 Con `archivo = "metodo.docx"` se guarda en Word.
@@ -857,6 +886,23 @@ Siempre revisa las instrucciones para autores de la revista elegida: algunas
 piden otro ancho, otro formato o la figura en un archivo aparte.
 
 ## Preguntas frecuentes
+
+**Mi omega o mi AVE no coinciden con los de `semTools`.** Hay varias fórmulas.
+`tabla_confiabilidad()` calcula ω igual que `semTools::compRelSEM()`. 
+`tabla_validez()` usa las fórmulas clásicas de Fornell y Larcker con las cargas
+estandarizadas (las de Hair et al.), que dan valores un poco distintos; con
+`tabla_validez(fit, metodo = "semtools")` obtienes los de `compRelSEM()` y
+`AVE()`. Reporta cuál usaste.
+
+**El análisis paralelo no coincide con `fa.parallel()`.** Usa el mismo método de
+extracción (`tabla_factorabilidad(datos, fm = "ml")` equivale a
+`fa.parallel(datos, fm = "ml")`). Como usa datos aleatorios, los autovalores
+aleatorios cambian un poco en cada corrida; el número de factores casi nunca.
+
+**Una tabla dice que el modelo es multigrupo.** Las tablas de cargas, validez,
+confiabilidad, etc. describen un solo grupo. Para comparar grupos usa
+`tabla_invarianza()`; para las tablas de un grupo, estima el modelo solo con los
+datos de ese grupo.
 
 **`cfa()` o `sem()` dicen que no encuentran una variable.** Un nombre del
 modelo no coincide con el de la columna (R distingue mayúsculas y minúsculas).

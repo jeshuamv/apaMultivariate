@@ -103,6 +103,7 @@ indices_bifactor <- function(lg, LS) {
 #' tabla_bifactor(fit)
 #' @export
 tabla_bifactor <- function(fit, general = NULL, etiquetas = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(fit)
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   B <- cargas_bifactor(fit, general)
   I <- indices_bifactor(B$lg, B$LS)

@@ -110,6 +110,7 @@ tabla_cargas_afe <- function(x, umbral, ocultar_bajas, etiquetas, decimales, nfa
 
 #' @noRd
 tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
+  exigir_un_grupo(fit)
   s <- lavaan::standardizedSolution(fit)
   if ("group" %in% names(s)) s <- s[s$group == 1, ]
   s <- s[s$op == "=~", ]
@@ -233,6 +234,7 @@ tabla_ajuste <- function(..., extra = NULL, titulo = NULL, archivo = NULL) {
 #' @export
 tabla_validez <- function(fit, metodo = c("clasico", "semtools"), etiquetas = NULL, decimales = 2,
                           titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(fit)
   metodo <- match.arg(metodo)
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan (cfa() o sem()).", call. = FALSE)
   s <- lavaan::standardizedSolution(fit)

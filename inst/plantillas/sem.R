@@ -1,16 +1,16 @@
 # =============================================================================
-#  MODELO DE ECUACIONES ESTRUCTURALES (SEM)  -  plantilla de diagramaSEM
+#  MODELO DE ECUACIONES ESTRUCTURALES (SEM)  -  plantilla de apaMultivariate
 # =============================================================================
 #  Se hace en dos pasos (Anderson y Gerbing, 1988): primero el modelo de
 #  medición (AFC) y después el modelo estructural (las hipótesis).
 #  Cómo usar: corre cada bloque con Ctrl + Enter (Mac: Cmd + Enter) y cambia
 #  solo lo marcado con  >>> CAMBIA AQUÍ <<<
 #  Guía de interpretación:
-#  https://github.com/jeshuamv/diagramaSEM/blob/main/guia/INTERPRETACION.md
+#  https://github.com/jeshuamv/apaMultivariate/blob/main/guia/INTERPRETACION.md
 # =============================================================================
 
 library(lavaan)
-library(diagramaSEM)
+library(apaMultivariate)
 # idioma_sem("en")          # quita el # si necesitas las tablas en inglés
 
 
@@ -31,8 +31,14 @@ medicion <- "
 "
 revisar_datos(datos, medicion)
 afc <- cfa(medicion, data = datos)
+revisar_modelo(afc)            # ¿hubo problemas al estimar?
 
 tabla_normalidad(afc)          # si el c.r. multivariado > 2, usa estimator = "MLR"
+tabla_atipicos(afc)            # casos atípicos multivariados
+# Si decides quitar los atípicos (justifícalo y repórtalo), quita los # de
+# estas dos líneas: se quitan los casos y se vuelve a estimar el modelo.
+# datos <- quitar_atipicos(datos, medicion)
+# afc <- cfa(medicion, data = datos)
 tabla_criterios_ajuste(afc)    # el modelo de medición debe ajustar bien
 tabla_cargas(afc)
 tabla_confiabilidad(afc)
@@ -48,6 +54,7 @@ estructural <- paste(medicion, "
   dem65 ~ ind60 + dem60
 ")
 fit <- sem(estructural, data = datos)
+revisar_modelo(fit)
 
 
 # --- 4. Diagrama -------------------------------------------------------------------

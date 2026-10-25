@@ -1,11 +1,11 @@
-Package: diagramaSEM
+Package: apaMultivariate
 Type: Package
-Title: Diagramas de Trayectorias y Tablas APA para Modelos 'lavaan' y 'psych'
-Version: 0.8.0
+Title: Tablas y Diagramas APA para Analisis Multivariado
+Version: 0.9.0
 Authors@R: person("Jeshua", "Moreno Valladares", email = "jeshuamv@gmail.com",
                   role = c("aut", "cre"))
-URL: https://github.com/jeshuamv/diagramaSEM
-BugReports: https://github.com/jeshuamv/diagramaSEM/issues
+URL: https://github.com/jeshuamv/apaMultivariate
+BugReports: https://github.com/jeshuamv/apaMultivariate/issues
 Description: Dibuja diagramas de trayectorias para analisis factoriales
     exploratorios ('psych', 'lavaan') y confirmatorios de primer y segundo orden,
     modelos bifactor, analisis de trayectorias y modelos de ecuaciones

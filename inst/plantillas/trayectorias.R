@@ -1,16 +1,16 @@
 # =============================================================================
-#  ANÁLISIS DE TRAYECTORIAS (PATH)  -  plantilla de diagramaSEM
+#  ANÁLISIS DE TRAYECTORIAS (PATH)  -  plantilla de apaMultivariate
 # =============================================================================
 #  Cómo usar esta plantilla:
 #   1. Corre cada bloque en orden: cursor en la línea y Ctrl + Enter
 #      (en Mac: Cmd + Enter).
 #   2. Solo cambia lo que está marcado con  >>> CAMBIA AQUÍ <<<
 #  Guía de interpretación:
-#  https://github.com/jeshuamv/diagramaSEM/blob/main/guia/INTERPRETACION.md
+#  https://github.com/jeshuamv/apaMultivariate/blob/main/guia/INTERPRETACION.md
 # =============================================================================
 
 library(lavaan)
-library(diagramaSEM)
+library(apaMultivariate)
 # idioma_sem("en")          # quita el # si necesitas las tablas en inglés
 
 
@@ -35,8 +35,13 @@ modelo <- "
 # --- 3. Revisar los datos y los supuestos -------------------------------------
 revisar_datos(datos, modelo)
 fit <- sem(modelo, data = datos)
+revisar_modelo(fit)          # ¿hubo problemas al estimar?
 tabla_normalidad(fit)        # c.r. multivariado < 2: normalidad multivariada
 tabla_atipicos(fit)          # p1 ≤ .001: caso atípico
+# Si decides quitar los atípicos (justifícalo y repórtalo), quita los # de
+# estas dos líneas: se quitan los casos y se vuelve a estimar el modelo.
+# datos <- quitar_atipicos(datos, modelo)
+# fit <- sem(modelo, data = datos)
 tabla_vif(fit)               # VIF > 5: multicolinealidad
 # Si no hay normalidad, estima con MLR quitando el # de la línea siguiente:
 # fit <- sem(modelo, data = datos, estimator = "MLR")

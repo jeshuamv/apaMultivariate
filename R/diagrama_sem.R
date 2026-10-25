@@ -341,7 +341,7 @@ plot.diagrama_sem <- function(x, ...) dibujar_diagrama(x)
 #' @export
 print.diagrama_sem <- function(x, ...) {
   N <- x$G$nodes
-  cat("Diagrama de diagramaSEM\n")
+  cat("Diagrama de apaMultivariate\n")
   cat("  Tipo de modelo:", nombre_tipo(x$tipo), "\n")
   cat("  Acomodo:       ", x$acomodo, "\n")
   cat("  Constructos:   ", sum(N$tipo == "lv"), " | Variables observadas:", sum(N$tipo %in% c("item", "ovc")),

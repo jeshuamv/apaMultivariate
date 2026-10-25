@@ -43,8 +43,8 @@ plantilla <- function(tipo = NULL, archivo = NULL, abrir = interactive()) {
   if (!tipo %in% names(TIPOS_PLANTILLA))
     stop("No hay plantilla \"", tipo, "\". Las disponibles son: ",
          paste0("\"", names(TIPOS_PLANTILLA), "\"", collapse = ", "), ".", call. = FALSE)
-  origen <- system.file("plantillas", paste0(tipo, ".R"), package = "diagramaSEM")
-  if (!nzchar(origen)) stop("No se encontr\u00f3 la plantilla instalada; reinstala diagramaSEM.", call. = FALSE)
+  origen <- system.file("plantillas", paste0(tipo, ".R"), package = "apaMultivariate")
+  if (!nzchar(origen)) stop("No se encontr\u00f3 la plantilla instalada; reinstala apaMultivariate.", call. = FALSE)
   if (is.null(archivo)) archivo <- paste0("analisis_", tipo, ".R")
   if (file.exists(archivo)) {
     base <- sub("\\.[Rr]$", "", archivo); i <- 2

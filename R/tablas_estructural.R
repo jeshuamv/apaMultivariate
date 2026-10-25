@@ -85,6 +85,7 @@ valores_efectos <- function(obj, R, caminos, pares) {
 #' @export
 tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, etiquetas = NULL,
                           decimales = 2, titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(fit)
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan (sem()).", call. = FALSE)
   pe0 <- lavaan::parameterEstimates(fit, level = nivel)
   if ("group" %in% names(pe0)) pe0 <- pe0[pe0$group == 1, ]
@@ -232,7 +233,7 @@ cita_paquete <- function(p, autores, cita, titulo, extra = "") {
 #' @param bootstrap Si se usaron intervalos bootstrap (por ejemplo, en
 #'   [tabla_efectos()]), número de remuestreos para mencionarlo.
 #' @param paquetes Otros paquetes que se usaron y deben citarse: cualquiera de
-#'   `"semTools"`, `"psych"` y `"diagramaSEM"`.
+#'   `"semTools"`, `"psych"` y `"apaMultivariate"`.
 #' @param archivo Si se indica, guarda el texto en `.docx` o `.txt`.
 #' @return Un objeto de clase `texto_apa` con `$parrafo` y `$referencias`,
 #'   que se imprime en la consola listo para copiar.
@@ -242,17 +243,17 @@ cita_paquete <- function(p, autores, cita, titulo, extra = "") {
 #'             textual =~ x4 + x5 + x6", data = HolzingerSwineford1939)
 #' parrafo_metodo(fit)
 #' @export
-parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("diagramaSEM"), archivo = NULL) {
+parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"), archivo = NULL) {
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   op <- lavaan::lavInspect(fit, "options")
-  est <- op$estimator; if (isTRUE(op$test %in% c("satorra.bentler")) && est == "ML") est <- "MLM"
+  est <- op$estimator; if (any(op$test %in% "satorra.bentler") && est == "ML") est <- "MLM"
   if (est == "ML" && any(c("yuan.bentler", "yuan.bentler.mplus") %in% op$test)) est <- "MLR"
   if (est == "DWLS" && any(c("scaled.shifted", "mean.var.adjusted") %in% op$test)) est <- "WLSMV"
   n <- lavaan::lavInspect(fit, "ntotal"); ng <- lavaan::lavInspect(fit, "ngroups")
   perd <- switch(op$missing, ml = , ml.x = , fiml = tx(" Los datos perdidos se trataron mediante m\u00e1xima verosimilitud con informaci\u00f3n completa (FIML).",
                                                     " Missing data were handled with full information maximum likelihood (FIML)."),
                  pairwise = tx(" Los datos perdidos se trataron con eliminaci\u00f3n por pares.", " Missing data were handled with pairwise deletion."), "")
-  orig <- lavaan::lavInspect(fit, "norig"); if (is.list(orig)) orig <- sum(unlist(orig))
+  orig <- sum(unlist(lavaan::lavInspect(fit, "norig")))
   if (op$missing %in% c("listwise", "default") && orig > n) perd <- paste0(tx(" Se excluyeron ", " A total of "), orig - n,
                                                                        tx(" casos con datos perdidos (eliminaci\u00f3n por lista).", " cases with missing data were excluded (listwise deletion)."))
   rver <- paste(R.version$major, R.version$minor, sep = "."); ranio <- R.version$year
@@ -266,7 +267,7 @@ parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("diagramaSEM"), a
   info <- list(
     semTools = list("Jorgensen, T. D., Pornprasertmanit, S., Schoemann, A. M., & Rosseel, Y.", "Jorgensen et al.", "semTools: Useful tools for structural equation modeling", ". https://CRAN.R-project.org/package=semTools"),
     psych = list("Revelle, W.", "Revelle", "psych: Procedures for psychological, psychometric, and personality research", ". Northwestern University. https://CRAN.R-project.org/package=psych"),
-    diagramaSEM = list("Moreno Valladares, J.", "Moreno Valladares", "diagramaSEM: Diagramas de trayectorias y tablas APA para modelos lavaan y psych", ". https://github.com/jeshuamv/diagramaSEM"))
+    apaMultivariate = list("Moreno Valladares, J.", "Moreno Valladares", tx("apaMultivariate: Tablas y diagramas APA para an\u00e1lisis multivariado", "apaMultivariate: APA-style tables and diagrams for multivariate analysis"), ". https://github.com/jeshuamv/apaMultivariate"))
   for (p in intersect(paquetes, names(info))) if (requireNamespace(p, quietly = TRUE)) {
     ci <- cita_paquete(p, info[[p]][[1]], info[[p]][[2]], info[[p]][[3]], info[[p]][[4]])
     citas[p] <- paste0(p, tx(" (versi\u00f3n ", " (version "), ci$version, "; ", ci$cita, ")"); refs <- c(refs, ci$ref)

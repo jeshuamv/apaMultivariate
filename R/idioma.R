@@ -22,16 +22,16 @@
 #' idioma_sem("es")
 #' @export
 idioma_sem <- function(idioma) {
-  actual <- getOption("diagramaSEM.idioma", "es")
+  actual <- getOption("apaMultivariate.idioma", "es")
   if (missing(idioma)) return(actual)
   idioma <- tolower(idioma)
   if (!idioma %in% c("es", "en")) stop("`idioma` debe ser \"es\" (espa\u00f1ol) o \"en\" (ingl\u00e9s).", call. = FALSE)
-  options(diagramaSEM.idioma = idioma)
+  options(apaMultivariate.idioma = idioma)
   invisible(actual)
 }
 
 #' @noRd
-en <- function() identical(getOption("diagramaSEM.idioma", "es"), "en")
+en <- function() identical(getOption("apaMultivariate.idioma", "es"), "en")
 
 # Texto en el idioma elegido
 #' @noRd

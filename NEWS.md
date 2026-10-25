@@ -1,3 +1,44 @@
+# apaMultivariate 0.9.0
+
+* **El paquete cambia de nombre: antes se llamaba `diagramaSEM`.** El nombre
+  nuevo describe mejor lo que hace hoy: tablas APA y diagramas para análisis
+  factoriales, trayectorias, SEM, moderación y MANOVA, en español o en inglés.
+  Las funciones no cambian. Para actualizar:
+  `remotes::install_github("jeshuamv/apaMultivariate")` y
+  `library(apaMultivariate)`.
+
+Revisión completa antes de compartirlo:
+
+* Se reprodujeron los scripts y la tarea del curso (AFC de Holzinger con MLM,
+  AFE con `bfi`, AFC con `ChurchSurvey`) y todas las funciones se probaron
+  con 14 tipos de modelo. El detalle está en `guia/VALIDACION.md`.
+* `revisar_modelo()`: revisa el modelo ya estimado y explica en español los
+  avisos de `lavaan` (no convergencia, falta de identificación, casos
+  Heywood, factores con correlación de 1, cargas bajas) y qué hacer.
+* `quitar_atipicos()`: devuelve los datos sin los atípicos multivariados
+  (Mahalanobis, *p* < .001), como en los scripts de clase.
+* `tabla_confiabilidad()`: ω ahora usa la varianza observada de la suma, igual
+  que `semTools::compRelSEM()` por defecto (antes, la del modelo; sigue
+  disponible con `varianza = "modelo"`). Con ítems ordinales indica que es el
+  omega ordinal.
+* `tabla_factorabilidad()`: el análisis paralelo de factores se calcula igual
+  que `psych::fa.parallel()` (argumento `fm`, por defecto `"ml"`); antes podía
+  sugerir más factores que esa función.
+* `tabla_criterios_ajuste()`: RMSEA con los criterios habituales (≤ .06
+  excelente, ≤ .08 aceptable); nuevos argumentos `cortes` (puntos de corte
+  propios) y `evaluacion = FALSE` (sin la columna de calificación).
+* Las tablas que describen un grupo dan un mensaje claro con modelos
+  multigrupo, en lugar de mostrar en silencio el primer grupo.
+* `tabla_metodo_comun()` respeta los ítems ordinales y explica por qué no
+  aplica a modelos de un factor; `tabla_modificacion()` avisa cuando el modelo
+  tiene restricciones de igualdad; `parrafo_metodo()` funciona con modelos
+  multigrupo.
+* Word: columnas más anchas para textos con flechas y símbolos.
+* Las tablas avisan cuando son más anchas que la consola.
+* Hoja de referencia de una página (`guia/hoja_referencia.pdf`), sección "Lo
+  que no hace" en el README, `citation("apaMultivariate")`, revisión
+  automática en Windows, macOS y Linux, y formularios para reportar problemas.
+
 # diagramaSEM 0.8.0
 
 Pensada para quien empieza con R.

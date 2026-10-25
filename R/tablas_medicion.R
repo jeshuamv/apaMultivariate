@@ -55,6 +55,7 @@ calcular_htmt <- function(R, factores, tipo) {
 #' @export
 tabla_htmt <- function(x, factores = NULL, tipo = c("htmt", "htmt2"), umbral = 0.85, etiquetas = NULL,
                        decimales = 2, titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(x)
   tipo <- match.arg(tipo)
   if (inherits(x, "lavaan")) {
     factores <- factores_de(x); R <- cor_observada(x)
@@ -215,16 +216,21 @@ tabla_comparacion <- function(..., referencia = c("anterior", "primero"), anidad
 #' tabla_metodo_comun(fit)
 #' @export
 tabla_metodo_comun <- function(fit, titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(fit)
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   fac <- factores_de(fit); items <- unique(unlist(fac))
+  if (!length(fac)) stop("El modelo no tiene factores con \u00edtems; esta prueba es para modelos de medici\u00f3n (AFC o SEM).", call. = FALSE)
+  if (length(fac) < 2) stop("El modelo ya tiene un solo factor. La prueba compara tu modelo con uno de un factor, as\u00ed que necesita al menos dos factores.", call. = FALSE)
   if (length(items) < 3) stop("Se necesitan al menos tres \u00edtems.", call. = FALSE)
   R <- cor_observada(fit)[items, items]
   ev <- eigen(R, symmetric = TRUE, only.values = TRUE)$values
   pct <- 100 * ev[1] / length(items)
   op <- lavaan::lavInspect(fit, "options")
   d <- obtener_datos(fit)[, items, drop = FALSE]
+  ord <- intersect(lavaan::lavNames(fit, "ov.ord"), items)
   uno <- tryCatch(lavaan::cfa(paste("Metodo =~", paste(items, collapse = " + ")), data = d,
-                              estimator = op$estimator, missing = op$missing),
+                              estimator = op$estimator, test = op$test, se = op$se, missing = op$missing,
+                              ordered = if (length(ord)) ord else NULL),
                   error = function(e) NULL)
   if (is.null(uno)) stop("No se pudo estimar el AFC de un factor.", call. = FALSE)
   i1 <- indices(uno); i0 <- indices(fit)
@@ -274,7 +280,12 @@ mapa_velicer <- function(R) {
 }
 
 #' @noRd
-autovalores_reducidos <- function(R) {
+autovalores_reducidos <- function(R, fm = "smc", n = NULL) {
+  if (fm != "smc") {
+    v <- tryCatch(suppressWarnings(suppressMessages(
+      psych::fa(R, nfactors = 1, fm = fm, rotate = "none", n.obs = n, warnings = FALSE)$values)), error = function(e) NULL)
+    if (!is.null(v)) return(v)
+  }
   smc <- 1 - 1 / diag(solve(R)); Rr <- R; diag(Rr) <- smc
   eigen(Rr, symmetric = TRUE, only.values = TRUE)$values
 }
@@ -286,9 +297,12 @@ autovalores_reducidos <- function(R) {
 #' * **Factorabilidad:** índice KMO global y por ítem (MSA), prueba de
 #'   esfericidad de Bartlett y determinante de la matriz de correlaciones.
 #' * **Número de factores** según cuatro criterios: autovalores mayores que 1
-#'   (Kaiser), análisis paralelo de Horn con componentes y con factores
-#'   (autovalores de la matriz reducida con correlaciones múltiples al
-#'   cuadrado) y la prueba MAP de Velicer.
+#'   (Kaiser), análisis paralelo de Horn con componentes y con factores, y la
+#'   prueba MAP de Velicer. El análisis paralelo de factores se calcula como
+#'   `psych::fa.parallel()` con el método de extracción `fm` (autovalores de
+#'   la solución de un factor), así que sus resultados coinciden con los de
+#'   esa función. Con `fm = "smc"` se usa la matriz reducida con
+#'   correlaciones múltiples al cuadrado en la diagonal.
 #' * **Autovalores** observados junto al percentil 95 de los aleatorios.
 #'
 #' El análisis paralelo usa datos aleatorios normales, por lo que sus
@@ -298,6 +312,9 @@ autovalores_reducidos <- function(R) {
 #' @param datos `data.frame` con los ítems (o un modelo de `lavaan`).
 #' @param iteraciones Número de conjuntos de datos aleatorios del análisis
 #'   paralelo.
+#' @param fm Método de extracción para el análisis paralelo de factores:
+#'   `"ml"` (por defecto), `"minres"`, `"pa"`, etc., como en [psych::fa()];
+#'   o `"smc"`. Usa el mismo método que en tu análisis factorial.
 #' @param semilla Semilla para el análisis paralelo (`NULL` para no fijarla).
 #' @inheritParams tabla_descriptivos
 #' @return Un objeto `tabla_apa` con tres partes. Los valores están en
@@ -306,8 +323,12 @@ autovalores_reducidos <- function(R) {
 #' library(lavaan)
 #' tabla_factorabilidad(HolzingerSwineford1939[, paste0("x", 1:9)], iteraciones = 50)
 #' @export
-tabla_factorabilidad <- function(datos, variables = NULL, iteraciones = 100, semilla = 123, etiquetas = NULL,
+tabla_factorabilidad <- function(datos, variables = NULL, iteraciones = 100, fm = "ml", semilla = 123, etiquetas = NULL,
                                  titulo = NULL, archivo = NULL) {
+  if (fm != "smc" && !requireNamespace("psych", quietly = TRUE)) {
+    message("Para el an\u00e1lisis paralelo con fm = \"", fm, "\" se necesita el paquete psych; se usa fm = \"smc\". Inst\u00e1lalo con install.packages(\"psych\").")
+    fm <- "smc"
+  }
   d <- obtener_datos(datos, variables); d <- d[stats::complete.cases(d), , drop = FALSE]
   n <- nrow(d); p <- ncol(d)
   if (p < 3) stop("Se necesitan al menos tres variables.", call. = FALSE)
@@ -316,12 +337,12 @@ tabla_factorabilidad <- function(datos, variables = NULL, iteraciones = 100, sem
   K <- kmo(R)
   chi <- -(n - 1 - (2 * p + 5) / 6) * log(det(R)); gl <- p * (p - 1) / 2
   pb <- stats::pchisq(chi, gl, lower.tail = FALSE)
-  ev <- eigen(R, symmetric = TRUE, only.values = TRUE)$values; evr <- autovalores_reducidos(R)
+  ev <- eigen(R, symmetric = TRUE, only.values = TRUE)$values; evr <- autovalores_reducidos(R, fm, n)
   if (!is.null(semilla)) { viejo <- if (exists(".Random.seed", envir = globalenv())) get(".Random.seed", envir = globalenv())
                            set.seed(semilla); on.exit(if (!is.null(viejo)) assign(".Random.seed", viejo, envir = globalenv()), add = TRUE) }
   sim <- replicate(iteraciones, {
     Rs <- stats::cor(matrix(stats::rnorm(n * p), n, p))
-    c(eigen(Rs, symmetric = TRUE, only.values = TRUE)$values, autovalores_reducidos(Rs))
+    c(eigen(Rs, symmetric = TRUE, only.values = TRUE)$values, autovalores_reducidos(Rs, fm, n))
   })
   q95 <- apply(sim, 1, stats::quantile, probs = .95)
   pc95 <- q95[1:p]; fa95 <- q95[(p + 1):(2 * p)]
@@ -355,8 +376,9 @@ tabla_factorabilidad <- function(datos, variables = NULL, iteraciones = 100, sem
                             c(tx("Criterio", "Criterion"), tx("Factores", "Factors")), cel2, alinear = c("l", "c"), nota = nota2),
                 nueva_tabla(tx("Autovalores observados y aleatorios (percentil 95)", "Observed and random eigenvalues (95th percentile)"),
                             c(tx("N.\u00ba", "No."), tx("Componentes", "Components"), tx("Aleatorios", "Random"), tx("Factores", "Factors"), tx("Aleatorios", "Random")), cel3, neg3,
-                            nota = tx("En negritas, autovalores observados mayores que los aleatorios. Factores: autovalores de la matriz reducida (correlaciones m\u00faltiples al cuadrado en la diagonal).",
-                                      "Observed eigenvalues greater than the random ones are in bold. Factors: eigenvalues of the reduced matrix (squared multiple correlations on the diagonal).")))
+                            nota = paste0(tx("En negritas, autovalores observados mayores que los aleatorios. Factores: ", "Observed eigenvalues greater than the random ones are in bold. Factors: "),
+                                          if (fm == "smc") tx("autovalores de la matriz reducida (correlaciones m\u00faltiples al cuadrado en la diagonal).", "eigenvalues of the reduced matrix (squared multiple correlations on the diagonal).")
+                                          else paste0(tx("autovalores de la soluci\u00f3n factorial (fm = \"", "eigenvalues of the factor solution (fm = \""), fm, tx("\"), como en psych::fa.parallel().", "\"), as in psych::fa.parallel().")))))
   t <- nueva_tabla(if (is.null(titulo)) tx("Factorabilidad de la matriz de correlaciones", "Factorability of the correlation matrix") else titulo,
                    c(tx("Indicador", "Indicator"), tx("Valor", "Value"), tx("Criterio", "Criterion")), cel1, alinear = c("l", "c", "l"), nota = nota1,
                    datos = list(kmo = K$global, msa = K$msa, bartlett = c(chi = chi, gl = gl, p = pb), determinante = det(R),

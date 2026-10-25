@@ -1,8 +1,8 @@
-#' diagramaSEM: diagramas de trayectorias para modelos de lavaan
+#' apaMultivariate: tablas y diagramas APA para análisis multivariado
 #'
-#' Diagramas y tablas APA para análisis factoriales exploratorios y
-#' confirmatorios, análisis de trayectorias y modelos de ecuaciones
-#' estructurales, con la convención gráfica clásica de los programas de SEM.
+#' Tablas en formato APA y diagramas para análisis factoriales exploratorios y
+#' confirmatorios, análisis de trayectorias, modelos de ecuaciones
+#' estructurales, moderación y MANOVA, en español o en inglés.
 #'
 #' Para empezar:
 #' \itemize{
@@ -38,6 +38,6 @@
 #'   \item Idioma (español o inglés): [idioma_sem()].
 #' }
 #'
-#' Consulte la guía de uso con `vignette("guia-de-uso", package = "diagramaSEM")`.
+#' Consulte la guía de uso con `vignette("guia-de-uso", package = "apaMultivariate")`.
 #' @keywords internal
 "_PACKAGE"

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<style>
+@page { size: Letter landscape; margin: 9mm 10mm; }
+:root { --tinta:#1f2328; --gris:#5b6470; --acento:#2b5a8a; --fondo:#f3f6f9; --linea:#d7dde4; }
+* { box-sizing: border-box; }
+body { font-family: "DejaVu Sans", "Helvetica", sans-serif; color: var(--tinta); font-size: 8.8pt; line-height: 1.34; margin: 0; }
+header { display:flex; justify-content:space-between; align-items:baseline; border-bottom: 2px solid var(--acento); padding-bottom: 3mm; margin-bottom: 3.5mm; }
+h1 { font-size: 17pt; margin: 0; letter-spacing: -0.3px; }
+h1 span { color: var(--acento); }
+header p { margin: 0; color: var(--gris); font-size: 8.4pt; text-align:right; }
+.cols { display: grid; grid-template-columns: 0.95fr 1.45fr 0.95fr; gap: 6mm; }
+section { break-inside: avoid; margin-bottom: 4mm; }
+h2 { font-size: 10.2pt; color: var(--acento); margin: 0 0 1.2mm; text-transform: uppercase; letter-spacing: .5px; }
+h2 b { display:inline-block; background: var(--acento); color:#fff; border-radius: 50%; width: 4.6mm; height: 4.6mm; line-height: 4.6mm; text-align:center; font-size: 8pt; margin-right: 1.5mm; }
+pre { background: var(--fondo); border-left: 2.5px solid var(--acento); margin: 0 0 1.2mm; padding: 1.4mm 2mm; font-family: "DejaVu Sans Mono", monospace; font-size: 7.3pt; white-space: pre; line-height: 1.4; overflow: hidden; }
+pre i { color: var(--gris); font-style: normal; }
+p { margin: 0 0 1.2mm; }
+table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+td { padding: .7mm 1mm; border-bottom: 1px solid var(--linea); vertical-align: top; }
+td:first-child { font-family: "DejaVu Sans Mono", monospace; white-space: nowrap; font-size: 7pt; }
+.etapa td { background: var(--fondo); font-family: inherit; font-weight: bold; color: var(--acento); font-size: 7.4pt; }
+.nota { color: var(--gris); font-size: 7.6pt; }
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 7.4pt; background: var(--fondo); padding: 0 .6mm; }
+footer { margin-top: 2mm; border-top: 1px solid var(--linea); padding-top: 1.5mm; color: var(--gris); font-size: 7.4pt; display:flex; justify-content:space-between; }
+</style></head><body>
+<header>
+  <h1>apa<span>Multivariate</span> <small style="font-weight:normal;color:#5b6470;font-size:11pt">· hoja de referencia</small></h1>
+  <p>De tus datos a las tablas APA en Word<br>Ejecuta cada línea con <b>Ctrl + Enter</b> (Mac: <b>Cmd + Enter</b>)</p>
+</header>
+<div class="cols"><div><section><h2><b>0</b>Instalar (una sola vez)</h2>
+<pre>install.packages("remotes")
+remotes::install_github("jeshuamv/apaMultivariate")
+install.packages(c("psych", "GPArotation"))  <i># AFE</i></pre>
+</section><section><h2><b>1</b>Lo más fácil: una plantilla</h2>
+<pre>library(apaMultivariate)
+plantilla("afc")
+<i># también: "afe", "trayectorias", "sem",</i>
+<i>#          "moderacion", "manova"</i></pre>
+<p>Crea un script con todo el análisis explicado. Cambia solo lo marcado con <code>&gt;&gt;&gt; CAMBIA AQUÍ &lt;&lt;&lt;</code>.</p>
+</section><section><h2><b>2</b>Leer y revisar los datos</h2>
+<pre>library(lavaan)
+datos &lt;- leer_datos()          <i># abre una ventana</i>
+datos &lt;- leer_datos("encuesta.sav", perdidos = c(99))
+names(datos)                   <i># nombres de columnas</i>
+revisar_datos(datos, modelo)   <i># antes de estimar</i></pre>
+<p class="nota">Lee Excel, SPSS, CSV (coma o punto y coma), Stata, SAS y texto.</p>
+</section><section><h2><b>3</b>Escribir el modelo</h2>
+<pre>modelo &lt;- "
+  F1 =~ i1 + i2 + i3     <i># =~  el factor se mide con</i>
+  F2 =~ i4 + i5 + i6
+  F2 ~  F1               <i># ~   F1 influye en F2</i>
+  i1 ~~ i2               <i># ~~  covarianza / correlación</i>
+"</pre>
+<p class="nota">Los nombres deben ser idénticos a las columnas (mayúsculas incluidas).</p>
+</section><section><h2><b>4</b>Estimar y revisar</h2>
+<pre>fit &lt;- cfa(modelo, data = datos)   <i># sem() si hay ~</i>
+revisar_modelo(fit)    <i># avisos de lavaan en español</i>
+<i># sin normalidad multivariada:</i>
+fit &lt;- cfa(modelo, data = datos, estimator = "MLR")
+<i># ítems con menos de 5 opciones:</i>
+fit &lt;- cfa(modelo, data = datos, ordered = TRUE)
+<i># si decides quitar los atípicos (repórtalo):</i>
+datos &lt;- quitar_atipicos(datos, modelo)</pre>
+</section></div><div><section><h2><b>5</b>Tablas</h2>
+<table>
+<tr class="etapa"><td colspan="2">Datos y supuestos</td></tr>
+<tr><td>tabla_descriptivos(datos)</td><td>M, DE, asimetría, curtosis, correlaciones</td></tr>
+<tr><td>tabla_perdidos(datos)</td><td>Datos perdidos</td></tr>
+<tr><td>tabla_normalidad(fit)</td><td>c.r. y Mardia (como AMOS)</td></tr>
+<tr><td>tabla_atipicos(fit)</td><td>Mahalanobis, p1 y p2</td></tr>
+<tr class="etapa"><td colspan="2">Análisis factorial</td></tr>
+<tr><td>tabla_factorabilidad(items)</td><td>KMO, Bartlett, paralelo, MAP</td></tr>
+<tr><td>tabla_cargas(afe o fit)</td><td>Cargas, h², R²</td></tr>
+<tr><td>tabla_confiabilidad(fit)</td><td>α (IC), ω, r ítem-total</td></tr>
+<tr><td>tabla_validez(fit)</td><td>CR, AVE, Fornell-Larcker</td></tr>
+<tr><td>tabla_htmt(fit)</td><td>Validez discriminante HTMT</td></tr>
+<tr><td>tabla_bifactor(fit)</td><td>ωH, ECV, PUC, H, FD</td></tr>
+<tr><td>tabla_invarianza(modelo, datos, "grupo")</td><td>Configural → estricta</td></tr>
+<tr class="etapa"><td colspan="2">Ajuste</td></tr>
+<tr><td>tabla_criterios_ajuste(fit)</td><td>Cada índice contra su criterio</td></tr>
+<tr><td>tabla_comparacion("A" = f1, "B" = f2)</td><td>Δχ², ΔCFI, AIC, BIC</td></tr>
+<tr><td>tabla_residuales(fit)</td><td>Dónde ajusta mal</td></tr>
+<tr><td>tabla_modificacion(fit)</td><td>Índices de modificación</td></tr>
+<tr class="etapa"><td colspan="2">Trayectorias y SEM</td></tr>
+<tr><td>tabla_parametros(fit)</td><td>B, EE, C.R., p, β</td></tr>
+<tr><td>tabla_efectos(fit)</td><td>Directos, indirectos (bootstrap), totales</td></tr>
+<tr><td>tabla_hipotesis(fit, c(H1 = "X -&gt; Y (+)"))</td><td>¿Se sostiene?</td></tr>
+<tr class="etapa"><td colspan="2">Otros análisis</td></tr>
+<tr><td>tabla_moderacion(datos, x=, w=, y=)</td><td>PROCESS 1, 7, 14</td></tr>
+<tr><td>tabla_manova(datos, c("Y1","Y2"), "g")</td><td>MANOVA y post hoc</td></tr>
+</table>
+</section></div><div><section><h2><b>6</b>Diagrama</h2>
+<pre>diagrama_sem(fit)
+diagrama_sem(fit, estandarizado = FALSE)   <i># como AMOS</i>
+diagrama_sem(fit, estilo = "revista",
+             archivo = "figura1.pdf", ancho = "pagina")</pre>
+<p class="nota">Estilos: <code>"clasico"</code>, <code>"revista"</code>, <code>"color"</code>. Formatos: pdf, png, tiff, eps, svg.</p>
+</section><section><h2><b>7</b>Guardar en Word</h2>
+<pre>guardar_tablas(tabla_criterios_ajuste(fit),
+               tabla_cargas(fit),
+               tabla_validez(fit),
+               archivo = "tablas.docx")
+parrafo_metodo(fit, archivo = "metodo.docx")
+getwd()          <i># carpeta donde quedaron</i></pre>
+</section><section><h2><b>8</b>En inglés y ayuda</h2>
+<pre>idioma_sem("en")   <i># tablas en inglés</i>
+?tabla_validez     <i># ayuda de una función</i>
+citation("apaMultivariate")</pre>
+<p class="nota">Guía, interpretación de resultados y reporte de problemas: <b>github.com/jeshuamv/apaMultivariate</b></p>
+</section><section><h2><b>9</b>Criterios de referencia</h2>
+<table>
+<tr><td>CFI, TLI</td><td>≥ .95 (≥ .90 aceptable)</td></tr>
+<tr><td>RMSEA</td><td>≤ .06 (≤ .08 aceptable)</td></tr>
+<tr><td>SRMR</td><td>≤ .08</td></tr>
+<tr><td>Carga estandarizada</td><td>≥ .50 (ideal ≥ .70)</td></tr>
+<tr><td>α, ω, CR</td><td>≥ .70</td></tr>
+<tr><td>AVE</td><td>&gt; .50; √AVE &gt; correlaciones</td></tr>
+<tr><td>HTMT</td><td>&lt; .85</td></tr>
+<tr><td>KMO</td><td>≥ .60 (mejor ≥ .80)</td></tr>
+<tr><td>Indirecto (bootstrap)</td><td>IC que no incluye el 0</td></tr>
+</table>
+<p class="nota" style="margin-top:1.2mm">Son convenciones, no leyes: cita su fuente. Cómo interpretarlos y redactarlos: guía <b>INTERPRETACION.md</b>.</p>
+</section></div></div>
+<footer><span>Errores comunes: mayúsculas distintas · comillas sin cerrar · paréntesis sin cerrar · no correr las líneas en orden</span><span>v0.9.0</span></footer>
+</body></html>

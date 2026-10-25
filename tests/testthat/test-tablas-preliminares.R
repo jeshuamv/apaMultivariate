@@ -53,7 +53,7 @@ test_that("alfa, IC de Feldt y r item-total coinciden con psych", {
   }
 })
 
-test_that("omega coincide con semTools::compRelSEM(obs.var = FALSE)", {
+test_that("omega coincide con semTools::compRelSEM (observada y modelo)", {
   skip_if_not_installed("semTools")
   fit2 <- cfa("visual =~ x1 + x2 + x3
                textual =~ x4 + x5 + x6
@@ -61,7 +61,8 @@ test_that("omega coincide con semTools::compRelSEM(obs.var = FALSE)", {
                x7 ~~ x8", data = HS)
   for (f in list(fit3, fit2)) {
     om <- unlist(semTools::compRelSEM(f, obs.var = FALSE))
-    expect_equal(tabla_confiabilidad(f)$datos$omega, as.numeric(om), tolerance = 1e-6)
+    expect_equal(tabla_confiabilidad(f, varianza = "modelo")$datos$omega, as.numeric(om), tolerance = 1e-6)
+    expect_equal(tabla_confiabilidad(f)$datos$omega, as.numeric(unlist(semTools::compRelSEM(f))), tolerance = 1e-6)
   }
 })
 

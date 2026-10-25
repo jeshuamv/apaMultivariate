@@ -25,7 +25,7 @@ evalua <- function(v, exc, acep, mayor = TRUE) {
 #' |---|---|---|---|
 #' | \eqn{\chi^2} | p > .05 | | Hair et al. (2014); Kline (2011) |
 #' | \eqn{\chi^2}/gl | \eqn{\le} 2 | \eqn{\le} 3 | Hair et al. (2014) |
-#' | RMSEA | \eqn{\le} .05 | \eqn{\le} .06 | Kline (2011); Hu y Bentler (1999) |
+#' | RMSEA | \eqn{\le} .06 | \eqn{\le} .08 | Hu y Bentler (1999); Browne y Cudeck (1993) |
 #' | SRMR | \eqn{\le} .08 | \eqn{\le} .10 | Hu y Bentler (1999); Hair et al. (2014) |
 #' | CFI, TLI | \eqn{\ge} .95 | \eqn{\ge} .90 | Hu y Bentler (1999); Hair et al. (2014) |
 #' | GFI | \eqn{\ge} .95 | \eqn{\ge} .90 | Hair et al. (2014) |
@@ -34,9 +34,19 @@ evalua <- function(v, exc, acep, mayor = TRUE) {
 #' Con estimadores robustos se usan las versiones corregidas de
 #' \eqn{\chi^2}, RMSEA, CFI y TLI.
 #'
+#' Si tu curso o tu revista usan otros puntos de corte, cámbialos con
+#' `cortes`, por ejemplo `cortes = list(rmsea = c(.05, .06))` (primero el de
+#' excelente y después el de aceptable). Para un artículo puedes quitar la
+#' columna de evaluación con `evaluacion = FALSE`: muchos metodólogos
+#' prefieren reportar los valores y los criterios sin calificarlos.
+#'
 #' @param fit Modelo de `lavaan`.
 #' @param indices Índices que se incluyen. Kline (2011) recomienda reportar
 #'   siempre \eqn{\chi^2}, RMSEA, GFI, CFI y SRMR.
+#' @param cortes Lista para cambiar los puntos de corte de algún índice:
+#'   `chi2gl`, `rmsea`, `srmr`, `cfi`, `tli`, `gfi`, `pnfi` o `pratio`, cada
+#'   uno con dos valores (excelente, aceptable).
+#' @param evaluacion Si es `FALSE`, no se incluye la columna de evaluación.
 #' @param titulo Título de la tabla.
 #' @param archivo Si se indica, guarda la tabla.
 #' @return Un objeto `tabla_apa` con dos partes (ajuste e identificación).
@@ -48,9 +58,17 @@ evalua <- function(v, exc, acep, mayor = TRUE) {
 #' tabla_criterios_ajuste(fit)
 #' @export
 tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "srmr", "cfi", "tli", "gfi", "pnfi", "pratio"),
-                                   titulo = NULL, archivo = NULL) {
+                                   cortes = NULL, evaluacion = TRUE, titulo = NULL, archivo = NULL) {
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   indices <- match.arg(indices, several.ok = TRUE)
+  K <- list(chi2gl = c(2, 3), rmsea = c(.06, .08), srmr = c(.08, .10), cfi = c(.95, .90), tli = c(.95, .90),
+            gfi = c(.95, .90), pnfi = c(NA, .50), pratio = c(NA, .50))
+  if (!is.null(cortes)) {
+    mal <- setdiff(names(cortes), names(K))
+    if (length(mal)) stop("No reconozco estos \u00edndices en `cortes`: ", paste(mal, collapse = ", "), ". Usa: ", paste(names(K), collapse = ", "), ".", call. = FALSE)
+    for (k in names(cortes)) { v <- cortes[[k]]; if (length(v) == 1) v <- c(NA, v); K[[k]] <- v }
+  }
+  lim <- function(k, i, signo) if (is.na(K[[k]][i])) "" else paste(signo, if (K[[k]][i] < 1) sub("^0", "", formatC(K[[k]][i], format = "f", digits = max(2, nchar(sub("^0\\.", "", format(K[[k]][i])))))) else format(K[[k]][i]))
   I <- indices(fit); fm <- lavaan::fitMeasures(fit)
   gfi <- if ("gfi" %in% names(fm)) fm[["gfi"]] else NA
   bdf <- if ("baseline.df" %in% names(fm)) fm[["baseline.df"]] else NA
@@ -62,18 +80,21 @@ tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "
                                     if (is.na(I[["pvalue"]])) tx("no calculable", "not computable") else if (I[["pvalue"]] < .001) "< .001" else paste("=", f_apa(I[["pvalue"]], 3)), ")"),
              "p > .05", "", if (is.na(I[["pvalue"]])) "" else if (I[["pvalue"]] > .05) tx("Adecuado", "Adequate") else tx("No adecuado", "Not adequate"),
              "Hair et al. (2014); Kline (2011)"),
-    chi2gl = c(tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), f_num(I[["chisq"]] / I[["df"]], 2), "\u2264 2", "\u2264 3",
-               evalua(I[["chisq"]] / I[["df"]], 2, 3, FALSE), "Hair et al. (2014)"),
+    chi2gl = c(tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), f_num(I[["chisq"]] / I[["df"]], 2), lim("chi2gl", 1, "\u2264"), lim("chi2gl", 2, "\u2264"),
+               evalua(I[["chisq"]] / I[["df"]], K$chi2gl[1], K$chi2gl[2], FALSE), "Hair et al. (2014)"),
     rmsea = c(tx("RMSEA [IC 90 %]", "RMSEA [90% CI]"), paste0(f3(I[["rmsea"]]), " [", f3(I[["lo"]]), ", ", f3(I[["hi"]]), "]"),
-              "\u2264 .05", "\u2264 .06", evalua(I[["rmsea"]], .05, .06, FALSE), tx("Kline (2011); Hu y Bentler (1999)", "Kline (2011); Hu & Bentler (1999)")),
-    srmr = c("SRMR", f3(I[["srmr"]]), "\u2264 .08", "\u2264 .10", evalua(I[["srmr"]], .08, .10, FALSE),
+              lim("rmsea", 1, "\u2264"), lim("rmsea", 2, "\u2264"), evalua(I[["rmsea"]], K$rmsea[1], K$rmsea[2], FALSE), tx("Hu y Bentler (1999); Browne y Cudeck (1993)", "Hu & Bentler (1999); Browne & Cudeck (1993)")),
+    srmr = c("SRMR", f3(I[["srmr"]]), lim("srmr", 1, "\u2264"), lim("srmr", 2, "\u2264"), evalua(I[["srmr"]], K$srmr[1], K$srmr[2], FALSE),
              tx("Hu y Bentler (1999); Hair et al. (2014)", "Hu & Bentler (1999); Hair et al. (2014)")),
-    cfi = c("CFI", f3(I[["cfi"]]), "\u2265 .95", "\u2265 .90", evalua(I[["cfi"]], .95, .90), tx("Hu y Bentler (1999); Hair et al. (2014)", "Hu & Bentler (1999); Hair et al. (2014)")),
-    tli = c("TLI (NNFI)", f3(I[["tli"]]), "\u2265 .95", "\u2265 .90", evalua(I[["tli"]], .95, .90), tx("Tabachnick y Fidell (2013)", "Tabachnick & Fidell (2013)")),
-    gfi = c("GFI", f3(gfi), "\u2265 .95", "\u2265 .90", evalua(gfi, .95, .90), "Hair et al. (2014)"),
-    pnfi = c("PNFI", f3(pnfi), "", "\u2265 .50", evalua(pnfi, NA, .50), "Mulaik et al. (1989)"),
-    pratio = c("PRATIO", f3(pratio), "", "\u2265 .50", evalua(pratio, NA, .50), "Mulaik et al. (1989)"))
+    cfi = c("CFI", f3(I[["cfi"]]), lim("cfi", 1, "\u2265"), lim("cfi", 2, "\u2265"), evalua(I[["cfi"]], K$cfi[1], K$cfi[2]), tx("Hu y Bentler (1999); Hair et al. (2014)", "Hu & Bentler (1999); Hair et al. (2014)")),
+    tli = c("TLI (NNFI)", f3(I[["tli"]]), lim("tli", 1, "\u2265"), lim("tli", 2, "\u2265"), evalua(I[["tli"]], K$tli[1], K$tli[2]), tx("Tabachnick y Fidell (2013)", "Tabachnick & Fidell (2013)")),
+    gfi = c("GFI", f3(gfi), lim("gfi", 1, "\u2265"), lim("gfi", 2, "\u2265"), evalua(gfi, K$gfi[1], K$gfi[2]), "Hair et al. (2014)"),
+    pnfi = c("PNFI", f3(pnfi), lim("pnfi", 1, "\u2265"), lim("pnfi", 2, "\u2265"), evalua(pnfi, K$pnfi[1], K$pnfi[2]), "Mulaik et al. (1989)"),
+    pratio = c("PRATIO", f3(pratio), lim("pratio", 1, "\u2265"), lim("pratio", 2, "\u2265"), evalua(pratio, K$pratio[1], K$pratio[2]), "Mulaik et al. (1989)"))
   cel <- do.call(rbind, filas[indices])
+  cab <- c(tx("\u00cdndice", "Index"), tx("Valor", "Value"), tx("Excelente", "Excellent"), tx("Aceptable", "Acceptable"), tx("Evaluaci\u00f3n", "Evaluation"), tx("Fuente", "Source"))
+  ali <- c("l", "c", "c", "c", "c", "l")
+  if (!evaluacion) { cel <- cel[, -5, drop = FALSE]; cab <- cab[-5]; ali <- ali[-5] }
   nota <- paste0(if (as.logical(I[["robusto"]])) tx("Se usan los \u00edndices corregidos del estimador robusto (el GFI no tiene versi\u00f3n corregida). ",
                                                     "Robust (scaled) indices are reported (GFI has no robust version). ") else "",
                  tx("RMSEA = error cuadr\u00e1tico medio de aproximaci\u00f3n; SRMR = ra\u00edz del residuo cuadr\u00e1tico medio estandarizado; CFI = \u00edndice de ajuste comparativo; TLI = \u00edndice de Tucker-Lewis; GFI = \u00edndice de bondad de ajuste; PNFI = \u00edndice de ajuste normado parsimonioso; PRATIO = raz\u00f3n de parsimonia. La prueba \u03c7\u00b2 es sensible al tama\u00f1o de la muestra; con muestras grandes suele ser significativa aunque el ajuste sea bueno.",
@@ -91,8 +112,7 @@ tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "
   nota2 <- tx("gl > 0: modelo sobreidentificado (el deseable); gl = 0: exactamente identificado (\u03c7\u00b2 = 0, el ajuste no puede evaluarse); gl < 0: subidentificado (no puede estimarse). Raz\u00f3n N:q: se recomiendan al menos 10 casos por par\u00e1metro y, de preferencia, 20 (Kline, 2011).",
               "df > 0: overidentified model (desirable); df = 0: just-identified (\u03c7\u00b2 = 0, fit cannot be evaluated); df < 0: underidentified (cannot be estimated). N:q ratio: at least 10 and preferably 20 cases per parameter are recommended (Kline, 2011).")
   t <- nueva_tabla(if (is.null(titulo)) tx("Evaluaci\u00f3n del ajuste del modelo", "Model fit evaluation") else titulo,
-                   c(tx("\u00cdndice", "Index"), tx("Valor", "Value"), tx("Excelente", "Excellent"), tx("Aceptable", "Acceptable"), tx("Evaluaci\u00f3n", "Evaluation"), tx("Fuente", "Source")), cel,
-                   alinear = c("l", "c", "c", "c", "c", "l"), nota = nota,
+                   cab, cel, alinear = ali, nota = nota,
                    datos = list(indices = c(I, gfi = gfi, pnfi = pnfi, pratio = pratio),
                                 identificacion = c(p = p, q = q, gl = gl, n = n, razon = razon)),
                    extra = list(nueva_tabla(tx("Identificaci\u00f3n del modelo y tama\u00f1o de la muestra", "Model identification and sample size"), c(tx("Elemento", "Element"), tx("Valor", "Value"), tx("Interpretaci\u00f3n", "Interpretation")),
@@ -124,6 +144,7 @@ tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "
 #' tabla_parametros(fit)
 #' @export
 tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(fit)
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   pe <- lavaan::parameterEstimates(fit, standardized = TRUE)
   if ("group" %in% names(pe)) pe <- pe[pe$group == 1, ]
@@ -200,6 +221,7 @@ tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales 
 #' @export
 tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etiquetas = NULL, decimales = 2,
                             titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(fit)
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   if (is.null(names(hipotesis))) names(hipotesis) <- paste0("H", seq_along(hipotesis))
   ss <- lavaan::standardizedSolution(fit); pe <- lavaan::parameterEstimates(fit)
@@ -285,8 +307,11 @@ tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etique
 #' @export
 tabla_modificacion <- function(fit, n = 10, minimo = 3.84, tipos = c("~~", "=~", "~"), etiquetas = NULL,
                                decimales = 2, titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(fit)
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
-  mi <- lavaan::modindices(fit, sort. = TRUE, standardized = TRUE)
+  igualdad <- any(lavaan::parTable(fit)$op == "==") || any(duplicated(stats::na.omit(
+    replace(lavaan::parTable(fit)$label, lavaan::parTable(fit)$label == "", NA))))
+  mi <- suppressWarnings(lavaan::modindices(fit, sort. = TRUE, standardized = TRUE))
   mi <- mi[mi$op %in% tipos & mi$mi >= minimo, ]
   mi <- utils::head(mi, n)
   et <- function(v) renombrar(v, etiquetas)
@@ -305,7 +330,9 @@ tabla_modificacion <- function(fit, n = 10, minimo = 3.84, tipos = c("~~", "=~",
   nota <- paste0(tx("IM = \u00edndice de modificaci\u00f3n (disminuci\u00f3n esperada del \u03c7\u00b2 al liberar el par\u00e1metro); EPC = cambio esperado en el par\u00e1metro (no estandarizado y estandarizado). Se muestran los IM \u2265 ",
                     "MI = modification index (expected decrease in \u03c7\u00b2 if the parameter is freed); EPC = expected parameter change (unstandardized and standardized). MIs \u2265 "),
                  f_num(minimo, 2), tx(". Liberar un par\u00e1metro solo se justifica si tiene sentido te\u00f3rico; la sintaxis de lavaan para agregarlo est\u00e1 en la segunda columna.",
-                                      " are shown. Freeing a parameter is justified only on theoretical grounds; the lavaan syntax to add it is in the second column."))
+                                      " are shown. Freeing a parameter is justified only on theoretical grounds; the lavaan syntax to add it is in the second column."),
+                 if (igualdad) tx(" El modelo tiene restricciones de igualdad: estos IM no las toman en cuenta; para evaluar si conviene liberar una restricci\u00f3n usa lavaan::lavTestScore(fit).",
+                                  " The model has equality constraints, which these MIs ignore; use lavaan::lavTestScore(fit) to evaluate releasing a constraint.") else "")
   t <- nueva_tabla(if (is.null(titulo)) tx("\u00cdndices de modificaci\u00f3n", "Modification indices") else titulo,
                    c(tx("Par\u00e1metro", "Parameter"), tx("Sintaxis lavaan", "lavaan syntax"), tx("IM", "MI"), "EPC", tx("EPC est.", "Std. EPC")), cel,
                    alinear = c("l", "l", "c", "c", "c"), nota = nota,
@@ -338,6 +365,7 @@ tabla_modificacion <- function(fit, n = 10, minimo = 3.84, tipos = c("~~", "=~",
 #' tabla_residuales(fit)
 #' @export
 tabla_residuales <- function(fit, umbral = .10, etiquetas = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(fit)
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   r <- lavaan::lavResiduals(fit, type = "cor", summary = FALSE)
   if (!is.null(r$cov)) R <- r$cov else R <- r[[1]]$cov

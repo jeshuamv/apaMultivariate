@@ -27,9 +27,13 @@ print.tabla_apa <- function(x, ...) {
       if (i %in% b$separadores) cat(strrep("\u2508", nchar(linea)), "\n", sep = "")
     }
     cat(linea, "\n", sep = "")
-    if (!is.null(b$nota)) cat(strwrap(paste(tx("Nota.", "Note."), b$nota), width = max(60, nchar(linea))), sep = "\n")
+    if (!is.null(b$nota)) cat(strwrap(paste(tx("Nota.", "Note."), b$nota), width = min(getOption("width", 80) - 2, max(60, nchar(linea)))), sep = "\n")
     cat("\n")
+    if (nchar(linea) > getOption("width", 80)) ancha <- TRUE
   }
+  if (exists("ancha", inherits = FALSE))
+    message(tx("La tabla es m\u00e1s ancha que la consola y puede verse cortada. Agranda el panel de la consola o gu\u00e1rdala en Word: guardar_tabla(tabla, \"tabla.docx\").",
+               "The table is wider than the console and may look broken. Widen the console pane or save it to Word: guardar_tabla(table, \"table.docx\")."))
   invisible(x)
 }
 
@@ -104,7 +108,7 @@ tabla_rtf <- function(x, numero) {
   for (k in seq_along(bloques(x))) {
     b <- bloques(x)[[k]]
     M <- rbind(b$columnas, b$celdas); N <- rbind(rep(FALSE, ncol(M)), b$negritas)
-    w <- apply(M, 2, function(v) max(ancho_txt(v))) + 2.5
+    w <- apply(M, 2, function(v) max(ancho_txt(v))) + 3
     fs <- 24; tw <- w * 118                          # ~118 twips por carácter a 12 pt
     if (sum(tw) > 9360) { fs <- 20; tw <- w * 98 }   # tabla ancha: letra de 10 pt
     if (sum(tw) > 9360) tw <- tw * 9360 / sum(tw)    # y si aún no cabe, se ajusta
@@ -217,14 +221,15 @@ docx_par <- function(runs, antes = 0, despues = 0, jc = NULL, mantener = FALSE) 
 #' @noRd
 ancho_txt <- function(v) vapply(utf8_real(v), function(z) {
   ch <- strsplit(z, "")[[1]]
-  sum(ifelse(grepl("[A-Z\u00c0-\u00de\u0391-\u03a9]", ch), 1.45, ifelse(grepl("[ .,:;il|1]", ch), 0.6, 1)))
+  sum(ifelse(grepl("[\u2190-\u21ff\u2194\u2264\u2265\u2014]", ch), 1.7,
+             ifelse(grepl("[A-Z\u00c0-\u00de\u0391-\u03a9]", ch), 1.45, ifelse(grepl("[ .,:;il|1]", ch), 0.6, 1))))
 }, numeric(1), USE.NAMES = FALSE)
 
 # Anchos de columna (twips) y tamaño de letra de un bloque de tabla
 #' @noRd
 docx_medidas <- function(b, disponible) {
   M <- rbind(b$columnas, b$celdas)
-  w <- apply(M, 2, function(v) max(ancho_txt(v))) + 2.5
+  w <- apply(M, 2, function(v) max(ancho_txt(v))) + 3
   sz <- 24; tw <- w * 118
   if (sum(tw) > disponible) { sz <- 20; tw <- w * 98 }
   list(sz = sz, tw = tw, ancho = sum(tw))

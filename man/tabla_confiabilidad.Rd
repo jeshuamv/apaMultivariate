@@ -7,6 +7,7 @@
 tabla_confiabilidad(
   x,
   factores = NULL,
+  varianza = c("observada", "modelo"),
   etiquetas = NULL,
   decimales = 2,
   titulo = NULL,
@@ -18,6 +19,10 @@ tabla_confiabilidad(
 
 \item{factores}{Solo con \code{data.frame}: lista con los ítems de cada factor,
 p. ej. \code{list(Visual = c("x1", "x2", "x3"), Verbal = c("x4", "x5", "x6"))}.}
+
+\item{varianza}{Denominador de omega: \code{"observada"} (varianza observada de
+la suma de los ítems, por defecto) o \code{"modelo"} (varianza reproducida por
+el modelo).}
 
 \item{etiquetas}{Vector con nombres para cambiar cómo se ven las variables.}
 
@@ -39,9 +44,11 @@ correlaciones ítem-total corregidas.
 \details{
 \itemize{
 \item Con un modelo de \code{lavaan} (AFC o SEM), los factores y sus ítems se toman
-del modelo y omega se calcula con sus cargas (incluye las covarianzas
-entre errores, si las hay). Es la confiabilidad de la suma de los ítems,
-igual que \code{semTools::compRelSEM(fit, obs.var = FALSE)}.
+del modelo y omega se calcula con sus cargas. Es la confiabilidad de la
+suma de los ítems: por defecto se divide entre la varianza observada de
+la suma, igual que \code{semTools::compRelSEM(fit)}; con
+\code{varianza = "modelo"}, entre la reproducida por el modelo (incluye las
+covarianzas entre errores), igual que \code{compRelSEM(fit, obs.var = FALSE)}.
 \item Con un \code{data.frame}, indique los ítems de cada factor en \code{factores};
 omega se calcula con un AFC de un factor para cada uno (se necesitan al
 menos 3 ítems).

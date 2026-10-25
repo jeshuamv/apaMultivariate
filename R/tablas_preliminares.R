@@ -272,7 +272,7 @@ ic_feldt <- function(a, n, k, nivel = .95) {
 
 # Omega de McDonald para la suma de los ítems (cargas sin estandarizar)
 #' @noRd
-omega_fit <- function(fit, f, items) {
+omega_fit <- function(fit, f, items, varianza = "observada") {
   pe <- lavaan::parameterEstimates(fit, se = FALSE)
   if ("group" %in% names(pe)) pe <- pe[pe$group == 1, ]
   psi <- lavaan::lavInspect(fit, "cov.lv"); if (is.list(psi)) psi <- psi[[1]]
@@ -280,6 +280,10 @@ omega_fit <- function(fit, f, items) {
   th <- pe$est[pe$op == "~~" & pe$lhs == pe$rhs & pe$lhs %in% items]
   rc <- pe$est[pe$op == "~~" & pe$lhs != pe$rhs & pe$lhs %in% items & pe$rhs %in% items]
   v <- sum(l)^2 * psi[f, f]
+  if (varianza == "observada") {
+    S <- lavaan::lavInspect(fit, "sampstat"); if (is.null(S$cov)) S <- S[[1]]
+    return(v / sum(S$cov[items, items]))
+  }
   v / (v + sum(th) + 2 * sum(rc))
 }
 
@@ -290,9 +294,11 @@ omega_fit <- function(fit, f, items) {
 #' correlaciones ítem-total corregidas.
 #'
 #' * Con un modelo de `lavaan` (AFC o SEM), los factores y sus ítems se toman
-#'   del modelo y omega se calcula con sus cargas (incluye las covarianzas
-#'   entre errores, si las hay). Es la confiabilidad de la suma de los ítems,
-#'   igual que `semTools::compRelSEM(fit, obs.var = FALSE)`.
+#'   del modelo y omega se calcula con sus cargas. Es la confiabilidad de la
+#'   suma de los ítems: por defecto se divide entre la varianza observada de
+#'   la suma, igual que `semTools::compRelSEM(fit)`; con
+#'   `varianza = "modelo"`, entre la reproducida por el modelo (incluye las
+#'   covarianzas entre errores), igual que `compRelSEM(fit, obs.var = FALSE)`.
 #' * Con un `data.frame`, indique los ítems de cada factor en `factores`;
 #'   omega se calcula con un AFC de un factor para cada uno (se necesitan al
 #'   menos 3 ítems).
@@ -300,6 +306,9 @@ omega_fit <- function(fit, f, items) {
 #' @param x Modelo de `lavaan` o `data.frame`.
 #' @param factores Solo con `data.frame`: lista con los ítems de cada factor,
 #'   p. ej. `list(Visual = c("x1", "x2", "x3"), Verbal = c("x4", "x5", "x6"))`.
+#' @param varianza Denominador de omega: `"observada"` (varianza observada de
+#'   la suma de los ítems, por defecto) o `"modelo"` (varianza reproducida por
+#'   el modelo).
 #' @inheritParams tabla_descriptivos
 #' @return Un objeto `tabla_apa`. Los valores están en `$datos`.
 #' @examples
@@ -312,8 +321,10 @@ omega_fit <- function(fit, f, items) {
 #'                     factores = list(Visual = c("x1", "x2", "x3"),
 #'                                     Velocidad = c("x7", "x8", "x9")))
 #' @export
-tabla_confiabilidad <- function(x, factores = NULL, etiquetas = NULL, decimales = 2,
-                                titulo = NULL, archivo = NULL) {
+tabla_confiabilidad <- function(x, factores = NULL, varianza = c("observada", "modelo"),
+                                etiquetas = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
+  exigir_un_grupo(x)
+  varianza <- match.arg(varianza)
   if (inherits(x, "lavaan")) {
     s <- lavaan::standardizedSolution(x)
     if ("group" %in% names(s)) s <- s[s$group == 1, ]
@@ -321,7 +332,7 @@ tabla_confiabilidad <- function(x, factores = NULL, etiquetas = NULL, decimales 
     if (!nrow(L)) stop("El modelo no tiene factores con \u00edtems.", call. = FALSE)
     factores <- split(L$rhs, factor(L$lhs, levels = unique(L$lhs)))
     d <- obtener_datos(x)
-    om <- vapply(names(factores), function(f) omega_fit(x, f, factores[[f]]), numeric(1))
+    om <- vapply(names(factores), function(f) omega_fit(x, f, factores[[f]], varianza), numeric(1))
   } else {
     if (is.null(factores) || !is.list(factores) || is.null(names(factores)))
       stop("Con un data.frame indica los \u00edtems de cada factor: factores = list(F1 = c(...), F2 = c(...)).", call. = FALSE)
@@ -330,7 +341,7 @@ tabla_confiabilidad <- function(x, factores = NULL, etiquetas = NULL, decimales 
       it <- factores[[f]]; if (length(it) < 3) return(NA_real_)
       m <- tryCatch(lavaan::cfa(paste("F =~", paste(it, collapse = " + ")), data = d, missing = "listwise"),
                     error = function(e) NULL)
-      if (is.null(m)) NA_real_ else omega_fit(m, "F", it)
+      if (is.null(m)) NA_real_ else omega_fit(m, "F", it, varianza)
     }, numeric(1))
   }
   res <- lapply(names(factores), function(f) alfa_cronbach(d[, factores[[f]], drop = FALSE]))
@@ -348,8 +359,13 @@ tabla_confiabilidad <- function(x, factores = NULL, etiquetas = NULL, decimales 
                paste0(f_apa(rmin, decimales), "\u2013", f_apa(rmax, decimales)))
   nota <- paste0(tx("\u03b1 = alfa de Cronbach; IC 95 % de Feldt; \u03c9 = omega de McDonald", "\u03b1 = Cronbach's alpha with Feldt's 95% CI; \u03c9 = McDonald's omega"),
                  if (inherits(x, "lavaan")) tx(", calculado con las cargas del modelo", ", computed from the model loadings") else tx(", calculado con un AFC de un factor", ", computed from a one-factor CFA"),
+                 if (varianza == "observada") tx(" y la varianza observada de la suma de los \u00edtems", " and the observed variance of the item sum")
+                 else tx(" y la varianza reproducida por el modelo", " and the model-implied variance") ,
                  tx("; r \u00edtem-total = correlaci\u00f3n \u00edtem-total corregida (m\u00ednima\u2013m\u00e1xima). Valores de \u03b1 y \u03c9 \u2265 .70 suelen considerarse aceptables (Nunnally y Bernstein, 1994) y una correlaci\u00f3n \u00edtem-total \u2265 .30 adecuada.",
                     "; item-total r = corrected item-total correlation (minimum\u2013maximum). \u03b1 and \u03c9 \u2265 .70 are usually considered acceptable (Nunnally & Bernstein, 1994), and item-total r \u2265 .30 adequate."),
+                 if (inherits(x, "lavaan") && length(lavaan::lavNames(x, "ov.ord")))
+                   tx(" Con \u00edtems ordinales, \u03c9 es el omega ordinal (calculado con las correlaciones polic\u00f3ricas; Gadermann et al., 2012) y \u03b1 se calcula con los puntajes observados.",
+                      " With ordinal items, \u03c9 is ordinal omega (computed from polychoric correlations; Gadermann et al., 2012) and \u03b1 is computed from the observed scores.") else "",
                  if (any(is.na(om))) tx(" \u2014 = omega no calculable con menos de 3 \u00edtems.", " \u2014 = omega cannot be computed with fewer than 3 items.") else "",
                  " n = ", min(vapply(res, `[[`, numeric(1), "n")), if (length(unique(vapply(res, `[[`, numeric(1), "n"))) > 1) tx(" o m\u00e1s", " or more") else "",
                  tx(" casos completos.", " complete cases."))

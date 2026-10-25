@@ -1,5 +1,5 @@
 # =============================================================================
-#  ANÁLISIS FACTORIAL CONFIRMATORIO (AFC)  -  plantilla de diagramaSEM
+#  ANÁLISIS FACTORIAL CONFIRMATORIO (AFC)  -  plantilla de apaMultivariate
 # =============================================================================
 #  Cómo usar esta plantilla:
 #   1. Corre cada bloque en orden: pon el cursor en una línea y presiona
@@ -7,11 +7,11 @@
 #   2. Solo cambia lo que está marcado con  >>> CAMBIA AQUÍ <<<
 #   3. Las líneas que empiezan con # son comentarios: R no las ejecuta.
 #  La guía de interpretación explica cómo leer y redactar cada resultado:
-#  https://github.com/jeshuamv/diagramaSEM/blob/main/guia/INTERPRETACION.md
+#  https://github.com/jeshuamv/apaMultivariate/blob/main/guia/INTERPRETACION.md
 # =============================================================================
 
 library(lavaan)
-library(diagramaSEM)
+library(apaMultivariate)
 # idioma_sem("en")          # quita el # si necesitas las tablas en inglés
 
 
@@ -47,12 +47,17 @@ tabla_perdidos(datos)
 
 # --- 4. Estimar el modelo -------------------------------------------------------
 fit <- cfa(modelo, data = datos)
+revisar_modelo(fit)          # ¿hubo problemas al estimar? (avisos de lavaan en español)
 
 # Supuesto de normalidad: si el c.r. multivariado es mayor que 2, vuelve a
 # estimar con estimador robusto quitando el # de la línea siguiente:
 tabla_normalidad(fit)
 # fit <- cfa(modelo, data = datos, estimator = "MLR")
 tabla_atipicos(fit)          # casos atípicos multivariados
+# Si decides quitar los atípicos (justifícalo y repórtalo), quita los # de
+# estas dos líneas: se quitan los casos y se vuelve a estimar el modelo.
+# datos <- quitar_atipicos(datos, modelo)
+# fit <- cfa(modelo, data = datos)
 
 
 # --- 5. Diagrama ------------------------------------------------------------------

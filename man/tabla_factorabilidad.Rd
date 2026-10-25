@@ -8,6 +8,7 @@ tabla_factorabilidad(
   datos,
   variables = NULL,
   iteraciones = 100,
+  fm = "ml",
   semilla = 123,
   etiquetas = NULL,
   titulo = NULL,
@@ -21,6 +22,10 @@ tabla_factorabilidad(
 
 \item{iteraciones}{Número de conjuntos de datos aleatorios del análisis
 paralelo.}
+
+\item{fm}{Método de extracción para el análisis paralelo de factores:
+\code{"ml"} (por defecto), \code{"minres"}, \code{"pa"}, etc., como en \code{\link[psych:fa]{psych::fa()}};
+o \code{"smc"}. Usa el mismo método que en tu análisis factorial.}
 
 \item{semilla}{Semilla para el análisis paralelo (\code{NULL} para no fijarla).}
 
@@ -43,9 +48,12 @@ Reúne lo que suele reportarse antes de un análisis factorial exploratorio:
 \item \strong{Factorabilidad:} índice KMO global y por ítem (MSA), prueba de
 esfericidad de Bartlett y determinante de la matriz de correlaciones.
 \item \strong{Número de factores} según cuatro criterios: autovalores mayores que 1
-(Kaiser), análisis paralelo de Horn con componentes y con factores
-(autovalores de la matriz reducida con correlaciones múltiples al
-cuadrado) y la prueba MAP de Velicer.
+(Kaiser), análisis paralelo de Horn con componentes y con factores, y la
+prueba MAP de Velicer. El análisis paralelo de factores se calcula como
+\code{psych::fa.parallel()} con el método de extracción \code{fm} (autovalores de
+la solución de un factor), así que sus resultados coinciden con los de
+esa función. Con \code{fm = "smc"} se usa la matriz reducida con
+correlaciones múltiples al cuadrado en la diagonal.
 \item \strong{Autovalores} observados junto al percentil 95 de los aleatorios.
 }
 
