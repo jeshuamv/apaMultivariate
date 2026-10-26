@@ -23,6 +23,15 @@ td:first-child { font-family: "DejaVu Sans Mono", monospace; white-space: nowrap
 .nota { color: var(--gris); font-size: 7.6pt; }
 code { font-family: "DejaVu Sans Mono", monospace; font-size: 7.4pt; background: var(--fondo); padding: 0 .6mm; }
 footer { margin-top: 2mm; border-top: 1px solid var(--linea); padding-top: 1.5mm; color: var(--gris); font-size: 7.4pt; display:flex; justify-content:space-between; }
+
+.pagina2 { break-before: page; }
+.lista { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6mm; }
+.lista h3 { font-size: 9.6pt; color: var(--acento); margin: 0 0 1mm; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid var(--linea); padding-bottom: .8mm; }
+.lista ul { list-style: none; padding: 0; margin: 0 0 3.2mm; }
+.lista li { padding: .9mm 0 .9mm 5.2mm; position: relative; border-bottom: 1px dotted var(--linea); }
+.lista li::before { content: ""; position: absolute; left: 0; top: 1.5mm; width: 2.8mm; height: 2.8mm; border: 1px solid var(--tinta); border-radius: .5mm; }
+.lista code { font-size: 7.2pt; }
+.tu { font-weight: bold; color: #8a4b2b; }
 </style></head><body>
 <header>
   <h1>apa<span>Multivariate</span> <small style="font-weight:normal;color:#5b6470;font-size:11pt">· hoja de referencia</small></h1>
@@ -123,4 +132,91 @@ citation("apaMultivariate")</pre>
 <p class="nota" style="margin-top:1.2mm">Son convenciones, no leyes: cita su fuente. Cómo interpretarlos y redactarlos: guía <b>INTERPRETACION.md</b>.</p>
 </section></div></div>
 <footer><span>Errores comunes: mayúsculas distintas · comillas sin cerrar · paréntesis sin cerrar · no correr las líneas en orden</span><span>v0.9.0</span></footer>
+
+<div class="pagina2">
+<header>
+  <h1>apa<span>Multivariate</span> <small style="font-weight:normal;color:#5b6470;font-size:11pt">· lista para reportar un AFC o un SEM</small></h1>
+  <p>Basada en los estándares de reporte de APA (JARS-Quant, tabla 7; Appelbaum et al., 2018)<br><span class="tu">Tú</span> = lo tienes que escribir o justificar tú</p>
+</header>
+<div class="lista">
+<div>
+<h3>Introducción</h3>
+<ul>
+<li>Modelo principal y teoría que lo respalda <span class="tu">Tú</span></li>
+<li>Dirección de cada trayectoria y por qué <span class="tu">Tú</span></li>
+<li>Si se planeaba reespecificar el modelo si no ajustaba <span class="tu">Tú</span></li>
+</ul>
+<h3>Método</h3>
+<ul>
+<li>Cuestionarios de origen y su psicometría previa <span class="tu">Tú</span></li>
+<li>Indicadores: ítems, parcelas o puntajes <span class="tu">Tú</span></li>
+<li>Ítems continuos u ordinales, y por qué · <code>revisar_datos()</code></li>
+<li>Cómo se decidió el tamaño de la muestra <span class="tu">Tú</span></li>
+<li>Confiabilidad en tu muestra · <code>tabla_confiabilidad()</code></li>
+<li>Validez convergente y discriminante · <code>tabla_validez()</code> <code>tabla_htmt()</code></li>
+</ul>
+<h3>Diagnóstico de los datos</h3>
+<ul>
+<li>% de perdidos y su patrón · <code>tabla_perdidos()</code></li>
+<li>Por qué faltan los datos <span class="tu">Tú</span></li>
+<li>Cómo se trataron los perdidos · <code>parrafo_metodo()</code></li>
+<li>Asimetría, curtosis y Mardia · <code>tabla_normalidad()</code></li>
+<li>Qué se hizo sin normalidad, y por qué · <code>parrafo_metodo()</code> <span class="tu">Tú</span></li>
+<li>Atípicos: criterio y cuántos · <code>tabla_atipicos()</code></li>
+<li>Correlaciones, medias y DE · <code>tabla_descriptivos()</code></li>
+<li>Disponibilidad de los datos <span class="tu">Tú</span></li>
+</ul>
+</div>
+<div>
+<h3>Especificación</h3>
+<ul>
+<li>Enfoque: confirmatorio, alternativos o generación <span class="tu">Tú</span></li>
+<li>Diagrama de cada modelo · <code>diagrama_sem()</code></li>
+<li>Parámetros libres, fijos y restringidos; gl · <code>tabla_parametros()</code></li>
+<li>Identificación verificada · <code>tabla_criterios_ajuste()</code></li>
+<li>Justificación de cada error correlacionado <span class="tu">Tú</span></li>
+<li>Comparaciones entre grupos · <code>tabla_invarianza()</code></li>
+</ul>
+<h3>Estimación y ajuste</h3>
+<ul>
+<li>Software y versión · <code>parrafo_metodo()</code></li>
+<li>Estimador y por qué es adecuado · <code>parrafo_metodo()</code> <span class="tu">Tú</span></li>
+<li>Opciones del programa que cambiaste <span class="tu">Tú</span></li>
+<li>Soluciones inadmisibles y cómo se resolvieron · <code>revisar_modelo()</code> <span class="tu">Tú</span></li>
+<li>Ajuste global: ≥ 2 índices de clases distintas, con criterio y fuente · <code>tabla_criterios_ajuste()</code></li>
+<li>Ajuste local: residuales · <code>tabla_residuales()</code></li>
+<li>Criterio para elegir entre modelos y prueba de diferencia · <code>tabla_comparacion()</code></li>
+</ul>
+<h3>Reespecificación</h3>
+<ul>
+<li>Si el modelo final difiere del original <span class="tu">Tú</span></li>
+<li>Parámetros liberados o fijados, con justificación · <code>tabla_modificacion()</code> <span class="tu">Tú</span></li>
+<li>¿Decidido antes o después de ver los datos? <span class="tu">Tú</span></li>
+</ul>
+</div>
+<div>
+<h3>Estimaciones</h3>
+<ul>
+<li>No estandarizadas y estandarizadas, con EE · <code>tabla_parametros()</code> <code>tabla_cargas()</code></li>
+<li>Criterio de significancia · <code>tabla_parametros()</code></li>
+<li>Efectos indirectos con IC y método · <code>tabla_efectos()</code></li>
+<li>Interacciones y su seguimiento · <code>tabla_moderacion()</code></li>
+<li>Correlaciones entre factores · <code>tabla_validez()</code></li>
+</ul>
+<h3>Discusión</h3>
+<ul>
+<li>Cambios al modelo original y sus razones <span class="tu">Tú</span></li>
+<li>Modelos equivalentes y por qué prefieres el tuyo <span class="tu">Tú</span></li>
+</ul>
+<h3>Resumen (abstract)</h3>
+<ul>
+<li>≥ 2 índices de ajuste global de clases distintas</li>
+<li>Mención del ajuste local (residuales)</li>
+<li>Si el modelo final es el que planteaste al inicio</li>
+</ul>
+<p class="nota">Casi todo lo marcado <span class="tu">Tú</span> son justificaciones: es lo que más omiten los artículos y lo que más objetan los revisores. Versión completa, con explicaciones: guía <b>INTERPRETACION.md</b>.</p>
+<p class="nota">Appelbaum, M., et al. (2018). <i>American Psychologist, 73</i>(1), 3–25. https://doi.org/10.1037/amp0000191</p>
+</div>
+</div>
+</div>
 </body></html>

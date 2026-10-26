@@ -38,7 +38,11 @@ Revisión completa antes de compartirlo:
   dispositivo estándar de R).
 * Word: columnas más anchas para textos con flechas y símbolos.
 * Las tablas avisan cuando son más anchas que la consola.
-* Hoja de referencia de una página (`guia/hoja_referencia.pdf`), sección "Lo
+* Lista de verificación para reportar un AFC o un SEM según los estándares de
+  APA (JARS-Quant), con la función que da cada dato y lo que debe justificar
+  el autor: en la guía de interpretación, en la página 2 de la hoja de
+  referencia y al final de las plantillas.
+* Hoja de referencia (`guia/hoja_referencia.pdf`), sección "Lo
   que no hace" en el README, `citation("apaMultivariate")`, revisión
   automática en Windows, macOS y Linux, y formularios para reportar problemas.
 

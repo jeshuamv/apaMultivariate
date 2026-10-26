@@ -86,3 +86,10 @@ guardar_tablas(
 )
 parrafo_metodo(fit, bootstrap = 1000, archivo = "metodo_trayectorias.docx")
 getwd()
+
+# --- Antes de entregar ------------------------------------------------------------------
+# Revisa la lista de lo que debes reportar (estándares de APA):
+# https://github.com/jeshuamv/apaMultivariate/blob/main/guia/INTERPRETACION.md
+# (sección "Lista de verificación"; también en la página 2 de la hoja de referencia).
+# Lo que el paquete no puede hacer por ti son las justificaciones: por qué ese
+# estimador, por qué esas modificaciones al modelo, por qué ese modelo y no otro.

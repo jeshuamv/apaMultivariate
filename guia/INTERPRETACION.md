@@ -28,6 +28,8 @@ honestidad en lugar de forzar la conclusión.
     cuestionables](#errores-comunes-y-prácticas-cuestionables)
 9.  [Orden sugerido de la sección de
     resultados](#orden-sugerido-de-la-sección-de-resultados)
+10. [Lista de verificación para reportar un AFC o un
+    SEM](#lista-de-verificación-para-reportar-un-afc-o-un-sem)
 
 ------------------------------------------------------------------------
 
@@ -428,11 +430,118 @@ moderador.
 En el método, incluye el párrafo de `parrafo_metodo()` (software,
 estimador, manejo de perdidos, bootstrap) y las referencias que trae.
 
+## Lista de verificación para reportar un AFC o un SEM
+
+Muchos artículos con AFC y SEM omiten información necesaria para
+evaluarlos o replicarlos (Jackson et al., 2009). Para corregirlo, APA
+publicó estándares de reporte para estudios con ecuaciones
+estructurales, que incluyen los modelos de medición como el AFC
+(JARS-Quant, tabla 7; Appelbaum et al., 2018). Esta lista resume esos
+estándares y, para cada punto, dice qué función te da la información.
+Donde dice **tú**, el paquete no puede hacerlo por ti: es una decisión o
+una justificación que debes escribir.
+
+Úsala al final, antes de entregar o enviar tu trabajo: revisa punto por
+punto si ya está en tu texto.
+
+### Introducción
+
+| Qué reportar                                                                        | Cómo lo obtienes |
+|-------------------------------------------------------------------------------------|------------------|
+| El modelo principal y la teoría o la evidencia previa que lo respaldan              | **Tú**           |
+| La dirección de cada trayectoria importante y por qué (por qué X → Y y no al revés) | **Tú**           |
+| Si tenías previsto reespecificar el modelo en caso de que no ajustara               | **Tú**           |
+
+### Método
+
+| Qué reportar                                                                                              | Cómo lo obtienes                                                                 |
+|-----------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| De qué cuestionario o cuestionarios salen los indicadores y su psicometría previa                         | **Tú**                                                                           |
+| Si los indicadores son ítems, parcelas o puntajes totales                                                 | **Tú**                                                                           |
+| Si los ítems se trataron como continuos o como categóricos (ordinales)                                    | `revisar_datos()` te dice si parecen tipo Likert; **tú** decides y lo justificas |
+| Cómo se decidió el tamaño de la muestra (regla práctica, análisis de potencia o los recursos disponibles) | **Tú**; la razón N:q de `tabla_criterios_ajuste()` ayuda a justificarlo          |
+| Confiabilidad de los puntajes en tu muestra                                                               | `tabla_confiabilidad()`                                                          |
+| Validez convergente y discriminante                                                                       | `tabla_validez()`, `tabla_htmt()`                                                |
+
+### Resultados: diagnóstico de los datos
+
+| Qué reportar                                                                        | Cómo lo obtienes                        |
+|-------------------------------------------------------------------------------------|-----------------------------------------|
+| Porcentaje de datos perdidos y su patrón                                            | `tabla_perdidos()`                      |
+| Por qué faltan los datos (al azar o no) y la evidencia                              | **Tú**                                  |
+| Cómo se trataron los perdidos (FIML, imputación múltiple, eliminación)              | `parrafo_metodo()`                      |
+| Normalidad: asimetría, curtosis y normalidad multivariada                           | `tabla_normalidad()`                    |
+| Qué se hizo si no había normalidad (estimador robusto, bootstrap)                   | `parrafo_metodo()` + **tú** (por qué)   |
+| Casos atípicos: criterio, cuántos y qué se hizo con ellos                           | `tabla_atipicos()`, `quitar_atipicos()` |
+| Datos suficientes para un reanálisis: correlaciones, medias y desviaciones estándar | `tabla_descriptivos()`                  |
+| Si los datos están disponibles y dónde                                              | **Tú**                                  |
+
+### Resultados: especificación e identificación
+
+| Qué reportar                                                                                         | Cómo lo obtienes                                                   |
+|------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+| El enfoque: estrictamente confirmatorio, comparación de modelos alternativos o generación de modelos | **Tú**                                                             |
+| Un diagrama de cada modelo (o una descripción que permita dibujarlo)                                 | `diagrama_sem()`                                                   |
+| Parámetros libres, fijos y restringidos, y los grados de libertad                                    | `diagrama_sem()`, `tabla_parametros()`, `tabla_criterios_ajuste()` |
+| Que el modelo está identificado y cómo se verificó                                                   | `tabla_criterios_ajuste()`, `revisar_modelo()`                     |
+| La justificación de cada correlación entre errores                                                   | `tabla_parametros()` las muestra; **tú** las justificas            |
+| Las comparaciones entre grupos, si las hay                                                           | `tabla_invarianza()`                                               |
+
+### Resultados: estimación y ajuste
+
+| Qué reportar                                                                           | Cómo lo obtienes                             |
+|----------------------------------------------------------------------------------------|----------------------------------------------|
+| Software y versión                                                                     | `parrafo_metodo()`                           |
+| Método de estimación y por qué es adecuado para tus datos                              | `parrafo_metodo()` + **tú** (por qué)        |
+| Opciones del programa que cambiaste                                                    | **Tú**                                       |
+| Soluciones inadmisibles (casos Heywood, no convergencia) y cómo se resolvieron         | `revisar_modelo()` + **tú**                  |
+| Ajuste global: al menos dos índices de clases distintas, con sus criterios y su fuente | `tabla_criterios_ajuste()`, `tabla_ajuste()` |
+| Ajuste local: residuales, en cada modelo que interpretes                               | `tabla_residuales()`                         |
+| Criterio para elegir entre modelos alternativos y prueba de diferencia                 | `tabla_comparacion()`                        |
+
+### Resultados: reespecificación
+
+| Qué reportar                                                         | Cómo lo obtienes                                             |
+|----------------------------------------------------------------------|--------------------------------------------------------------|
+| Si el modelo que interpretas fue modificado respecto al original     | **Tú**                                                       |
+| Qué parámetros se liberaron o fijaron, con su justificación teórica  | `tabla_modificacion()` te dice cuáles; **tú** los justificas |
+| Si las modificaciones se decidieron antes o después de ver los datos | **Tú**                                                       |
+
+### Resultados: estimaciones
+
+| Qué reportar                                                                    | Cómo lo obtienes                              |
+|---------------------------------------------------------------------------------|-----------------------------------------------|
+| Estimaciones no estandarizadas y estandarizadas, con sus errores estándar       | `tabla_parametros()`, `tabla_cargas()`        |
+| El criterio de significancia                                                    | `tabla_parametros()` (valores *p*)            |
+| Efectos indirectos, con su intervalo de confianza y el método (bootstrap)       | `tabla_efectos()`                             |
+| Interacciones y su análisis de seguimiento (pendientes simples, Johnson-Neyman) | `tabla_moderacion()`, `grafica_interaccion()` |
+| Correlaciones entre factores                                                    | `tabla_validez()`                             |
+
+### Discusión
+
+| Qué reportar                                                                                       | Cómo lo obtienes                               |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------|
+| Los cambios hechos al modelo original y sus razones                                                | **Tú**                                         |
+| Modelos equivalentes o casi equivalentes que ajustarían igual de bien, y por qué prefieres el tuyo | **Tú**; `tabla_comparacion()` si los estimaste |
+
+### Resumen
+
+- Casi todo lo que marca **tú** son justificaciones, no cálculos. Son lo
+  que más omiten los artículos y lo que más objetan los revisores.
+- En el resumen (*abstract*) también se pide al menos dos índices de
+  ajuste global de clases distintas, una mención del ajuste local y si
+  el modelo final es el que planteaste al inicio.
+
 ## Referencias
 
 - Anderson, J. C., & Gerbing, D. W. (1988). Structural equation modeling
   in practice: A review and recommended two-step approach.
   *Psychological Bulletin, 103*(3), 411–423.
+- Appelbaum, M., Cooper, H., Kline, R. B., Mayo-Wilson, E., Nezu, A. M.,
+  & Rao, S. M. (2018). Journal article reporting standards for
+  quantitative research in psychology: The APA Publications and
+  Communications Board task force report. *American Psychologist,
+  73*(1), 3–25. <https://doi.org/10.1037/amp0000191>
 - Bentler, P. M. (2006). *EQS 6 structural equations program manual*.
   Multivariate Software.
 - Browne, M. W., & Cudeck, R. (1993). Alternative ways of assessing
@@ -457,6 +566,10 @@ estimador, manejo de perdidos, bootstrap) y las referencias que trae.
 - Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in
   covariance structure analysis. *Structural Equation Modeling, 6*(1),
   1–55.
+- Jackson, D. L., Gillaspy, J. A., Jr., & Purc-Stephenson, R. (2009).
+  Reporting practices in confirmatory factor analysis: An overview and
+  some recommendations. *Psychological Methods, 14*(1), 6–23.
+  <https://doi.org/10.1037/a0014694>
 - Nunnally, J. C., & Bernstein, I. H. (1994). *Psychometric theory* (3rd
   ed.). McGraw-Hill.
 - Rodriguez, A., Reise, S. P., & Haviland, M. G. (2016). Evaluating

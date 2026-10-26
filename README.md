@@ -391,9 +391,12 @@ d
 - **[Guía de uso completa](guia/GUIA.md)**: cada tipo de análisis, todas las opciones
   y todas las tablas, con ejemplos e imágenes.
 - **[Cómo interpretar y redactar los resultados](guia/INTERPRETACION.md)**: qué mirar en
-  cada tabla, los criterios, ejemplos de redacción en APA y errores comunes.
-- **[Hoja de referencia](guia/hoja_referencia.pdf)** (una página, para imprimir): de tus
-  datos al Word en pocas líneas.
+  cada tabla, los criterios, ejemplos de redacción en APA, errores comunes y una
+  [lista de verificación](guia/INTERPRETACION.md#lista-de-verificación-para-reportar-un-afc-o-un-sem)
+  de lo que debes reportar.
+- **[Hoja de referencia](guia/hoja_referencia.pdf)** (dos páginas, para imprimir): de tus
+  datos al Word en pocas líneas, y la lista de lo que debes reportar en un AFC o un SEM
+  según los estándares de APA.
 - **[Cómo se verificó](guia/VALIDACION.md)**: contra qué paquetes y scripts de clase se
   compararon los resultados.
 - **Para citarlo**: `citation("apaMultivariate")`.
