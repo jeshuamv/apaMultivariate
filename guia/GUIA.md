@@ -485,8 +485,9 @@ tabla_normalidad(items)
 #> Curtosis multivariada     103.59      z = 2.83          .005 
 #> ─────────────────────────────────────────────────────────────
 #> Nota. Pruebas de Mardia (1970) con 301 casos y 9 variables.
-#> Se rechaza la normalidad multivariada; se recomienda un
-#> estimador robusto (MLR o MLM) o bootstrap.
+#> Se rechaza la normalidad multivariada (asimetría y
+#> curtosis); se recomienda un estimador robusto (MLR o MLM) o
+#> bootstrap.
 ```
 
 Como en AMOS, cada variable tiene su asimetría y su curtosis con la
@@ -937,8 +938,9 @@ tabla_normalidad(fit3)
 #> (p < .05), que indica falta de normalidad; con p < .01 el límite es
 #> 2.58. Multivariada: coeficiente de curtosis de Mardia y su c.r. N = 47
 #> casos completos. Asimetría significativa en Education. Curtosis
-#> significativa en Education, Catholic. El c.r. multivariado sugiere
-#> normalidad multivariada.
+#> significativa en Education, Catholic. El c.r. multivariado (curtosis)
+#> no indica problemas, pero la asimetría multivariada sí es
+#> significativa (segunda parte de la tabla).
 #> 
 #> Pruebas de normalidad multivariada de Mardia
 #> ────────────────────────────────────────────────────────────
@@ -948,8 +950,8 @@ tabla_normalidad(fit3)
 #> Curtosis multivariada      26.02      z = 1.00         .317 
 #> ────────────────────────────────────────────────────────────
 #> Nota. Pruebas de Mardia (1970) con 47 casos y 4 variables.
-#> Se rechaza la normalidad multivariada; se recomienda un
-#> estimador robusto (MLR o MLM) o bootstrap.
+#> Se rechaza la normalidad multivariada (por la asimetría);
+#> se recomienda un estimador robusto (MLR o MLM) o bootstrap.
 tabla_vif(fit3)
 #> 
 #> Diagnóstico de multicolinealidad
@@ -1008,16 +1010,23 @@ tabla_criterios_ajuste(fit3)
 #> ───────────────────────────────────────────────────────────────────────────────────────
 #> Elemento                    Valor  Interpretación                                      
 #> ───────────────────────────────────────────────────────────────────────────────────────
-#> Observaciones (p)             7    Elementos no redundantes de la matriz de covarianzas
-#> Parámetros estimados (q)      6                                                        
+#> Observaciones (p)            10    Elementos no redundantes de la matriz de covarianzas
+#> Parámetros estimados (q)      9                                                        
 #> Grados de libertad (p − q)    1    Sobreidentificado                                   
 #> Tamaño de la muestra (N)     47                                                        
-#> Razón N:q                   7.8:1  Baja (< 10:1)                                       
+#> Razón N:q                   5.2:1  Baja (< 10:1)                                       
+#> Variables exógenas            2    Education, Catholic                                 
+#> Variables endógenas           2    Examination, Fertility                              
 #> ───────────────────────────────────────────────────────────────────────────────────────
 #> Nota. gl > 0: modelo sobreidentificado (el deseable); gl = 0: exactamente
 #> identificado (χ² = 0, el ajuste no puede evaluarse); gl < 0: subidentificado
 #> (no puede estimarse). Razón N:q: se recomiendan al menos 10 casos por
-#> parámetro y, de preferencia, 20 (Kline, 2011).
+#> parámetro y, de preferencia, 20 (Kline, 2011). Exógenas: no reciben ninguna
+#> flecha de otra variable del modelo; endógenas: reciben al menos una (sin
+#> contar los errores). p y q incluyen las 3 varianzas y covarianzas (y medias,
+#> si las hay) de las variables exógenas observadas, como en AMOS; lavaan las
+#> fija en sus valores de la muestra y no las cuenta, pero los grados de
+#> libertad son los mismos.
 #> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
 ```
 
@@ -1028,7 +1037,12 @@ artículo puedes quitar la columna de evaluación:
 ``` r
 tabla_criterios_ajuste(fit3, cortes = list(rmsea = c(.05, .06)))   # excelente, aceptable
 tabla_criterios_ajuste(fit3, evaluacion = FALSE)
+tabla_criterios_ajuste(fit3, ic_rmsea = .95)   # IC del RMSEA al 95 % (por defecto, 90 %)
 ```
+
+La segunda parte de la tabla resume la identificación del modelo: p, q y
+gl contados como en AMOS, y qué variables son exógenas (no reciben
+ninguna flecha) y cuáles endógenas.
 
 **4. Estimaciones**, agrupadas como en AMOS (pesos de regresión,
 covarianzas, varianzas), con la razón crítica (C.R.):
@@ -1377,7 +1391,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 #> 
 #> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
 #> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
-#> Jorgensen et al., 2022) y apaMultivariate (versión 0.9.0; Moreno Valladares,
+#> Jorgensen et al., 2022) y apaMultivariate (versión 0.9.1; Moreno Valladares,
 #> 2026). El análisis factorial confirmatorio se estimó con una muestra de 301
 #> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
 #> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
@@ -1398,7 +1412,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 #>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
 #> 
 #> Moreno Valladares, J. (2026). apaMultivariate: Tablas y diagramas APA para
-#>     análisis multivariado (Paquete de R, versión 0.9.0).
+#>     análisis multivariado (Paquete de R, versión 0.9.1).
 #>     https://github.com/jeshuamv/apaMultivariate.
 #> 
 #> R Core Team. (2024). R: A language and environment for statistical computing. R

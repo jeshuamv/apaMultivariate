@@ -227,7 +227,9 @@ tabla_normalidad <- function(datos, variables = NULL, decimales = 2, titulo = NU
                  n, tx(" casos completos. ", " complete cases. "),
                  if (length(fz1)) paste0(tx("Asimetr\u00eda significativa en ", "Significant skewness: "), paste(fz1, collapse = ", "), ". ") else "",
                  if (length(fz2)) paste0(tx("Curtosis significativa en ", "Significant kurtosis: "), paste(fz2, collapse = ", "), ". ") else "",
-                 if (abs(m$z) < 1.96) tx("El c.r. multivariado sugiere normalidad multivariada.", "The multivariate c.r. suggests multivariate normality.")
+                 if (abs(m$z) < 1.96 && m$p_asim < .05) tx("El c.r. multivariado (curtosis) no indica problemas, pero la asimetr\u00eda multivariada s\u00ed es significativa (segunda parte de la tabla).",
+                                                          "The multivariate c.r. (kurtosis) shows no problem, but multivariate skewness is significant (second part of the table).")
+                 else if (abs(m$z) < 1.96) tx("El c.r. multivariado sugiere normalidad multivariada.", "The multivariate c.r. suggests multivariate normality.")
                  else tx("El c.r. multivariado indica que no hay normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.",
                          "The multivariate c.r. indicates multivariate non-normality; a robust estimator (MLR or MLM) or bootstrapping is recommended."))
   cel2 <- rbind(c(tx("Asimetr\u00eda multivariada", "Multivariate skewness"), f_num(m$b1, decimales), paste0("\u03c7\u00b2 = ", f_num(m$chi, 2)),
@@ -236,8 +238,10 @@ tabla_normalidad <- function(datos, variables = NULL, decimales = 2, titulo = NU
   normal <- m$p_asim >= .05 && m$p_curt >= .05
   nota2 <- paste0(tx("Pruebas de Mardia (1970) con ", "Mardia's (1970) tests with "), m$n, tx(" casos y ", " cases and "), m$p, " variables. ",
                   if (normal) tx("No se rechaza la normalidad multivariada.", "Multivariate normality is not rejected.")
-                  else tx("Se rechaza la normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.",
-                          "Multivariate normality is rejected; a robust estimator (MLR or MLM) or bootstrapping is recommended."))
+                  else paste0(tx("Se rechaza la normalidad multivariada (", "Multivariate normality is rejected ("),
+                              if (m$p_asim < .05 && m$p_curt < .05) tx("asimetr\u00eda y curtosis", "skewness and kurtosis")
+                              else if (m$p_asim < .05) tx("por la asimetr\u00eda", "due to skewness") else tx("por la curtosis", "due to kurtosis"),
+                              tx("); se recomienda un estimador robusto (MLR o MLM) o bootstrap.", "); a robust estimator (MLR or MLM) or bootstrapping is recommended.")))
   t <- nueva_tabla(if (is.null(titulo)) tx("Evaluaci\u00f3n de la normalidad", "Assessment of normality") else titulo,
                    c("Variable", tx("M\u00edn.", "Min."), tx("M\u00e1x.", "Max."), tx("Asimetr\u00eda", "Skewness"), "c.r.", tx("Curtosis", "Kurtosis"), "c.r."), cel, neg,
                    nota = nota, separadores = ncol(d),

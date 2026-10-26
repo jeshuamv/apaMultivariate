@@ -1,3 +1,17 @@
+# apaMultivariate 0.9.1
+
+Ajustes tras probar el paquete con la tarea de análisis de trayectorias del
+curso:
+
+* `tabla_criterios_ajuste()` y `tabla_ajuste()`: argumento `ic_rmsea` para
+  reportar el intervalo del RMSEA al 95 % (por defecto, 90 %).
+* `tabla_criterios_ajuste()` indica qué variables son exógenas y cuáles
+  endógenas, y cuenta p y q como AMOS y los libros (incluye las varianzas y
+  covarianzas de las exógenas observadas, que lavaan fija); los grados de
+  libertad no cambian.
+* `tabla_normalidad()`: las dos partes de la tabla ya no se contradicen
+  cuando la curtosis multivariada es normal pero la asimetría no.
+
 # apaMultivariate 0.9.0
 
 * **El paquete cambia de nombre: antes se llamaba `diagramaSEM`.** El nombre

@@ -9,6 +9,7 @@ tabla_criterios_ajuste(
   indices = c("chi2", "chi2gl", "rmsea", "srmr", "cfi", "tli", "gfi", "pnfi", "pratio"),
   cortes = NULL,
   evaluacion = TRUE,
+  ic_rmsea = 0.9,
   titulo = NULL,
   archivo = NULL
 )
@@ -24,6 +25,9 @@ siempre \eqn{\chi^2}, RMSEA, GFI, CFI y SRMR.}
 uno con dos valores (excelente, aceptable).}
 
 \item{evaluacion}{Si es \code{FALSE}, no se incluye la columna de evaluación.}
+
+\item{ic_rmsea}{Nivel de confianza del intervalo del RMSEA: \code{.90} (el
+habitual, por defecto) o, si te lo piden, \code{.95}.}
 
 \item{titulo}{Título de la tabla.}
 

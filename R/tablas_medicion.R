@@ -90,9 +90,21 @@ tabla_htmt <- function(x, factores = NULL, tipo = c("htmt", "htmt2"), umbral = 0
 
 # --- Comparación de modelos --------------------------------------------------------
 
+# fitMeasures() con el nivel de confianza pedido para el IC del RMSEA
 #' @noRd
-indices <- function(f) {
-  fm <- lavaan::fitMeasures(f)
+medidas_ajuste <- function(f, ic = .90) {
+  if (!is.numeric(ic) || length(ic) != 1 || ic <= 0 || ic >= 1) stop("`ic_rmsea` debe ser un nivel de confianza entre 0 y 1, por ejemplo .90 o .95.", call. = FALSE)
+  if (isTRUE(all.equal(ic, .90))) return(lavaan::fitMeasures(f))
+  lavaan::fitMeasures(f, fm.args = list(rmsea.ci.level = ic))
+}
+
+# IC del RMSEA en el encabezado de las tablas: "RMSEA [IC 90 %]"
+#' @noRd
+cab_rmsea <- function(ic) paste0("RMSEA [", tx("IC ", ""), round(100 * ic), tx(" %]", "% CI]"))
+
+#' @noRd
+indices <- function(f, ic = .90) {
+  fm <- medidas_ajuste(f, ic)
   rob <- "chisq.scaled" %in% names(fm) && !is.na(fm[["chisq.scaled"]])
   usa <- function(base, alt) { for (a in c(alt, base)) if (a %in% names(fm) && !is.na(fm[[a]])) return(fm[[a]]); NA_real_ }
   c(chisq = usa("chisq", if (rob) "chisq.scaled"), df = fm[["df"]],

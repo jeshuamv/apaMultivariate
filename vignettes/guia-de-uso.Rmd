@@ -571,7 +571,12 @@ quitar la columna de evaluación:
 ```{r, eval = FALSE}
 tabla_criterios_ajuste(fit3, cortes = list(rmsea = c(.05, .06)))   # excelente, aceptable
 tabla_criterios_ajuste(fit3, evaluacion = FALSE)
+tabla_criterios_ajuste(fit3, ic_rmsea = .95)   # IC del RMSEA al 95 % (por defecto, 90 %)
 ```
+
+La segunda parte de la tabla resume la identificación del modelo: p, q y gl
+contados como en AMOS, y qué variables son exógenas (no reciben ninguna
+flecha) y cuáles endógenas.
 
 **4. Estimaciones**, agrupadas como en AMOS (pesos de regresión, covarianzas,
 varianzas), con la razón crítica (C.R.):

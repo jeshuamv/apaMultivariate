@@ -47,6 +47,8 @@ evalua <- function(v, exc, acep, mayor = TRUE) {
 #'   `chi2gl`, `rmsea`, `srmr`, `cfi`, `tli`, `gfi`, `pnfi` o `pratio`, cada
 #'   uno con dos valores (excelente, aceptable).
 #' @param evaluacion Si es `FALSE`, no se incluye la columna de evaluación.
+#' @param ic_rmsea Nivel de confianza del intervalo del RMSEA: `.90` (el
+#'   habitual, por defecto) o, si te lo piden, `.95`.
 #' @param titulo Título de la tabla.
 #' @param archivo Si se indica, guarda la tabla.
 #' @return Un objeto `tabla_apa` con dos partes (ajuste e identificación).
@@ -58,7 +60,7 @@ evalua <- function(v, exc, acep, mayor = TRUE) {
 #' tabla_criterios_ajuste(fit)
 #' @export
 tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "srmr", "cfi", "tli", "gfi", "pnfi", "pratio"),
-                                   cortes = NULL, evaluacion = TRUE, titulo = NULL, archivo = NULL) {
+                                   cortes = NULL, evaluacion = TRUE, ic_rmsea = .90, titulo = NULL, archivo = NULL) {
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   indices <- match.arg(indices, several.ok = TRUE)
   K <- list(chi2gl = c(2, 3), rmsea = c(.06, .08), srmr = c(.08, .10), cfi = c(.95, .90), tli = c(.95, .90),
@@ -69,7 +71,7 @@ tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "
     for (k in names(cortes)) { v <- cortes[[k]]; if (length(v) == 1) v <- c(NA, v); K[[k]] <- v }
   }
   lim <- function(k, i, signo) if (is.na(K[[k]][i])) "" else paste(signo, if (K[[k]][i] < 1) sub("^0", "", formatC(K[[k]][i], format = "f", digits = max(2, nchar(sub("^0\\.", "", format(K[[k]][i])))))) else format(K[[k]][i]))
-  I <- indices(fit); fm <- lavaan::fitMeasures(fit)
+  I <- indices(fit, ic_rmsea); fm <- medidas_ajuste(fit, ic_rmsea)
   gfi <- if ("gfi" %in% names(fm)) fm[["gfi"]] else NA
   bdf <- if ("baseline.df" %in% names(fm)) fm[["baseline.df"]] else NA
   pratio <- I[["df"]] / bdf
@@ -82,7 +84,7 @@ tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "
              "Hair et al. (2014); Kline (2011)"),
     chi2gl = c(tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), f_num(I[["chisq"]] / I[["df"]], 2), lim("chi2gl", 1, "\u2264"), lim("chi2gl", 2, "\u2264"),
                evalua(I[["chisq"]] / I[["df"]], K$chi2gl[1], K$chi2gl[2], FALSE), "Hair et al. (2014)"),
-    rmsea = c(tx("RMSEA [IC 90 %]", "RMSEA [90% CI]"), paste0(f3(I[["rmsea"]]), " [", f3(I[["lo"]]), ", ", f3(I[["hi"]]), "]"),
+    rmsea = c(cab_rmsea(ic_rmsea), paste0(f3(I[["rmsea"]]), " [", f3(I[["lo"]]), ", ", f3(I[["hi"]]), "]"),
               lim("rmsea", 1, "\u2264"), lim("rmsea", 2, "\u2264"), evalua(I[["rmsea"]], K$rmsea[1], K$rmsea[2], FALSE), tx("Hu y Bentler (1999); Browne y Cudeck (1993)", "Hu & Bentler (1999); Browne & Cudeck (1993)")),
     srmr = c("SRMR", f3(I[["srmr"]]), lim("srmr", 1, "\u2264"), lim("srmr", 2, "\u2264"), evalua(I[["srmr"]], K$srmr[1], K$srmr[2], FALSE),
              tx("Hu y Bentler (1999); Hair et al. (2014)", "Hu & Bentler (1999); Hair et al. (2014)")),
@@ -100,21 +102,37 @@ tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "
                  tx("RMSEA = error cuadr\u00e1tico medio de aproximaci\u00f3n; SRMR = ra\u00edz del residuo cuadr\u00e1tico medio estandarizado; CFI = \u00edndice de ajuste comparativo; TLI = \u00edndice de Tucker-Lewis; GFI = \u00edndice de bondad de ajuste; PNFI = \u00edndice de ajuste normado parsimonioso; PRATIO = raz\u00f3n de parsimonia. La prueba \u03c7\u00b2 es sensible al tama\u00f1o de la muestra; con muestras grandes suele ser significativa aunque el ajuste sea bueno.",
                     "RMSEA = root mean square error of approximation; SRMR = standardized root mean square residual; CFI = comparative fit index; TLI = Tucker-Lewis index; GFI = goodness-of-fit index; PNFI = parsimony normed fit index; PRATIO = parsimony ratio. The \u03c7\u00b2 test is sensitive to sample size; with large samples it is usually significant even when fit is good."))
   # Identificación
-  q <- fm[["npar"]]; gl <- fm[["df"]]; p <- q + gl; n <- lavaan::lavInspect(fit, "ntotal")
+  q <- fm[["npar"]]; gl <- fm[["df"]]; n <- lavaan::lavInspect(fit, "ntotal")
+  # Con fixed.x = TRUE (el valor de lavaan), las varianzas y covarianzas de las
+  # exógenas observadas no se cuentan como parámetros; AMOS y los libros s\u00ed
+  # las cuentan. Se suman a p y q para que coincidan con el conteo a mano.
+  nx <- length(lavaan::lavNames(fit, "ov.x"))
+  sumx <- if (isTRUE(lavaan::lavInspect(fit, "options")$fixed.x) && nx > 0)
+    (nx * (nx + 1) / 2 + if (isTRUE(lavaan::lavInspect(fit, "meanstructure"))) nx else 0) * lavaan::lavInspect(fit, "ngroups") else 0
+  q <- q + sumx; p <- q + gl
   ident <- if (gl > 0) tx("Sobreidentificado", "Overidentified") else if (gl == 0) tx("Exactamente identificado", "Just-identified") else tx("Subidentificado", "Underidentified")
   razon <- n / q
+  pt <- lavaan::parTable(fit); pt <- pt[pt$group %in% c(0, 1) | is.null(pt$group), ]
+  todas <- unique(c(lavaan::lavNames(fit, "ov"), lavaan::lavNames(fit, "lv")))
+  endo <- intersect(todas, unique(c(pt$lhs[pt$op == "~"], pt$rhs[pt$op == "=~"])))
+  exo <- setdiff(todas, endo)
+  lista_v <- function(v) if (length(v)) paste(v, collapse = ", ") else "\u2014"
   cel2 <- rbind(c(tx("Observaciones (p)", "Observations (p)"), formatC(p, format = "d"), tx("Elementos no redundantes de la matriz de covarianzas", "Non-redundant elements of the covariance matrix")),
                 c(tx("Par\u00e1metros estimados (q)", "Estimated parameters (q)"), formatC(q, format = "d"), ""),
                 c(tx("Grados de libertad (p \u2212 q)", "Degrees of freedom (p \u2212 q)"), formatC(gl, format = "d"), ident),
                 c(tx("Tama\u00f1o de la muestra (N)", "Sample size (N)"), formatC(n, format = "d"), ""),
                 c(tx("Raz\u00f3n N:q", "N:q ratio"), paste0(f_num(razon, 1), ":1"),
-                  if (razon >= 20) "Ideal (\u2265 20:1)" else if (razon >= 10) tx("Aceptable (\u2265 10:1)", "Acceptable (\u2265 10:1)") else tx("Baja (< 10:1)", "Low (< 10:1)")))
-  nota2 <- tx("gl > 0: modelo sobreidentificado (el deseable); gl = 0: exactamente identificado (\u03c7\u00b2 = 0, el ajuste no puede evaluarse); gl < 0: subidentificado (no puede estimarse). Raz\u00f3n N:q: se recomiendan al menos 10 casos por par\u00e1metro y, de preferencia, 20 (Kline, 2011).",
-              "df > 0: overidentified model (desirable); df = 0: just-identified (\u03c7\u00b2 = 0, fit cannot be evaluated); df < 0: underidentified (cannot be estimated). N:q ratio: at least 10 and preferably 20 cases per parameter are recommended (Kline, 2011).")
+                  if (razon >= 20) "Ideal (\u2265 20:1)" else if (razon >= 10) tx("Aceptable (\u2265 10:1)", "Acceptable (\u2265 10:1)") else tx("Baja (< 10:1)", "Low (< 10:1)")),
+                c(tx("Variables ex\u00f3genas", "Exogenous variables"), formatC(length(exo), format = "d"), lista_v(exo)),
+                c(tx("Variables end\u00f3genas", "Endogenous variables"), formatC(length(endo), format = "d"), lista_v(endo)))
+  nota2 <- paste0(tx("gl > 0: modelo sobreidentificado (el deseable); gl = 0: exactamente identificado (\u03c7\u00b2 = 0, el ajuste no puede evaluarse); gl < 0: subidentificado (no puede estimarse). Raz\u00f3n N:q: se recomiendan al menos 10 casos por par\u00e1metro y, de preferencia, 20 (Kline, 2011). Ex\u00f3genas: no reciben ninguna flecha de otra variable del modelo; end\u00f3genas: reciben al menos una (sin contar los errores).",
+              "df > 0: overidentified model (desirable); df = 0: just-identified (\u03c7\u00b2 = 0, fit cannot be evaluated); df < 0: underidentified (cannot be estimated). N:q ratio: at least 10 and preferably 20 cases per parameter are recommended (Kline, 2011). Exogenous: receive no arrow from another variable in the model; endogenous: receive at least one (excluding error terms)."),
+                  if (sumx > 0) tx(paste0(" p y q incluyen las ", sumx, " varianzas y covarianzas (y medias, si las hay) de las variables ex\u00f3genas observadas, como en AMOS; lavaan las fija en sus valores de la muestra y no las cuenta, pero los grados de libertad son los mismos."),
+                                   paste0(" p and q include the ", sumx, " variances and covariances (and means, if any) of the observed exogenous variables, as in AMOS; lavaan fixes them at their sample values and does not count them, but the degrees of freedom are the same.")) else "")
   t <- nueva_tabla(if (is.null(titulo)) tx("Evaluaci\u00f3n del ajuste del modelo", "Model fit evaluation") else titulo,
                    cab, cel, alinear = ali, nota = nota,
                    datos = list(indices = c(I, gfi = gfi, pnfi = pnfi, pratio = pratio),
-                                identificacion = c(p = p, q = q, gl = gl, n = n, razon = razon)),
+                                identificacion = c(p = p, q = q, gl = gl, n = n, razon = razon), exogenas = exo, endogenas = endo),
                    extra = list(nueva_tabla(tx("Identificaci\u00f3n del modelo y tama\u00f1o de la muestra", "Model identification and sample size"), c(tx("Elemento", "Element"), tx("Valor", "Value"), tx("Interpretaci\u00f3n", "Interpretation")),
                                             cel2, alinear = c("l", "c", "l"), nota = nota2)))
   if (!is.null(archivo)) guardar_tabla(t, archivo)

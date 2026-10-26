@@ -292,7 +292,7 @@ un artículo o una tesis:
 | | `tabla_htmt(fit)` | Validez discriminante HTMT (la que hoy piden los revisores) |
 | | `tabla_metodo_comun(fit)` | Sesgo de método común (Harman y AFC de un factor) |
 | Ajuste | `tabla_ajuste(fit)` | χ², CFI, TLI, RMSEA, SRMR |
-| | `tabla_criterios_ajuste(fit)` | Cada índice (χ², χ²/gl, RMSEA, SRMR, CFI, TLI, GFI, PNFI, PRATIO) contra criterios excelente/aceptable (cámbialos con `cortes`), e identificación del modelo (p, q, gl) |
+| | `tabla_criterios_ajuste(fit)` | Cada índice (χ², χ²/gl, RMSEA, SRMR, CFI, TLI, GFI, PNFI, PRATIO) contra criterios excelente/aceptable (cámbialos con `cortes`; IC del RMSEA al 95 % con `ic_rmsea = .95`), identificación del modelo (p, q, gl) y variables exógenas y endógenas |
 | | `tabla_modificacion(fit)` | Índices de modificación |
 | | `tabla_residuales(fit)` | Residuales de correlación: dónde ajusta mal el modelo |
 | | `tabla_comparacion("A" = fit1, "B" = fit2)` | Modelos alternativos: Δχ², ΔCFI, AIC, BIC |

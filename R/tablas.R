@@ -146,6 +146,8 @@ tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
 #'   nombre aparece en la tabla: `tabla_ajuste("Modelo 1" = fit1, "Modelo 2" = fit2)`.
 #' @param extra Índices adicionales: cualquiera de `"gfi"`, `"agfi"`,
 #'   `"nfi"`, `"pnfi"`, `"aic"`, `"bic"`.
+#' @param ic_rmsea Nivel de confianza del intervalo del RMSEA: `.90` (el
+#'   habitual, por defecto) o, si te lo piden, `.95`.
 #' @param titulo Título de la tabla.
 #' @param archivo Si se indica, guarda la tabla (`.rtf`, `.html` o `.csv`).
 #' @return Un objeto `tabla_apa`. Los valores numéricos están en `$datos`.
@@ -157,7 +159,7 @@ tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
 #'             speed =~ x7 + x8 + x9", data = HolzingerSwineford1939)
 #' tabla_ajuste("Un factor" = m1, "Tres factores" = m3, extra = c("aic", "bic"))
 #' @export
-tabla_ajuste <- function(..., extra = NULL, titulo = NULL, archivo = NULL) {
+tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, titulo = NULL, archivo = NULL) {
   fits <- list(...)
   if (length(fits) == 1 && is.list(fits[[1]]) && !inherits(fits[[1]], "lavaan")) fits <- fits[[1]]
   if (!length(fits) || !all(vapply(fits, inherits, logical(1), "lavaan")))
@@ -169,7 +171,7 @@ tabla_ajuste <- function(..., extra = NULL, titulo = NULL, archivo = NULL) {
 
   robusto <- FALSE
   filas <- lapply(fits, function(f) {
-    fm <- lavaan::fitMeasures(f)
+    fm <- medidas_ajuste(f, ic_rmsea)
     usa <- function(base, alt) { for (a in c(alt, base)) if (a %in% names(fm) && !is.na(fm[[a]])) return(fm[[a]]); NA }
     rob <- "chisq.scaled" %in% names(fm) && !is.na(fm[["chisq.scaled"]])
     if (rob) robusto <<- TRUE
@@ -188,7 +190,7 @@ tabla_ajuste <- function(..., extra = NULL, titulo = NULL, archivo = NULL) {
   cel <- cbind(nms, f_num(D$chisq, 2), formatC(D$df, format = "d"), f_p(D$pvalue),
                f_num(D$chisq / D$df, 2), f_apa(D$cfi, 3), f_apa(D$tli, 3),
                paste0(f_apa(D$rmsea, 3), " [", f_apa(D$lo, 3), ", ", f_apa(D$hi, 3), "]"), f_apa(D$srmr, 3))
-  cols <- c(tx("Modelo", "Model"), "\u03c7\u00b2", tx("gl", "df"), "p", tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), "CFI", "TLI", tx("RMSEA [IC 90 %]", "RMSEA [90% CI]"), "SRMR")
+  cols <- c(tx("Modelo", "Model"), "\u03c7\u00b2", tx("gl", "df"), "p", tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), "CFI", "TLI", cab_rmsea(ic_rmsea), "SRMR")
   for (e in extra) {
     cel <- cbind(cel, if (e %in% c("aic", "bic")) f_num(D[[e]], 2) else f_apa(D[[e]], 3))
     cols <- c(cols, toupper(e))

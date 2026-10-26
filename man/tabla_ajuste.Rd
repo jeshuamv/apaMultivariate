@@ -4,7 +4,7 @@
 \alias{tabla_ajuste}
 \title{Tabla de índices de ajuste}
 \usage{
-tabla_ajuste(..., extra = NULL, titulo = NULL, archivo = NULL)
+tabla_ajuste(..., extra = NULL, ic_rmsea = 0.9, titulo = NULL, archivo = NULL)
 }
 \arguments{
 \item{...}{Uno o varios modelos de \code{lavaan}. Si se les pone nombre, ese
@@ -12,6 +12,9 @@ nombre aparece en la tabla: \code{tabla_ajuste("Modelo 1" = fit1, "Modelo 2" = f
 
 \item{extra}{Índices adicionales: cualquiera de \code{"gfi"}, \code{"agfi"},
 \code{"nfi"}, \code{"pnfi"}, \code{"aic"}, \code{"bic"}.}
+
+\item{ic_rmsea}{Nivel de confianza del intervalo del RMSEA: \code{.90} (el
+habitual, por defecto) o, si te lo piden, \code{.95}.}
 
 \item{titulo}{Título de la tabla.}
 

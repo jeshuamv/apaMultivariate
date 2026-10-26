@@ -54,7 +54,8 @@ diagrama_sem(fit, estilo = "revista", archivo = "figura_trayectorias.pdf", ancho
 
 
 # --- 5. Ajuste y estimaciones -------------------------------------------------------
-tabla_criterios_ajuste(fit)  # ajuste e identificación del modelo
+tabla_criterios_ajuste(fit)  # ajuste, identificación, exógenas y endógenas
+# tabla_criterios_ajuste(fit, ic_rmsea = .95)   # si te piden el IC del RMSEA al 95 %
 tabla_parametros(fit)        # pesos de regresión con B, EE, C.R., p y β
 tabla_efectos(fit)           # efectos directos, indirectos y totales (bootstrap)
 

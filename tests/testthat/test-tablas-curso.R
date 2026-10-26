@@ -154,3 +154,21 @@ test_that("criterios de ajuste: cortes propios y sin evaluacion", {
   expect_equal(ncol(e$celdas), 5); expect_false(any(grepl("Evaluaci", e$columnas)))
   expect_error(tabla_criterios_ajuste(f, cortes = list(foo = 1)), "No reconozco")
 })
+
+test_that("IC del RMSEA configurable, exogenas/endogenas y p y q como en AMOS", {
+  f <- lavaan::sem("Examination ~ Education
+                    Fertility ~ Education + Examination + Catholic", data = swiss)
+  a <- tabla_criterios_ajuste(f, ic_rmsea = .95)
+  fm <- lavaan::fitMeasures(f, c("rmsea.ci.lower", "rmsea.ci.upper"), fm.args = list(rmsea.ci.level = .95))
+  expect_equal(as.numeric(a$datos$indices[c("lo", "hi")]), as.numeric(fm), tolerance = 1e-8)
+  expect_match(a$columnas[1], "Índice"); expect_match(a$celdas["rmsea", 1], "IC 95")
+  expect_match(tabla_ajuste(f, ic_rmsea = .95)$columnas[8], "95")
+  expect_setequal(a$datos$exogenas, c("Education", "Catholic"))
+  expect_setequal(a$datos$endogenas, c("Examination", "Fertility"))
+  # 4 variables observadas: p = 10 elementos; q incluye las 3 (co)varianzas de las exógenas
+  expect_equal(unname(a$datos$identificacion[c("p", "gl")]), c(10, lavaan::fitMeasures(f, "df")[[1]]))
+  expect_error(tabla_criterios_ajuste(f, ic_rmsea = 95), "nivel de confianza")
+  c3 <- lavaan::cfa("v =~ x1 + x2 + x3\n t =~ x4 + x5 + x6", data = lavaan::HolzingerSwineford1939)
+  b <- tabla_criterios_ajuste(c3)
+  expect_equal(b$datos$exogenas, c("v", "t")); expect_equal(unname(b$datos$identificacion["p"]), 21)
+})
