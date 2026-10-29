@@ -116,6 +116,25 @@ leer_datos <- function(archivo = NULL, hoja = 1, perdidos = NULL, limpiar_nombre
 
 #' @noRd
 variables_del_modelo <- function(modelo) {
+  # Revisión propia antes de lavaan: mensajes más claros y que no dependen de su versión
+  mal <- function(txt) structure(class = c("error_modelo", "error", "condition"), list(message = txt, call = NULL))
+  if (inherits(modelo, "lavaan")) {
+    return(list(observadas = lavaan::lavNames(modelo, "ov"), latentes = lavaan::lavNames(modelo, "lv")))
+  }
+  if (!is.character(modelo)) {
+    que <- if (is.numeric(modelo)) paste0("un n\u00famero (", paste(utils::head(modelo, 3), collapse = ", "), ")")
+           else if (is.data.frame(modelo)) "una tabla de datos" else paste0("un objeto de clase ", class(modelo)[1])
+    return(mal(paste0("`modelo` no es el texto de un modelo: es ", que, ". El modelo se escribe entre comillas, por ejemplo:\n",
+                      "  modelo <- \"\n    F1 =~ item1 + item2 + item3\n    F2 =~ item4 + item5 + item6\n  \"")))
+  }
+  lineas <- unlist(strsplit(paste(modelo, collapse = "\n"), "[\n;]"))
+  lineas <- trimws(sub("#.*$", "", lineas)); lineas <- lineas[nzchar(lineas)]
+  if (!length(lineas)) return(mal("El modelo est\u00e1 vac\u00edo: escribe al menos una l\u00ednea como 'F1 =~ item1 + item2 + item3'."))
+  sin_op <- lineas[!grepl("=~|~~|~|:=|==|<|>|\\|", lineas)]
+  if (length(sin_op))
+    return(mal(paste0("Esta l\u00ednea del modelo no tiene operador (=~, ~ o ~~): '", sin_op[1], "'. ",
+                      "Cada l\u00ednea debe tener la forma 'Factor =~ item1 + item2' (factor y sus \u00edtems) o 'Y ~ X' (efecto).",
+                      if (length(sin_op) > 1) paste0(" Hay ", length(sin_op), " l\u00edneas as\u00ed.") else "")))
   pt <- tryCatch(lavaan::lavParseModelString(modelo, as.data.frame. = TRUE), error = function(e) e)
   if (inherits(pt, "error")) return(pt)
   pt <- pt[pt$op %in% c("=~", "~", "~~", "<~"), ]
@@ -159,9 +178,13 @@ revisar_datos <- function(datos, modelo = NULL, variables = NULL) {
   n <- nrow(datos)
   if (!is.null(modelo)) {
     vm <- variables_del_modelo(modelo)
-    if (inherits(vm, "error")) {
+    if (inherits(vm, "error_modelo")) {
+      agregar("problema", conditionMessage(vm))
+      variables <- character(0)
+    } else if (inherits(vm, "error")) {
       lugar <- gsub("\\s+", " ", sub("^<text>:[0-9]+:[0-9]+: ", "", conditionMessage(vm)))
-      agregar("problema", paste0("La sintaxis del modelo tiene un error (", lugar, "). Revisa que cada l\u00ednea tenga la forma 'Factor =~ item1 + item2' o 'Y ~ X', ",
+      lugar <- sub("^lavaan->[A-Za-z_.]+\\(\\):\\s*", "", lugar)
+      agregar("problema", paste0("La sintaxis del modelo tiene un error (lavaan dice: ", lugar, "). Revisa que cada l\u00ednea tenga la forma 'Factor =~ item1 + item2' o 'Y ~ X', ",
                                  "y que no falten ni sobren signos +."))
       variables <- character(0)
     } else {

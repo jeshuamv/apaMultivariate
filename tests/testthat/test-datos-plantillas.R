@@ -124,3 +124,13 @@ test_that("objetos que no existen dan un mensaje claro", {
   expect_error(revisar_datos(datos_que_no_existen), "Primero lee tus datos")
   expect_error(quitar_atipicos(datos, modelo_inexistente), "No existe un objeto")
 })
+
+test_that("modelo mal escrito: mensajes claros sin depender de la version de lavaan", {
+  d <- lavaan::HolzingerSwineford1939[, paste0("x", 1:9)]
+  capture.output(a <- revisar_datos(d, 1))
+  expect_match(a$texto[1], "no es el texto de un modelo")
+  capture.output(b <- revisar_datos(d, "visual =~ x1 + x2 + x3\n textual x4 x5"))
+  expect_match(b$texto[1], "no tiene operador.*textual x4 x5")
+  capture.output(c1 <- revisar_datos(d, lavaan::cfa("F =~ x1 + x2 + x3", data = d)))
+  expect_false(any(c1$estado == "problema"))
+})

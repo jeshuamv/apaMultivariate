@@ -1,3 +1,10 @@
+# apaMultivariate 0.9.3
+
+* `revisar_datos()` revisa el modelo antes de pasarlo a lavaan: avisa si
+  `modelo` no es texto (por ejemplo, un número), señala la línea que no tiene
+  operador (`=~`, `~` o `~~`) y acepta también un modelo ya estimado. Los
+  mensajes ya no dependen de la versión de lavaan.
+
 # apaMultivariate 0.9.2
 
 * El README y la hoja de referencia pedían `revisar_datos(datos, modelo)`
