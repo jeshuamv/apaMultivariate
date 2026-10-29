@@ -31,6 +31,7 @@ names(datos)                 # muestra los nombres de tus columnas
 # --- 2. Escribir el modelo ----------------------------------------------------
 # >>> CAMBIA AQUÍ <<<  Un renglón por factor:  Factor =~ item1 + item2 + item3
 # Los nombres de los ítems deben ser IGUALES a los de names(datos).
+# Las correlaciones entre factores y los errores NO se escriben: cfa() los incluye.
 modelo <- "
   visual  =~ x1 + x2 + x3
   textual =~ x4 + x5 + x6
@@ -47,6 +48,9 @@ tabla_perdidos(datos)
 
 # --- 4. Estimar el modelo -------------------------------------------------------
 fit <- cfa(modelo, data = datos)
+# Si tus resultados deben coincidir con AMOS o con las diapositivas de clase,
+# agrega likelihood = "wishart" (AMOS divide entre N - 1; lavaan, entre N):
+# fit <- cfa(modelo, data = datos, likelihood = "wishart")
 revisar_modelo(fit)          # ¿hubo problemas al estimar? (avisos de lavaan en español)
 
 # Supuesto de normalidad: si el c.r. multivariado es mayor que 2, vuelve a

@@ -2,33 +2,30 @@
 
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE) [![R-CMD-check](https://github.com/jeshuamv/apaMultivariate/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jeshuamv/apaMultivariate/actions/workflows/R-CMD-check.yaml)
 
-**Tablas APA y diagramas para tus análisis factoriales, de trayectorias, SEM, moderación y MANOVA, con una sola línea de código.**
+**Tablas APA y diagramas para tus análisis factoriales, de trayectorias, SEM, moderación y MANOVA.**
 
-*Multivariate analysis, APA-ready.* Antes se llamaba `diagramaSEM`; si lo tenías
-instalado, consulta [cómo actualizar](#si-tenías-diagramasem).
+*Multivariate analysis, APA-ready.* Lee tus datos de Excel o SPSS, revisa que todo esté
+bien, dibuja el diagrama al estilo AMOS y te entrega las tablas en formato APA en Word,
+en español o en inglés. Antes se llamaba `diagramaSEM` ([cómo actualizar](#si-tenías-diagramasem)).
 
-- **Diagramas** con el estilo clásico de los programas de SEM: rectángulos para los
-  ítems, óvalos para los factores, círculos de error (`e1`, `e2`, …), cargas sobre las
-  flechas y R² junto a cada variable. El paquete reconoce el tipo de modelo y acomoda
-  todo solo.
-- **Tres estilos**: el clásico de AMOS y dos listos para publicar (`"revista"` en
-  grises y `"color"`), que cumplen lo que piden APA y las principales revistas.
-- **Tablas en formato APA**, listas para Word: descriptivos y supuestos,
-  factorabilidad, cargas, confiabilidad, validez y HTMT, índices bifactor, ajuste,
-  comparación de modelos, invarianza de medición, efectos indirectos, hipótesis,
-  moderación y mediación moderada, MANOVA y hasta el párrafo de método con sus
-  referencias.
-- **En español o en inglés**, para tareas, tesis y artículos.
+<p align="center"><img src="man/figures/path_swiss.png" width="620"></p>
 
-Funciona con análisis **exploratorios** (`psych::fa()`, `lavaan::efa()`),
-**confirmatorios** (`cfa()`), de **trayectorias** y **SEM** (`sem()`); las tablas de
-moderación y MANOVA trabajan directamente con tus datos.
+## Contenido
 
-<p align="center"><img src="man/figures/afc_opciones.png" width="400"> <img src="man/figures/segundo_orden.png" width="400"></p>
+- **[Empieza aquí](#empieza-aquí)**: de cero a tus tablas en Word, en cinco pasos
+- **[Cómo escribir tu modelo a partir del diagrama](#cómo-escribir-tu-modelo-a-partir-del-diagrama)**
+- **[Ejemplo completo: análisis de trayectorias](#ejemplo-completo-análisis-de-trayectorias)**
+- **[Si tus resultados no coinciden con AMOS o con tu clase](#si-tus-resultados-no-coinciden-con-amos-o-con-tu-clase)**
+- [Todas las funciones](#todas-las-funciones) · [Para publicar en una revista](#para-publicar-en-una-revista) · [Problemas frecuentes](#problemas-frecuentes) · [Más información](#más-información)
 
 ---
 
-## Paso 0. Si nunca has usado R
+## Empieza aquí
+
+Sigue estos pasos en orden. No necesitas leer nada más del README para hacer tu primer
+análisis.
+
+### 1. Instala R y RStudio (solo la primera vez)
 
 1. **Instala R** desde [cran.r-project.org](https://cran.r-project.org): elige tu
    sistema (Windows, Mac o Linux) y descarga la versión más reciente.
@@ -37,20 +34,13 @@ moderación y MANOVA trabajan directamente con tus datos.
    RStudio es el programa en el que vas a trabajar; R funciona por debajo.
 3. **Abre RStudio.** Verás la *consola* (abajo a la izquierda), donde se escriben las
    instrucciones, y el panel de gráficos y archivos (abajo a la derecha).
-4. **Abre un script**: menú *File → New File → R Script*. Es un archivo de texto donde
-   guardas tus instrucciones para repetirlas después. Para ejecutar una línea, pon el
-   cursor en ella y presiona **Ctrl + Enter** (en Mac, **Cmd + Enter**).
-5. **Elige tu carpeta de trabajo**: menú *Session → Set Working Directory → Choose
-   Directory…* y selecciona la carpeta donde están tus datos. Ahí se guardarán los
-   diagramas y las tablas.
+4. Un **script** es un archivo de texto con tus instrucciones (el paso 3 te crea uno).
+   Para ejecutar una línea, pon el cursor en ella y presiona **Ctrl + Enter** (en Mac,
+   **Cmd + Enter**).
 
-Tres reglas que evitan la mayoría de los errores: R distingue mayúsculas de minúsculas
-(`Item1` no es `item1`), los textos van entre comillas (`"mis_datos.xlsx"`) y cada
-paréntesis que abres se tiene que cerrar.
+### 2. Instala el paquete (solo la primera vez)
 
-## Paso 1. Instalar (solo la primera vez)
-
-Abre R o RStudio, copia estas líneas, pégalas en la consola y presiona Enter:
+Copia estas dos líneas en la consola de RStudio y presiona Enter:
 
 ```r
 install.packages("remotes")
@@ -61,228 +51,225 @@ remotes::install_github("jeshuamv/apaMultivariate")
 - Si R pregunta si quieres actualizar otros paquetes, **presiona Enter** sin escribir
   nada para continuar.
 - Si no aparecen errores en rojo, quedó instalado.
+- **Solo para análisis exploratorio (AFE)**: instala también
+  `install.packages(c("psych", "GPArotation"))`.
 
-**¿Vas a hacer análisis exploratorios con `psych`?** Instala también:
+### 3. Crea la plantilla de tu análisis
 
-```r
-install.packages(c("psych", "GPArotation"))
-```
-
-## Paso 2. Leer y revisar tus datos
-
-R no solo lee archivos `.csv`. Con `leer_datos()` puedes abrir **Excel** (`.xlsx`,
-`.xls`), **SPSS** (`.sav`), **CSV** (con coma o con punto y coma), **Stata** (`.dta`),
-**SAS** y texto (`.txt`). Sin nada entre los paréntesis se abre una ventana para elegir
-el archivo:
+Primero elige tu carpeta de trabajo, la que tiene tus datos (*Session → Set Working
+Directory → Choose Directory…*). Después corre **una** de estas líneas en la consola:
 
 ```r
-library(lavaan)
 library(apaMultivariate)
 
-datos <- leer_datos()                          # se abre una ventana
-datos <- leer_datos("mis_datos.xlsx")          # o con el nombre del archivo
-datos <- leer_datos("encuesta.sav", perdidos = c(99, 999))   # códigos de dato perdido
-```
-
-`leer_datos()` detecta solo el formato, quita las etiquetas de SPSS y, si un nombre de
-columna tiene espacios o acentos (`Ítem 1`), lo cambia a uno que funciona en R
-(`Item_1`) y te avisa. También puedes usar el menú *File → Import Dataset* de RStudio.
-
-Revisa los datos:
-
-```r
-revisar_datos(datos)
-```
-
-Y, cuando ya escribiste tu modelo (Paso 3), revisa los datos junto con el modelo, antes
-de estimarlo:
-
-```r
-revisar_datos(datos, modelo)     # primero hay que crear `modelo`
-```
-
-```
-✖ Estas variables del modelo no están en los datos: 'item_2' (¿quisiste decir 'Item_2'?).
-✔ No hay datos perdidos.
-⚠ Las variables parecen ordinales (escala tipo Likert de hasta 5 puntos). Con 5 o más
-    categorías suele aceptarse tratarlas como continuas con estimator = "MLR".
-✔ Tamaño de la muestra: N = 312. Adecuada para la mayoría de los modelos.
-```
-
-Revisa errores de escritura en el modelo, columnas con texto, valores constantes,
-códigos como 99 que parecen datos perdidos, el porcentaje de perdidos, si los ítems son
-tipo Likert (y qué estimador conviene) y el tamaño de la muestra.
-
-Después de estimar el modelo, revisa que la estimación no haya tenido problemas:
-
-```r
-fit <- cfa(modelo, data = datos)
-revisar_modelo(fit)
-```
-
-`revisar_modelo()` explica en español los avisos que `lavaan` da en inglés (el modelo
-no convergió, no está identificado, varianzas negativas o *casos Heywood*, factores
-con correlación de 1) y qué hacer con cada uno, y señala las cargas bajas o no
-significativas.
-
-## La forma más fácil: una plantilla
-
-`plantilla()` crea un script con **todo el análisis**, paso por paso y explicado:
-leer los datos, revisarlos, estimar, revisar supuestos, dibujar el diagrama, hacer las
-tablas y guardarlas en Word. Solo cambias lo marcado con `>>> CAMBIA AQUÍ <<<`.
-
-```r
+plantilla("trayectorias")   # análisis de trayectorias (path)
 plantilla("afc")            # análisis factorial confirmatorio
-plantilla("afe")            # exploratorio
-plantilla("trayectorias")   # path
-plantilla("sem")            # medición + estructural
+plantilla("afe")            # análisis factorial exploratorio
+plantilla("sem")            # ecuaciones estructurales (medición + estructural)
 plantilla("moderacion")     # moderación y mediación moderada
-plantilla("manova")
+plantilla("manova")         # MANOVA
 ```
 
-El script se guarda en tu carpeta de trabajo (`analisis_afc.R`, …) y se abre en RStudio.
-Cada plantilla trae datos de ejemplo para probarla antes de usar los tuyos.
+Se crea un script (`analisis_trayectorias.R`, …) en tu carpeta y se abre en RStudio.
+Trae **todo** el análisis en orden y explicado: leer los datos, revisarlos, estimar,
+supuestos, diagrama, ajuste, efectos, hipótesis y guardar en Word.
 
-## Paso 3. Dibujar tu modelo
+### 4. Cambia lo marcado con `>>> CAMBIA AQUÍ <<<`
 
-Cada vez que abras R, carga los paquetes, estima tu modelo como siempre y pásaselo a
-`diagrama_sem()`. Elige la plantilla que corresponde a tu análisis y cambia los nombres
-por los tuyos (deben ser iguales a los nombres de las columnas de tus datos).
+Casi siempre son tres cosas:
+
+1. **El archivo de tus datos**: `datos <- leer_datos("tu_archivo.xlsx")` (Excel, SPSS,
+   CSV…). O deja `leer_datos()` sin nada y se abre una ventana para elegirlo.
+2. **El modelo**: tus variables y sus relaciones. Si no sabes cómo escribirlo, lee
+   [Cómo escribir tu modelo a partir del diagrama](#cómo-escribir-tu-modelo-a-partir-del-diagrama).
+3. **Las hipótesis** (en trayectorias y SEM): una por renglón, como `"X -> Y (+)"`.
+
+Antes de cambiar nada, puedes correr la plantilla con los datos de ejemplo que trae para
+ver cómo funciona.
+
+### 5. Corre el script línea por línea
+
+Pon el cursor en la primera línea y presiona **Ctrl + Enter** (Mac: **Cmd + Enter**);
+RStudio corre esa instrucción y baja a la siguiente. Avanza así, en orden, y lee lo que
+aparece en la consola:
+
+- `revisar_datos()` y `revisar_modelo()` te avisan en español si algo está mal y qué
+  hacer (✔ bien, ⚠ aviso, ✖ problema que hay que corregir).
+- Las tablas se ven en la consola; al final, `guardar_tablas()` las pone en un Word.
+- Los diagramas aparecen en el panel de gráficos y se guardan como imagen.
+
+Al terminar, `getwd()` te dice en qué carpeta quedaron los archivos. Para interpretar y
+redactar cada resultado, usa la guía
+**[Cómo interpretar y redactar los resultados](guia/INTERPRETACION.md)**.
+
+Cuatro reglas que evitan la mayoría de los errores: corre las líneas **en orden**; R
+distingue **mayúsculas de minúsculas** (`Item1` no es `item1`); los textos van **entre
+comillas** (`"mis_datos.xlsx"`), y cada paréntesis que abres se tiene que cerrar.
+
+---
+
+## Cómo escribir tu modelo a partir del diagrama
+
+El modelo es un texto entre comillas con una relación por renglón. Hay tres símbolos:
+
+| Símbolo | Significa | En el diagrama |
+|---|---|---|
+| `~` | "es influido por" (regresión) | Flecha de una sola punta **entre variables** |
+| `=~` | "se mide con" (factor y sus ítems) | Flechas de un **óvalo** a sus **rectángulos** |
+| `~~` | "se correlaciona con" | Flecha **curva de dos puntas** |
+
+### Análisis de trayectorias: las flechas que llegan
+
+Para cada variable **que recibe flechas**, escribe un renglón: la variable a la izquierda
+de `~`, y a la derecha **todas las que le apuntan**, separadas por `+`.
+
+En el diagrama de arriba, Examen recibe una flecha (de Educación) y Fecundidad recibe tres
+(de Educación, Examen y Católicos):
+
+```r
+modelo <- "
+  Examination ~ Education
+  Fertility   ~ Education + Examination + Catholic
+"
+```
+
+- Las variables que **no reciben ninguna flecha** (Educación y Católicos) son
+  **exógenas**: no tienen renglón propio.
+- La **correlación entre exógenas** (la flecha curva entre Educación y Católicos) **no se
+  escribe**: `sem()` la incluye sola.
+- Los **errores** (`e1`, `e2`) **no se escriben**: los pone el programa.
+- Usa los nombres **exactos** de las columnas de tus datos (`names(datos)` te los muestra),
+  no los que aparecen en el diagrama.
+
+### Análisis factorial confirmatorio: los factores y sus ítems
+
+Un renglón por factor: el factor (el óvalo) a la izquierda de `=~` y sus ítems (los
+rectángulos a los que apunta) a la derecha.
+
+```r
+modelo <- "
+  Visual   =~ x1 + x2 + x3
+  Verbal   =~ x4 + x5 + x6
+  Rapidez  =~ x7 + x8 + x9
+"
+```
+
+- El nombre del factor lo inventas tú (sin espacios ni acentos); los ítems deben ser
+  columnas de tus datos.
+- Las correlaciones entre factores **no se escriben**: `cfa()` las incluye solas.
+- Una correlación entre **errores de dos ítems** sí se escribe, y debe justificarse:
+  `x7 ~~ x8`.
+- **Segundo orden**: agrega un renglón con el factor general y los factores de primer
+  orden: `General =~ Visual + Verbal + Rapidez`.
+
+### SEM: las dos cosas juntas
+
+Primero los factores (`=~`) y después las flechas entre ellos (`~`):
+
+```r
+modelo <- "
+  Apoyo        =~ a1 + a2 + a3
+  Satisfaccion =~ s1 + s2 + s3
+  Lealtad      =~ l1 + l2 + l3
+  Satisfaccion ~ Apoyo
+  Lealtad      ~ Satisfaccion + Apoyo
+"
+```
+
+Después de escribirlo, corre `revisar_datos(datos, modelo)`: te dice si un nombre no
+coincide con tus columnas (y te sugiere el correcto) o si a un renglón le falta el
+símbolo.
+
+---
+
+## Ejemplo completo: análisis de trayectorias
+
+Este ejemplo funciona tal cual, porque usa los datos `swiss`, que vienen con R. Es el
+modelo del diagrama de arriba. Cópialo en un script y córrelo línea por línea:
 
 ```r
 library(lavaan)
 library(apaMultivariate)
 
-datos <- leer_datos("mis_datos.xlsx")   # tus datos
-```
+datos <- swiss                         # con tus datos: datos <- leer_datos("archivo.xlsx")
 
-### Análisis factorial confirmatorio (AFC)
-
-```r
+# 1. Modelo
 modelo <- "
-  Factor1 =~ item1 + item2 + item3       # =~  se mide con
-  Factor2 =~ item4 + item5 + item6
+  Examination ~ Education
+  Fertility   ~ Education + Examination + Catholic
 "
-revisar_datos(datos, modelo)             # ¿los nombres coinciden con tus columnas?
-fit <- cfa(modelo, data = datos)
-diagrama_sem(fit)
+revisar_datos(datos, modelo)           # ¿nombres correctos? ¿perdidos? ¿tamaño de muestra?
+
+# 2. Estimar
+fit <- sem(modelo, data = datos, likelihood = "wishart")   # "wishart": como AMOS
+revisar_modelo(fit)                    # ¿hubo problemas al estimar?
+
+# 3. Supuestos
+tabla_normalidad(fit)                  # normalidad (Mardia)
+tabla_atipicos(fit)                    # atípicos (Mahalanobis)
+
+# 4. Diagramas
+diagrama_sem(fit)                      # estandarizado, con R²
+diagrama_sem(fit, estandarizado = FALSE)   # no estandarizado, con varianzas
+
+# 5. Ajuste: χ², RMSEA (con su IC), CFI, TLI, SRMR, PNFI…, exógenas y endógenas
+tabla_criterios_ajuste(fit)
+
+# 6. Estimaciones, efectos directos, indirectos y totales, y R²
+tabla_parametros(fit)
+tabla_efectos(fit)
+
+# 7. Hipótesis: (+) o (-) si predice el signo; con dos flechas, efecto indirecto
+tabla_hipotesis(fit, c(
+  H1 = "Education -> Examination (+)",
+  H2 = "Education -> Fertility (-)",
+  H3 = "Catholic -> Fertility (+)",
+  H4 = "Examination -> Fertility (-)",
+  H5 = "Education -> Examination -> Fertility"
+))
+
+# 8. Todo a Word
+guardar_tablas(tabla_criterios_ajuste(fit), tabla_parametros(fit), tabla_efectos(fit),
+               archivo = "tablas_trayectorias.docx")
+parrafo_metodo(fit, bootstrap = 1000, archivo = "metodo.docx")
 ```
 
-### Análisis de trayectorias (path)
-
-```r
-modelo <- "
-  M ~ X                                  # ~   X influye en M
-  Y ~ M + X                              #     M y X influyen en Y
-"
-fit <- sem(modelo, data = datos)
-diagrama_sem(fit)
-```
-
-<p align="center"><img src="man/figures/path_swiss.png" width="620"></p>
-
-### Modelo de ecuaciones estructurales (SEM)
-
-Combina las dos cosas: factores medidos con sus ítems (`=~`) y efectos entre ellos (`~`).
-
-```r
-modelo <- "
-  Factor1 =~ item1 + item2 + item3
-  Factor2 =~ item4 + item5 + item6
-  Factor2 ~ Factor1                      # Factor1 influye en Factor2
-"
-fit <- sem(modelo, data = datos)
-diagrama_sem(fit)
-```
-
-### Análisis factorial exploratorio (AFE)
-
-```r
-library(psych)
-afe <- fa(datos, nfactors = 3, rotate = "oblimin")   # solo las columnas de los ítems
-diagrama_sem(afe)
-```
-
-En el exploratorio cada ítem carga en todos los factores; el diagrama muestra solo las
-cargas de .30 o más (puedes cambiarlo con `umbral = 0.40`).
-
-### ¿Quieres probar antes con datos de ejemplo?
-
-Este código funciona tal cual, porque los datos vienen incluidos en `lavaan`:
-
-```r
-library(lavaan)
-library(apaMultivariate)
-
-modelo <- "
-  visual  =~ x1 + x2 + x3
-  textual =~ x4 + x5 + x6
-  speed   =~ x7 + x8 + x9
-"
-fit <- cfa(modelo, data = HolzingerSwineford1939)
-diagrama_sem(fit)
-```
-
-## Paso 4. Guardar el diagrama
-
-```r
-diagrama_sem(fit, archivo = "mi_diagrama.png")   # imagen para Word o PowerPoint
-diagrama_sem(fit, archivo = "mi_diagrama.pdf")   # PDF de alta calidad
-```
-
-El archivo se guarda en tu carpeta de trabajo. Para saber cuál es, escribe `getwd()`.
-Si ya dibujaste el diagrama, también puedes guardarlo después:
-
-```r
-d <- diagrama_sem(fit)
-guardar_diagrama(d, "mi_diagrama.pdf")
-```
+Es lo mismo que hace `plantilla("trayectorias")`. Para AFC y SEM, las plantillas siguen
+la misma lógica y agregan las tablas de medición (cargas, confiabilidad, validez, HTMT).
 
 ---
 
-## Estilos: clásico, revista y color
+## Si tus resultados no coinciden con AMOS o con tu clase
 
-```r
-diagrama_sem(fit)                       # clásico (el de AMOS)
-diagrama_sem(fit, estilo = "revista")   # en grises, para artículos
-diagrama_sem(fit, estilo = "color")     # un color por factor
-```
-
-<p align="center"><img src="man/figures/estilo_revista.png" width="760"></p>
-<p align="center"><img src="man/figures/estilo_color.png" width="760"></p>
-
-Los estilos `"revista"` y `"color"` usan letra más grande y sin serifa, relleno plano,
-errores y correlaciones en gris, y cada valor sobre un fondo blanco para que ninguna
-línea lo cruce. No escriben los "1" de las flechas de error (eso se aclara en la nota
-de la figura). Los colores se distinguen aun con daltonismo y se leen bien si la revista
-imprime en blanco y negro.
-
-## Para publicar en una revista
-
-Las revistas piden que el texto mida **al menos 8 pt ya impreso** y que la figura se
-entregue al ancho con que se publicará. Usa:
-
-```r
-diagrama_sem(fit, estilo = "revista", archivo = "figura1.pdf", ancho = "pagina")
-```
-
-- `ancho = "pagina"` (174 mm) sirve para casi cualquier modelo; `ancho = "columna"`
-  (85 mm) solo para modelos muy pequeños.
-- El paquete te dice el tamaño real del texto y **te avisa si queda por debajo de 8 pt**.
-- Formato: `.pdf` (el mejor en general), `.eps` si la revista lo pide, o `.tiff`
-  (se guarda a 600 ppp) si la revista pide imagen.
-- En formato APA el número y el título de la figura van **fuera de la imagen**
-  (escríbelos en Word), no con `titulo =`.
-
-Revisa siempre las instrucciones para autores de tu revista. Más detalles en la sección
-*Figuras para una revista* de la [guía](guia/GUIA.md).
+- **El χ² es un poco distinto.** AMOS divide entre *N* − 1 y `lavaan`, entre *N*. Para
+  que coincida, estima con `likelihood = "wishart"`:
+  `sem(modelo, data = datos, likelihood = "wishart")` (o en `cfa()`). Cambian un poco
+  el χ² y los índices que dependen de él; las estimaciones no.
+- **El IC del RMSEA**: por defecto es al 90 %; si te lo piden al 95 %, usa
+  `tabla_criterios_ajuste(fit, ic_rmsea = .95)`.
+- **Omega, CR o AVE**: hay varias fórmulas. `tabla_confiabilidad()` calcula ω igual que
+  `semTools::compRelSEM()`; `tabla_validez()` usa las de Fornell y Larcker, y con
+  `metodo = "semtools"` da las de `semTools`.
+- **Mardia**: el paquete usa la fórmula original (como el paquete `MVN`); `psych::mardia()`
+  da valores un poco distintos.
 
 ---
 
-## Tablas para tu reporte
+## Todas las funciones
 
-El paquete crea, en formato APA y listas para Word, las tablas que suelen pedirse en
-un artículo o una tesis:
+### Leer y revisar
+
+| Código | Qué hace |
+|---|---|
+| `leer_datos("archivo")` | Lee Excel, SPSS, CSV (coma o punto y coma), Stata, SAS o texto; sin nada, abre una ventana. Quita las etiquetas de SPSS y arregla los nombres con espacios o acentos. `perdidos = c(99)` marca códigos de dato perdido |
+| `revisar_datos(datos)` | Revisa los datos: columnas de texto o constantes, códigos de perdido, % de perdidos, ítems tipo Likert, tamaño de muestra |
+| `revisar_datos(datos, modelo)` | Lo mismo, y además que los nombres del modelo existan en los datos |
+| `revisar_modelo(fit)` | Después de estimar: explica en español los avisos de `lavaan` (no convergió, no identificado, casos Heywood…) y qué hacer |
+| `plantilla("tipo")` | Crea el script completo de un análisis |
+
+### Tablas en formato APA
+
+Listas para Word, las que suelen pedirse en una tarea, una tesis o un artículo:
 
 | Etapa | Código | Qué reporta |
 |---|---|---|
@@ -346,7 +333,34 @@ al español: `idioma_sem("es")`.
 
 ---
 
-## Cambios más comunes
+## Diagramas
+
+```r
+diagrama_sem(fit)                              # para verlo
+diagrama_sem(fit, archivo = "mi_diagrama.png") # para Word o PowerPoint
+diagrama_sem(fit, archivo = "mi_diagrama.pdf") # PDF de alta calidad
+```
+
+El archivo se guarda en tu carpeta de trabajo (`getwd()` te dice cuál es).
+
+### Estilos: clásico, revista y color
+
+```r
+diagrama_sem(fit)                       # clásico (el de AMOS)
+diagrama_sem(fit, estilo = "revista")   # en grises, para artículos
+diagrama_sem(fit, estilo = "color")     # un color por factor
+```
+
+<p align="center"><img src="man/figures/estilo_revista.png" width="760"></p>
+<p align="center"><img src="man/figures/estilo_color.png" width="760"></p>
+
+Los estilos `"revista"` y `"color"` usan letra más grande y sin serifa, relleno plano,
+errores y correlaciones en gris, y cada valor sobre un fondo blanco para que ninguna
+línea lo cruce. No escriben los "1" de las flechas de error (eso se aclara en la nota
+de la figura). Los colores se distinguen aun con daltonismo y se leen bien si la revista
+imprime en blanco y negro.
+
+### Cambios más comunes
 
 Agrega la opción dentro de `diagrama_sem( )`, separada por una coma. Puedes combinar
 varias.
@@ -370,9 +384,7 @@ varias.
 Paletas del estilo clásico: `"lila"` (el de siempre), `"azul"`, `"verde"`, `"gris"`,
 `"durazno"` y `"blanco"`.
 
----
-
-## ¿Qué modelos puede dibujar?
+### ¿Qué modelos puede dibujar?
 
 | Modelo | ¿Cómo lo reconoce? |
 |---|---|
@@ -391,6 +403,28 @@ d
 ```
 
 <p align="center"><img src="man/figures/sem.png" width="820"></p>
+
+---
+
+## Para publicar en una revista
+
+Las revistas piden que el texto mida **al menos 8 pt ya impreso** y que la figura se
+entregue al ancho con que se publicará. Usa:
+
+```r
+diagrama_sem(fit, estilo = "revista", archivo = "figura1.pdf", ancho = "pagina")
+```
+
+- `ancho = "pagina"` (174 mm) sirve para casi cualquier modelo; `ancho = "columna"`
+  (85 mm) solo para modelos muy pequeños.
+- El paquete te dice el tamaño real del texto y **te avisa si queda por debajo de 8 pt**.
+- Formato: `.pdf` (el mejor en general), `.eps` si la revista lo pide, o `.tiff`
+  (se guarda a 600 ppp) si la revista pide imagen.
+- En formato APA el número y el título de la figura van **fuera de la imagen**
+  (escríbelos en Word), no con `titulo =`.
+
+Revisa siempre las instrucciones para autores de tu revista. Más detalles en la sección
+*Figuras para una revista* de la [guía](guia/GUIA.md).
 
 ---
 
@@ -452,8 +486,7 @@ cuál y te sugiere el nombre correcto.
 usa las fórmulas clásicas de Fornell y Larcker, y con `metodo = "semtools"` da los de
 `semTools`. Detalles en las preguntas frecuentes de la [guía](guia/GUIA.md).
 
-**`there is no package called 'apaMultivariate'`**: el paquete no está instalado. Repite
-el Paso 1.
+**`there is no package called 'apaMultivariate'`**: el paquete no está instalado. Repite el [paso 2 de *Empieza aquí*](#2-instala-el-paquete-solo-la-primera-vez).
 
 **`there is no package called 'remotes'`**: corre primero `install.packages("remotes")`.
 

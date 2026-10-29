@@ -31,6 +31,9 @@ medicion <- "
 "
 revisar_datos(datos, medicion)
 afc <- cfa(medicion, data = datos)
+# Si tus resultados deben coincidir con AMOS o con las diapositivas de clase,
+# agrega likelihood = "wishart" (AMOS divide entre N - 1; lavaan, entre N):
+# afc <- cfa(medicion, data = datos, likelihood = "wishart")
 revisar_modelo(afc)            # ¿hubo problemas al estimar?
 
 tabla_normalidad(afc)          # si el c.r. multivariado > 2, usa estimator = "MLR"
@@ -54,6 +57,7 @@ estructural <- paste(medicion, "
   dem65 ~ ind60 + dem60
 ")
 fit <- sem(estructural, data = datos)
+# (con likelihood = "wishart" si lo usaste en el modelo de medición)
 revisar_modelo(fit)
 
 

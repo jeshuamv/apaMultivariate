@@ -1,7 +1,7 @@
 Package: apaMultivariate
 Type: Package
 Title: Tablas y Diagramas APA para Analisis Multivariado
-Version: 0.9.3
+Version: 0.9.4
 Authors@R: person("Jeshua", "Moreno Valladares", email = "jeshuamv@gmail.com",
                   role = c("aut", "cre"))
 URL: https://github.com/jeshuamv/apaMultivariate

@@ -24,8 +24,13 @@ names(datos)
 
 
 # --- 2. Escribir el modelo ----------------------------------------------------
-# >>> CAMBIA AQUÍ <<<  Un renglón por variable dependiente:  Y ~ X1 + X2
-# Ejemplo: Examination depende de Education; Fertility depende de las tres.
+# >>> CAMBIA AQUÍ <<<  Cómo pasar tu diagrama a texto:
+#   - Un renglón por cada variable que RECIBE flechas:  Y ~ X1 + X2
+#     (a la izquierda la que recibe; a la derecha todas las que le apuntan).
+#   - Las variables que no reciben flechas (exógenas) no llevan renglón propio.
+#   - La correlación entre exógenas (flecha curva) y los errores NO se escriben.
+#   - Usa los nombres exactos de tus columnas: names(datos).
+# Ejemplo: Examination recibe una flecha (de Education); Fertility recibe tres.
 modelo <- "
   Examination ~ Education
   Fertility   ~ Education + Examination + Catholic
@@ -35,6 +40,9 @@ modelo <- "
 # --- 3. Revisar los datos y los supuestos -------------------------------------
 revisar_datos(datos, modelo)
 fit <- sem(modelo, data = datos)
+# Si tus resultados deben coincidir con AMOS o con las diapositivas de clase,
+# agrega likelihood = "wishart" (AMOS divide entre N - 1; lavaan, entre N):
+# fit <- sem(modelo, data = datos, likelihood = "wishart")
 revisar_modelo(fit)          # ¿hubo problemas al estimar?
 tabla_normalidad(fit)        # c.r. multivariado < 2: normalidad multivariada
 tabla_atipicos(fit)          # p1 ≤ .001: caso atípico

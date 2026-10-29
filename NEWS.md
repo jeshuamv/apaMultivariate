@@ -1,3 +1,18 @@
+# apaMultivariate 0.9.4
+
+* README reorganizado para principiantes: un solo camino ("Empieza aquí": instalar,
+  crear la plantilla, cambiar tres cosas y correr), una sección nueva sobre cómo
+  pasar el diagrama a la sintaxis del modelo, un ejemplo completo de análisis de
+  trayectorias que funciona tal cual, y qué hacer si los resultados no coinciden
+  con AMOS (`likelihood = "wishart"`). Lo de revistas y estilos queda al final.
+* `revisar_datos()`: las variables dicotómicas (0/1) usadas como predictoras ya
+  no generan el aviso de escala Likert; solo se avisa si una dicotómica es
+  variable dependiente.
+* `tabla_hipotesis()`: la nota aclara que el intervalo de los efectos
+  indirectos se calcula con el efecto no estandarizado.
+* Plantillas: cómo escribir el modelo a partir del diagrama y la opción
+  `likelihood = "wishart"` para coincidir con AMOS.
+
 # apaMultivariate 0.9.3
 
 * `revisar_datos()` revisa el modelo antes de pasarlo a lavaan: avisa si
