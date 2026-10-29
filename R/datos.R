@@ -151,6 +151,8 @@ variables_del_modelo <- function(modelo) {
 #'                                       textual =~ x4 + x5 + X6")
 #' @export
 revisar_datos <- function(datos, modelo = NULL, variables = NULL) {
+  objeto_existe(datos, "datos", "Primero lee tus datos, por ejemplo: datos <- leer_datos()")
+  objeto_existe(modelo, "modelo", "Primero escribe tu modelo, por ejemplo:\n  modelo <- \"F1 =~ item1 + item2 + item3\"\nO revisa solo los datos con: revisar_datos(datos)")
   if (!is.data.frame(datos)) stop("`datos` debe ser un data.frame (por ejemplo, el que devuelve leer_datos()).", call. = FALSE)
   res <- list()
   agregar <- function(estado, texto) res[[length(res) + 1]] <<- data.frame(estado = estado, texto = texto, stringsAsFactors = FALSE)
@@ -243,4 +245,17 @@ print.revision_datos <- function(x, ...) {
   cat("\n", if (np) paste0(np, " problema", if (np > 1) "s" else "", if (modelo) " que hay que resolver antes de interpretar los resultados." else " que hay que corregir antes de estimar el modelo.")
       else if (modelo) "La estimaci\u00f3n no muestra problemas; ya puedes revisar el ajuste y las tablas." else "Todo listo para estimar el modelo.", "\n", sep = "")
   invisible(x)
+}
+
+# Si el usuario pasa un objeto que todavía no creó (por ejemplo `modelo` antes
+# de escribirlo), R da "object 'modelo' not found". Lo traducimos y decimos qué
+# hacer. Gracias a la evaluación perezosa, el error aparece al usar el argumento.
+#' @noRd
+objeto_existe <- function(x, nombre, ayuda) {
+  ok <- tryCatch({ force(x); TRUE }, error = function(e) conditionMessage(e))
+  if (isTRUE(ok)) return(invisible(TRUE))
+  falta <- regmatches(ok, regexpr("(?<=object ').*?(?=' not found)|(?<=objeto ').*?(?=' no encontrado)", ok, perl = TRUE))
+  if (!length(falta)) stop(ok, call. = FALSE)
+  stop("No existe un objeto llamado '", falta, "'. ", ayuda,
+       "\nRecuerda correr las l\u00edneas en orden (y que R distingue may\u00fasculas de min\u00fasculas).", call. = FALSE)
 }

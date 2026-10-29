@@ -88,10 +88,17 @@ datos <- leer_datos("encuesta.sav", perdidos = c(99, 999))   # códigos de dato 
 columna tiene espacios o acentos (`Ítem 1`), lo cambia a uno que funciona en R
 (`Item_1`) y te avisa. También puedes usar el menú *File → Import Dataset* de RStudio.
 
-Antes de estimar, revisa los datos y el modelo:
+Revisa los datos:
 
 ```r
-revisar_datos(datos, modelo)
+revisar_datos(datos)
+```
+
+Y, cuando ya escribiste tu modelo (Paso 3), revisa los datos junto con el modelo, antes
+de estimarlo:
+
+```r
+revisar_datos(datos, modelo)     # primero hay que crear `modelo`
 ```
 
 ```
@@ -156,6 +163,7 @@ modelo <- "
   Factor1 =~ item1 + item2 + item3       # =~  se mide con
   Factor2 =~ item4 + item5 + item6
 "
+revisar_datos(datos, modelo)             # ¿los nombres coinciden con tus columnas?
 fit <- cfa(modelo, data = datos)
 diagrama_sem(fit)
 ```

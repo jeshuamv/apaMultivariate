@@ -154,6 +154,8 @@ tabla_vif <- function(fit, etiquetas = NULL, decimales = 2, titulo = NULL, archi
 #' attr(datos2, "atipicos")
 #' @export
 quitar_atipicos <- function(datos, modelo = NULL, alfa = .001) {
+  objeto_existe(datos, "datos", "Primero lee tus datos, por ejemplo: datos <- leer_datos()")
+  objeto_existe(modelo, "modelo", "Primero escribe tu modelo o indica las variables, por ejemplo: quitar_atipicos(datos, c(\"x1\", \"x2\", \"x3\"))")
   if (!is.data.frame(datos)) stop("`datos` debe ser un data.frame (tus datos originales, no el modelo).", call. = FALSE)
   vars <- if (inherits(modelo, "lavaan")) lavaan::lavNames(modelo, "ov")
           else if (is.character(modelo) && length(modelo) == 1 && grepl("~", modelo)) {

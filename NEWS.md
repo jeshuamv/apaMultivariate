@@ -1,3 +1,12 @@
+# apaMultivariate 0.9.2
+
+* El README y la hoja de referencia pedían `revisar_datos(datos, modelo)`
+  antes de escribir el modelo, lo que daba el error `object 'modelo' not
+  found`. Ahora primero se revisan los datos y después, ya con el modelo, los
+  datos y el modelo juntos.
+* `revisar_datos()` y `quitar_atipicos()`: si les pasas un objeto que todavía
+  no existe, explican en español qué falta crear en lugar del error de R.
+
 # apaMultivariate 0.9.1
 
 Ajustes tras probar el paquete con la tarea de análisis de trayectorias del

@@ -117,3 +117,10 @@ test_that("revisar_modelo detecta los problemas habituales", {
   expect_true(any(grepl("Revisión del modelo", capture.output(print(h)))))
   expect_error(revisar_modelo(HS), "lavaan")
 })
+
+test_that("objetos que no existen dan un mensaje claro", {
+  datos <- lavaan::HolzingerSwineford1939
+  expect_error(revisar_datos(datos, modelo_que_no_existe), "No existe un objeto llamado 'modelo_que_no_existe'")
+  expect_error(revisar_datos(datos_que_no_existen), "Primero lee tus datos")
+  expect_error(quitar_atipicos(datos, modelo_inexistente), "No existe un objeto")
+})

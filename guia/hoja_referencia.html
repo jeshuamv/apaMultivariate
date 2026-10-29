@@ -52,7 +52,7 @@ plantilla("afc")
 datos &lt;- leer_datos()          <i># abre una ventana</i>
 datos &lt;- leer_datos("encuesta.sav", perdidos = c(99))
 names(datos)                   <i># nombres de columnas</i>
-revisar_datos(datos, modelo)   <i># antes de estimar</i></pre>
+revisar_datos(datos)           <i># revisa tus datos</i></pre>
 <p class="nota">Lee Excel, SPSS, CSV (coma o punto y coma), Stata, SAS y texto.</p>
 </section><section><h2><b>3</b>Escribir el modelo</h2>
 <pre>modelo &lt;- "
@@ -63,7 +63,8 @@ revisar_datos(datos, modelo)   <i># antes de estimar</i></pre>
 "</pre>
 <p class="nota">Los nombres deben ser idénticos a las columnas (mayúsculas incluidas).</p>
 </section><section><h2><b>4</b>Estimar y revisar</h2>
-<pre>fit &lt;- cfa(modelo, data = datos)   <i># sem() si hay ~</i>
+<pre>revisar_datos(datos, modelo)   <i># ya con el modelo escrito</i>
+fit &lt;- cfa(modelo, data = datos)   <i># sem() si hay ~</i>
 revisar_modelo(fit)    <i># avisos de lavaan en español</i>
 <i># sin normalidad multivariada:</i>
 fit &lt;- cfa(modelo, data = datos, estimator = "MLR")
@@ -131,7 +132,7 @@ citation("apaMultivariate")</pre>
 </table>
 <p class="nota" style="margin-top:1.2mm">Son convenciones, no leyes: cita su fuente. Cómo interpretarlos y redactarlos: guía <b>INTERPRETACION.md</b>.</p>
 </section></div></div>
-<footer><span>Errores comunes: mayúsculas distintas · comillas sin cerrar · paréntesis sin cerrar · no correr las líneas en orden</span><span>v0.9.1</span></footer>
+<footer><span>Errores comunes: mayúsculas distintas · comillas sin cerrar · paréntesis sin cerrar · no correr las líneas en orden</span><span>v0.9.2</span></footer>
 
 <div class="pagina2">
 <header>
