@@ -1,3 +1,19 @@
+# apaMultivariate 0.9.5
+
+Plantillas revisadas resolviendo con ellas un ejercicio real de clase
+(análisis de trayectorias de Crowson), cambiando solo lo marcado:
+
+* La plantilla de trayectorias guarda los dos diagramas (estandarizado y no
+  estandarizado) como imagen, estima con `likelihood = "wishart"` para
+  coincidir con AMOS, y guarda en el Word también la normalidad, los atípicos
+  y las hipótesis.
+* Cada tabla se calcula una sola vez y se guarda en un objeto: el bootstrap ya
+  no se repite al guardar en Word.
+* Al quitar atípicos o cambiar de estimador, el modelo se vuelve a estimar con
+  `update()`, que conserva las demás opciones.
+* La línea de los datos está marcada como `>>> CAMBIA AQUÍ <<<` en todas las
+  plantillas, con el ejemplo para escribir el nombre del archivo.
+
 # apaMultivariate 0.9.4
 
 * README reorganizado para principiantes: un solo camino ("Empieza aquí": instalar,

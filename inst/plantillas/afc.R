@@ -16,9 +16,10 @@ library(apaMultivariate)
 
 
 # --- 1. Leer los datos --------------------------------------------------------
-# Se abre una ventana para elegir tu archivo (Excel, SPSS, CSV...).
 # Si tus datos tienen códigos de dato perdido (por ejemplo 99), escribe:
 # datos <- leer_datos(perdidos = c(99))
+# >>> CAMBIA AQUÍ <<<  Así como está, se abre una ventana para elegir tu archivo.
+# También puedes escribir su nombre:  datos <- leer_datos("mi_archivo.xlsx")
 datos <- leer_datos()
 
 # Para probar con datos de ejemplo: pon # al inicio de la línea de arriba y
@@ -56,17 +57,19 @@ revisar_modelo(fit)          # ¿hubo problemas al estimar? (avisos de lavaan en
 # Supuesto de normalidad: si el c.r. multivariado es mayor que 2, vuelve a
 # estimar con estimador robusto quitando el # de la línea siguiente:
 tabla_normalidad(fit)
-# fit <- cfa(modelo, data = datos, estimator = "MLR")
+# fit <- update(fit, estimator = "MLR")
 tabla_atipicos(fit)          # casos atípicos multivariados
 # Si decides quitar los atípicos (justifícalo y repórtalo), quita los # de
 # estas dos líneas: se quitan los casos y se vuelve a estimar el modelo.
 # datos <- quitar_atipicos(datos, modelo)
-# fit <- cfa(modelo, data = datos)
+# fit <- update(fit, data = datos)
 
 
 # --- 5. Diagrama ------------------------------------------------------------------
-diagrama_sem(fit)                                             # para ver en pantalla
-diagrama_sem(fit, estilo = "revista", archivo = "figura_afc.pdf", ancho = "pagina")  # para el documento
+diagrama_sem(fit)                                    # para ver en pantalla
+diagrama_sem(fit, archivo = "diagrama_afc.png")      # imagen para tu documento
+# Para un artículo, versión en estilo de revista:
+# diagrama_sem(fit, estilo = "revista", archivo = "figura_afc.pdf", ancho = "pagina")
 
 
 # --- 6. Tablas de resultados ------------------------------------------------------

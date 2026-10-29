@@ -15,6 +15,8 @@ library(apaMultivariate)
 
 
 # --- 1. Leer los datos --------------------------------------------------------
+# >>> CAMBIA AQUÍ <<<  Así como está, se abre una ventana para elegir tu archivo.
+# También puedes escribir su nombre:  datos <- leer_datos("mi_archivo.xlsx")
 datos <- leer_datos()
 # Para probar con datos de ejemplo de lavaan: pon # al inicio de la línea de arriba
 # y quita el # de la línea siguiente.
@@ -41,7 +43,7 @@ tabla_atipicos(afc)            # casos atípicos multivariados
 # Si decides quitar los atípicos (justifícalo y repórtalo), quita los # de
 # estas dos líneas: se quitan los casos y se vuelve a estimar el modelo.
 # datos <- quitar_atipicos(datos, medicion)
-# afc <- cfa(medicion, data = datos)
+# afc <- update(afc, data = datos)
 tabla_criterios_ajuste(afc)    # el modelo de medición debe ajustar bien
 tabla_cargas(afc)
 tabla_confiabilidad(afc)
@@ -63,7 +65,9 @@ revisar_modelo(fit)
 
 # --- 4. Diagrama -------------------------------------------------------------------
 diagrama_sem(fit)
-diagrama_sem(fit, estilo = "revista", archivo = "figura_sem.pdf", ancho = "pagina")
+diagrama_sem(fit, archivo = "diagrama_sem.png")      # imagen para tu documento
+# Para un artículo, versión en estilo de revista:
+# diagrama_sem(fit, estilo = "revista", archivo = "figura_sem.pdf", ancho = "pagina")
 
 
 # --- 5. Ajuste, estimaciones e hipótesis -------------------------------------------

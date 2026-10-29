@@ -13,6 +13,8 @@ library(apaMultivariate)
 
 
 # --- 1. Leer los datos --------------------------------------------------------
+# >>> CAMBIA AQUÍ <<<  Así como está, se abre una ventana para elegir tu archivo.
+# También puedes escribir su nombre:  datos <- leer_datos("mi_archivo.xlsx")
 datos <- leer_datos()
 # Para probar con datos de ejemplo incluidos en R: pon # al inicio de la línea de arriba
 # y quita el # de la línea siguiente.
