@@ -282,8 +282,8 @@ tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etique
   nota <- paste0(tx("\u03b2 = coeficiente estandarizado. Efectos directos: se sostienen si p < ", "\u03b2 = standardized coefficient. Direct effects are supported if p < "), f_apa(alfa, 2),
                  tx(". Efectos indirectos: se sostienen si el intervalo de confianza al 95 % (", ". Indirect effects are supported if the 95% confidence interval ("),
                  if (necesita_ind && bootstrap > 0) paste0(tx("bootstrap con ", "bootstrap with "), bootstrap, tx(" remuestreos", " resamples")) else tx("m\u00e9todo delta", "delta method"),
-                 tx(") no incluye el 0. Si la hip\u00f3tesis indica un signo (+ o \u2212), el efecto debe tener ese signo.",
-                    ") excludes 0. If the hypothesis specifies a sign (+ or \u2212), the effect must have that sign."))
+                 tx(", calculado con el efecto no estandarizado) no incluye el 0. Si la hip\u00f3tesis indica un signo (+ o \u2212), el efecto debe tener ese signo.",
+                    ", computed on the unstandardized effect) excludes 0. If the hypothesis specifies a sign (+ or \u2212), the effect must have that sign."))
   datos <- data.frame(hipotesis = names(H), trayectoria = vapply(H, function(h) paste(h$v, collapse = " -> "), character(1)),
                       signo = vapply(H, `[[`, character(1), "signo"), tipo = vapply(res, `[[`, character(1), "tipo"),
                       B = vapply(res, `[[`, numeric(1), "est"), beta = vapply(res, `[[`, numeric(1), "beta"),

@@ -119,7 +119,9 @@ variables_del_modelo <- function(modelo) {
   # Revisión propia antes de lavaan: mensajes más claros y que no dependen de su versión
   mal <- function(txt) structure(class = c("error_modelo", "error", "condition"), list(message = txt, call = NULL))
   if (inherits(modelo, "lavaan")) {
-    return(list(observadas = lavaan::lavNames(modelo, "ov"), latentes = lavaan::lavNames(modelo, "lv")))
+    ptl <- lavaan::parTable(modelo)
+    return(list(observadas = lavaan::lavNames(modelo, "ov"), latentes = lavaan::lavNames(modelo, "lv"),
+                dependientes = unique(c(ptl$lhs[ptl$op == "~"], ptl$rhs[ptl$op == "=~"]))))
   }
   if (!is.character(modelo)) {
     que <- if (is.numeric(modelo)) paste0("un n\u00famero (", paste(utils::head(modelo, 3), collapse = ", "), ")")
@@ -141,7 +143,8 @@ variables_del_modelo <- function(modelo) {
   lat <- unique(pt$lhs[pt$op %in% c("=~", "<~")])
   todas <- unique(c(pt$lhs, pt$rhs))
   todas <- todas[!grepl(":", todas, fixed = TRUE) & nzchar(todas) & !grepl("^[0-9.]+$", todas)]
-  list(observadas = setdiff(todas, lat), latentes = lat)
+  list(observadas = setdiff(todas, lat), latentes = lat,
+       dependientes = unique(c(pt$lhs[pt$op == "~"], pt$rhs[pt$op == "=~"])))
 }
 
 #' Revisar los datos antes del análisis
@@ -176,6 +179,7 @@ revisar_datos <- function(datos, modelo = NULL, variables = NULL) {
   res <- list()
   agregar <- function(estado, texto) res[[length(res) + 1]] <<- data.frame(estado = estado, texto = texto, stringsAsFactors = FALSE)
   n <- nrow(datos)
+  dependientes <- NULL
   if (!is.null(modelo)) {
     vm <- variables_del_modelo(modelo)
     if (inherits(vm, "error_modelo")) {
@@ -188,7 +192,7 @@ revisar_datos <- function(datos, modelo = NULL, variables = NULL) {
                                  "y que no falten ni sobren signos +."))
       variables <- character(0)
     } else {
-      variables <- vm$observadas
+      variables <- vm$observadas; dependientes <- vm$dependientes
       falta <- setdiff(variables, names(datos))
       if (length(falta)) {
         sug <- vapply(falta, function(v) {
@@ -236,11 +240,25 @@ revisar_datos <- function(datos, modelo = NULL, variables = NULL) {
                        " casos est\u00e1n completos. ", if (max(pp) > .05) "Con m\u00e1s de 5 %, considera estimar con missing = \"fiml\" y rep\u00f3rtalo con tabla_perdidos()." else ""))
       } else agregar("bien", "No hay datos perdidos.")
       cats <- vapply(num, function(v) { x <- stats::na.omit(d[[v]]); if (all(x == round(x))) length(unique(x)) else Inf }, numeric(1))
-      if (any(is.finite(cats) & cats <= 7)) {
-        k <- max(cats[is.finite(cats) & cats <= 7])
-        agregar("aviso", paste0("Las variables parecen ordinales (escala tipo Likert de hasta ", k, " puntos). ",
+      lik <- num[is.finite(cats) & cats >= 3 & cats <= 7]
+      if (!is.null(dependientes)) lik <- intersect(lik, dependientes)
+      if (length(lik)) {
+        k <- max(cats[lik])
+        agregar("aviso", paste0("Estas variables parecen ordinales (escala tipo Likert de hasta ", k, " puntos): ", paste(lik, collapse = ", "), ". ",
                                 if (k >= 5) "Con 5 o m\u00e1s categor\u00edas suele aceptarse tratarlas como continuas con estimator = \"MLR\"."
                                 else "Con menos de 5 categor\u00edas conviene tratarlas como ordinales: ordered = TRUE (estimador WLSMV)."))
+      }
+      bin <- num[is.finite(cats) & cats == 2]
+      if (length(bin)) {
+        bin_dep <- if (is.null(dependientes)) character(0) else intersect(bin, dependientes)
+        if (length(bin_dep))
+          agregar("aviso", paste0("Estas variables son dicot\u00f3micas (dos valores) y en tu modelo reciben flechas: ", paste(bin_dep, collapse = ", "),
+                                  ". Una variable dependiente dicot\u00f3mica no debe tratarse como continua; decl\u00e1rala ordinal con ordered = c(\"",
+                                  paste(bin_dep, collapse = "\", \""), "\") (estimador WLSMV)."))
+        bin_ok <- setdiff(bin, bin_dep)
+        if (length(bin_ok))
+          agregar("bien", paste0("Variables dicot\u00f3micas (dos valores, por ejemplo 0/1): ", paste(bin_ok, collapse = ", "),
+                                 ". Como predictoras no hay problema", if (is.null(dependientes)) "; si alguna fuera variable dependiente, habr\u00eda que declararla ordinal (ordered)." else "."))
       }
     }
   }
