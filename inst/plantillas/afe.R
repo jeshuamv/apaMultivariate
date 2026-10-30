@@ -40,6 +40,12 @@ tabla_descriptivos(items)
 # Para el número de factores, da más peso al análisis paralelo y a la MAP.
 tabla_factorabilidad(items)
 
+# Compara las soluciones con el número de factores que sugieren los criterios:
+# ítems sin carga, cargas cruzadas, factores con menos de tres ítems, ajuste.
+# Elige la que tenga sentido teórico y una estructura clara.
+soluciones <- comparar_soluciones(items)
+soluciones
+
 
 # --- 4. Estimar el AFE ------------------------------------------------------------
 # >>> CAMBIA AQUÍ <<<  nfactors = número de factores elegido en el paso 3.

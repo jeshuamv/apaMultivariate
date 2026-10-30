@@ -82,15 +82,26 @@ tabla_htmt(fit)              # validez discriminante: menor que .85
 tabla_residuales(fit)        # pares de ítems que el modelo explica mal
 
 
-# --- 7. (Opcional) Si el ajuste no es bueno ----------------------------------------
-# Índices de modificación: solo libera un parámetro si tiene sentido teórico.
+# --- 7. Modelos rivales -----------------------------------------------------------
+# Tu modelo frente a los rivales teóricos: un factor, factores independientes,
+# segundo orden y bifactor (estos dos, con tres o más factores). Se estiman con
+# las mismas opciones, se comparan y se dibuja cada uno.
+rivales <- modelos_rivales(fit, archivo = "diagrama_rival.png")
+rivales
+# Sus tablas, con rivales$fits; por ejemplo, las cargas del de segundo orden:
+# tabla_cargas(rivales$fits$segundo_orden)
+
+
+# --- 8. (Opcional) Si el ajuste no es bueno ----------------------------------------
+# Propuesta exploratoria: quita los ítems con cargas menores que .40 y lista las
+# covarianzas entre errores o cargas cruzadas que sugieren los índices de
+# modificación. Agrégalas (agregar = 1) solo si tienen sentido teórico.
+# alt <- modelo_alternativo(fit, archivo = "diagrama_alternativo.png")
+# alt
 tabla_modificacion(fit, n = 10)
-# Compara con un modelo alternativo (por ejemplo, de un solo factor):
-# alterno <- cfa("G =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9", data = datos)
-# tabla_comparacion("Un factor" = alterno, "Tres factores" = fit)
 
 
-# --- 8. Guardar todo en Word ----------------------------------------------------------
+# --- 9. Guardar todo en Word ----------------------------------------------------------
 guardar_tablas(
   tabla_descriptivos(datos[, c("x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9")]),  # >>> CAMBIA AQUÍ <<<
   tabla_criterios_ajuste(fit),
@@ -98,6 +109,7 @@ guardar_tablas(
   tabla_confiabilidad(fit),
   tabla_validez(fit),
   tabla_htmt(fit),
+  rivales$comparacion,
   archivo = "tablas_afc.docx"
 )
 parrafo_metodo(fit, archivo = "metodo_afc.docx")   # párrafo de método con referencias

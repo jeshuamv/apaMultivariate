@@ -293,6 +293,7 @@ Listas para Word, las que suelen pedirse en una tarea, una tesis o un artículo:
 | | `tabla_atipicos(datos)` | Atípicos multivariados (Mahalanobis, p1 y p2) |
 | | `quitar_atipicos(datos, modelo)` | Devuelve los datos sin los atípicos (*p* < .001) y te dice cuántos quitó |
 | AFE | `tabla_factorabilidad(datos)` | KMO, Bartlett y cuántos factores retener (Kaiser, análisis paralelo, MAP) |
+| | `comparar_soluciones(datos)` | Compara soluciones con distinto número de factores (ítems sin carga, cargas cruzadas, ajuste) y dibuja cada una |
 | | `tabla_cargas(afe)` | Cargas, comunalidades, varianza explicada |
 | Medición | `tabla_cargas(fit)` | Cargas estandarizadas, EE, *p* y R² |
 | | `tabla_confiabilidad(fit)` | Alfa de Cronbach (con IC), omega de McDonald, correlaciones ítem-total |
@@ -305,7 +306,8 @@ Listas para Word, las que suelen pedirse en una tarea, una tesis o un artículo:
 | | `tabla_modificacion(fit)` | Índices de modificación |
 | | `tabla_residuales(fit)` | Residuales de correlación: dónde ajusta mal el modelo |
 | | `tabla_comparacion("A" = fit1, "B" = fit2)` | Modelos alternativos: Δχ², ΔCFI, AIC, BIC (avisa si los modelos no son comparables) |
-| | `modelo_alternativo(fit)` | Propone un modelo alternativo: quita las trayectorias no significativas, prueba el cambio, lo compara y dibuja su diagrama |
+| | `modelos_rivales(fit)` | AFC: compara tu modelo con un factor, factores independientes, segundo orden y bifactor, y dibuja cada uno |
+| | `modelo_alternativo(fit)` | Propone un modelo alternativo (trayectorias y SEM: quita las no significativas; AFC: quita cargas bajas), lo compara y dibuja su diagrama |
 | | `tabla_invarianza(modelo, datos, grupo = "sexo")` | Invarianza configural, métrica, escalar y estricta |
 | Estructural | `tabla_parametros(fit)` | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas |
 | | `tabla_efectos(fit)` | Efectos directos, indirectos (bootstrap) y totales |

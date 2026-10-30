@@ -601,6 +601,40 @@ El análisis paralelo de factores se calcula igual que
 `"ml"`); usa el mismo método que en tu análisis factorial, por ejemplo
 `tabla_factorabilidad(items, fm = "pa")`.
 
+Cuando los criterios no coinciden, compara las soluciones candidatas.
+`comparar_soluciones()` estima el AFE con el número de factores que
+sugieren (o los que indiques) y resume cada solución: varianza
+explicada, ítems sin ninguna carga destacada, cargas cruzadas, factores
+con menos de tres ítems, correlación más alta entre factores e índices
+de ajuste. También dibuja cada solución:
+
+``` r
+soluciones <- comparar_soluciones(items, 2:4, dibujar = FALSE)
+soluciones
+#> 
+#> Comparación de soluciones factoriales
+#> ─────────────────────────────────────────────────────────────────────────────
+#> Factores  % var.  Sin carga  Cruzadas  < 3 ítems  r máx.  RMSEA   TLI    BIC 
+#> ─────────────────────────────────────────────────────────────────────────────
+#> 2          42.7       1         0          0       .35    .138   .762   19.2 
+#> 3          52.4       0         1          0       .33    .053   .964   -46.1
+#> 4          52.6       0         2          2       .72    .000   1.003  -28.7
+#> ─────────────────────────────────────────────────────────────────────────────
+#> Nota. Extracción ml, rotación oblimin. % var. = varianza común explicada
+#> acumulada; Sin carga = ítems sin ninguna carga ≥ .40; Cruzadas = ítems con
+#> dos cargas ≥ .30 que difieren en menos de .20; < 3 ítems = factores con
+#> menos de tres ítems; r máx. = correlación más alta entre factores. En
+#> negritas, lo que conviene revisar. 2 factores (sin carga: x2). 3 factores
+#> (cruzadas: x9). 4 factores (cruzadas: x6, x9).
+#> 
+#> Elige la solución que tenga sentido teórico y una estructura clara: cada ítem
+#> en un solo factor y al menos tres ítems por factor. Para ver sus cargas:
+#> tabla_cargas(r$soluciones[["3"]]) (cambia el 3 por el número de factores).
+```
+
+Elige la que tenga sentido teórico y una estructura clara; sus cargas,
+con `tabla_cargas(soluciones$soluciones[["3"]])`.
+
 ### Cargas factoriales
 
 En un **exploratorio**, la tabla incluye la matriz de cargas (de patrón
@@ -812,6 +846,65 @@ La Δχ² solo es válida si un modelo es una versión restringida del otro
 (modelos anidados); si no lo son, usa `anidados = FALSE` y compara AIC y
 BIC.
 
+#### Modelos rivales de un AFC
+
+`modelos_rivales()` genera, estima y compara de una vez los rivales
+habituales de tu modelo de medición: un factor, factores independientes,
+segundo orden y bifactor (estos dos, con tres o más factores). Usa las
+mismas opciones que tu modelo, marca los que tuvieron problemas de
+estimación y dibuja cada uno (en pantalla, o en archivos con
+`archivo = "rival.png"`):
+
+``` r
+rivales <- modelos_rivales(fit, dibujar = FALSE)
+rivales
+#> 
+#> Comparación del modelo propuesto con sus modelos rivales
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Modelo                                  χ²    gl  CFI   TLI   RMSEA  SRMR    AIC      BIC    Δχ² (Δgl)     p     ΔCFI   ΔRMSEA
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Factores correlacionados (tu modelo)  85.31   24  .931  .896  .092   .065  7,517.5  7,595.3      —         —       —      —   
+#> Un factor                             312.26  27  .677  .569  .187   .143  7,738.4  7,805.2  226.96 (3)  < .001  -.254  +.095 
+#> Factores independientes               153.53  27  .857  .809  .125   .161  7,579.7  7,646.4  68.22 (3)   < .001  -.074  +.033 
+#> Segundo orden                         85.31   24  .931  .896  .092   .065  7,517.5  7,595.3   0.00 (0)           +.000  +.000 
+#> Bifactor                              34.88   18  .981  .962  .056   .047  7,479.1  7,579.2  50.43 (6)   < .001  +.050  -.036 
+#> ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. Diferencias respecto de Factores correlacionados (tu modelo). Δχ²
+#> válida solo para modelos anidados. Un ΔCFI menor que −.010 junto con un
+#> ΔRMSEA mayor que .015 indica un ajuste apreciablemente peor (Chen, 2007). AIC
+#> y BIC: menor es mejor; el AIC más bajo es el de Bifactor y también el BIC.
+#> Los modelos rivales están anidados en el propuesto, salvo el bifactor, en el
+#> que el propuesto está anidado. Con tres factores, el de segundo orden es
+#> equivalente al de factores correlacionados (mismo ajuste). Problemas de
+#> estimación: Bifactor (varianza negativa (caso Heywood)).
+#> 
+#> Cómo leerla: tu modelo se sostiene si ajusta mejor que los rivales más simples
+#> (un factor, factores independientes): Δχ² significativa y un AIC y BIC más
+#> altos en ellos. Si el de segundo orden ajusta casi igual, la correlación entre
+#> tus factores puede explicarse con un factor general. El bifactor suele ajustar
+#> mejor por tener más parámetros; para decidir si la escala es esencialmente
+#> unidimensional usa tabla_bifactor(r$fits$bifactor), no solo el ajuste.
+#> 
+#> Sintaxis de cada modelo en r$sintaxis; sus tablas con r$fits, por ejemplo tabla_cargas(r$fits$segundo_orden).
+```
+
+Tu modelo se sostiene si ajusta mejor que los rivales más simples. Con
+tres factores, el de segundo orden es equivalente al de factores
+correlacionados; el bifactor suele ajustar mejor por tener más
+parámetros, así que para él revisa también
+`tabla_bifactor(rivales$fits$bifactor)`. Las tablas de cada rival se
+obtienen con `rivales$fits`, por ejemplo
+`tabla_cargas(rivales$fits$segundo_orden)`.
+
+#### Si el ajuste no es bueno
+
+`modelo_alternativo(fit)` también funciona con un AFC: quita uno por uno
+los ítems (o las cargas cruzadas) con carga estandarizada menor que .40,
+sin dejar un factor con menos de tres ítems, y lista las covarianzas
+entre errores y las cargas cruzadas que sugieren los índices de
+modificación. Con `agregar = 1` las incorpora. Es exploratorio: cada
+cambio debe justificarse con la teoría.
+
 ### Invarianza de medición
 
 ¿El instrumento mide lo mismo en distintos grupos? Indica el modelo, los
@@ -977,7 +1070,7 @@ multivariada, los puntos siguen la línea punteada; los atípicos (*p* \<
 grafica_normalidad(fit3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-36-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-38-1.png" width="100%" />
 
 **2. Diagrama** estandarizado (cargas y β, R²) y no estandarizado (B, y,
 como en AMOS, la varianza de cada variable exógena y de cada error):
@@ -986,7 +1079,7 @@ como en AMOS, la varianza de cada variable exógena y de cada error):
 diagrama_sem(fit3, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-37-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-39-1.png" width="100%" />
 
 **3. Ajuste e identificación.** Cada índice contra los criterios
 excelente y aceptable, con su fuente, y la identificación del modelo
@@ -1129,7 +1222,7 @@ modelo original.
 alt <- modelo_alternativo(fit3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-42-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-44-1.png" width="100%" />
 
 ``` r
 alt
@@ -1171,13 +1264,14 @@ alt
 #> un ajuste apreciablemente peor (Chen, 2007). AIC y BIC: menor es mejor; el
 #> AIC más bajo es el de Alternativo y también el BIC.
 #> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
-#> Trayectorias que sugieren los índices de modificación (no se agregaron; solo si tienen sustento teórico, usa agregar = 1):
-#>   Catholic → Examination  (IM = 20.35, β esperado = -.48)
+#> Lo que sugieren los índices de modificación (no se agregó; solo si tiene sustento teórico, usa agregar = 1):
+#>   Catholic → Examination  (IM = 20.35, cambio esperado = -.48)
 #> 
 #> Atención: este modelo se obtuvo a partir de los resultados, así que es
 #> exploratorio. Justifica cada cambio con la teoría, repórtalo como modificado
 #> después de ver los datos y, si puedes, confírmalo en otra muestra (MacCallum et
-#> al., 1992). Para sus tablas usa $fit, por ejemplo tabla_efectos(alt$fit).
+#> al., 1992). Para sus tablas usa $fit, por ejemplo tabla_cargas(alt$fit) o
+#> tabla_efectos(alt$fit).
 ```
 
 Con `agregar = 1` (o más) también agrega, una por una, las trayectorias
@@ -1448,7 +1542,7 @@ región de Johnson-Neyman. La gráfica de la interacción:
 grafica_interaccion(mod)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-49-1.png" width="60%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-51-1.png" width="60%" />
 
 Con `archivo = "figura2.pdf"` se guarda al ancho de una columna.
 
@@ -1475,7 +1569,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 #> 
 #> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
 #> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
-#> Jorgensen et al., 2022) y apaMultivariate (versión 0.10.0; Moreno Valladares,
+#> Jorgensen et al., 2022) y apaMultivariate (versión 0.11.0; Moreno Valladares,
 #> 2026). El análisis factorial confirmatorio se estimó con una muestra de 301
 #> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
 #> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
@@ -1496,7 +1590,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 #>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
 #> 
 #> Moreno Valladares, J. (2026). apaMultivariate: Tablas y diagramas APA para
-#>     análisis multivariado (Paquete de R, versión 0.10.0).
+#>     análisis multivariado (Paquete de R, versión 0.11.0).
 #>     https://github.com/jeshuamv/apaMultivariate.
 #> 
 #> R Core Team. (2024). R: A language and environment for statistical computing. R
@@ -1573,7 +1667,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-56-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
 
 Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -1583,7 +1677,7 @@ Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados y,
 como en AMOS, en lugar de la R² se escribe la varianza de cada variable
@@ -1593,7 +1687,7 @@ exógena y de cada error:
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-60-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -1601,13 +1695,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-61-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-59-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-61-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -1627,20 +1721,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-61-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-63-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-61-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-63-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-61-3.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-63-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -1653,7 +1747,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-62-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-64-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -1662,7 +1756,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-63-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-65-1.png" width="100%" />
 
 ## Guardar el diagrama
 

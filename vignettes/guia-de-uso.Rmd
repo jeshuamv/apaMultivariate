@@ -423,6 +423,21 @@ El análisis paralelo de factores se calcula igual que `psych::fa.parallel()`
 con el método de extracción `fm` (por defecto `"ml"`); usa el mismo método que
 en tu análisis factorial, por ejemplo `tabla_factorabilidad(items, fm = "pa")`.
 
+Cuando los criterios no coinciden, compara las soluciones candidatas.
+`comparar_soluciones()` estima el AFE con el número de factores que sugieren
+(o los que indiques) y resume cada solución: varianza explicada, ítems sin
+ninguna carga destacada, cargas cruzadas, factores con menos de tres ítems,
+correlación más alta entre factores e índices de ajuste. También dibuja cada
+solución:
+
+```{r, message = FALSE}
+soluciones <- comparar_soluciones(items, 2:4, dibujar = FALSE)
+soluciones
+```
+
+Elige la que tenga sentido teórico y una estructura clara; sus cargas, con
+`tabla_cargas(soluciones$soluciones[["3"]])`.
+
 ### Cargas factoriales
 
 En un **exploratorio**, la tabla incluye la matriz de cargas (de patrón si la
@@ -501,6 +516,33 @@ tabla_comparacion("Un factor" = un_factor, "Tres factores" = fit)
 
 La Δχ² solo es válida si un modelo es una versión restringida del otro
 (modelos anidados); si no lo son, usa `anidados = FALSE` y compara AIC y BIC.
+
+#### Modelos rivales de un AFC
+
+`modelos_rivales()` genera, estima y compara de una vez los rivales habituales de
+tu modelo de medición: un factor, factores independientes, segundo orden y
+bifactor (estos dos, con tres o más factores). Usa las mismas opciones que tu
+modelo, marca los que tuvieron problemas de estimación y dibuja cada uno (en
+pantalla, o en archivos con `archivo = "rival.png"`):
+
+```{r, message = FALSE, warning = FALSE}
+rivales <- modelos_rivales(fit, dibujar = FALSE)
+rivales
+```
+
+Tu modelo se sostiene si ajusta mejor que los rivales más simples. Con tres
+factores, el de segundo orden es equivalente al de factores correlacionados; el
+bifactor suele ajustar mejor por tener más parámetros, así que para él revisa
+también `tabla_bifactor(rivales$fits$bifactor)`. Las tablas de cada rival se
+obtienen con `rivales$fits`, por ejemplo `tabla_cargas(rivales$fits$segundo_orden)`.
+
+#### Si el ajuste no es bueno
+
+`modelo_alternativo(fit)` también funciona con un AFC: quita uno por uno los
+ítems (o las cargas cruzadas) con carga estandarizada menor que .40, sin dejar
+un factor con menos de tres ítems, y lista las covarianzas entre errores y las
+cargas cruzadas que sugieren los índices de modificación. Con `agregar = 1` las
+incorpora. Es exploratorio: cada cambio debe justificarse con la teoría.
 
 ### Invarianza de medición
 

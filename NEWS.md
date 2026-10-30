@@ -1,3 +1,19 @@
+# apaMultivariate 0.11.0
+
+* `modelos_rivales()`: compara un AFC con sus rivales teóricos (un factor,
+  factores independientes, segundo orden y bifactor), estimados con las
+  mismas opciones; señala problemas de estimación y dibuja cada modelo.
+* `comparar_soluciones()`: compara soluciones del AFE con distinto número de
+  factores (varianza explicada, ítems sin carga, cargas cruzadas, factores con
+  menos de tres ítems, correlación entre factores, RMSEA, TLI y BIC) y dibuja
+  cada una.
+* `modelo_alternativo()` funciona también con un AFC: quita uno por uno los
+  ítems o las cargas cruzadas con carga menor que `carga_minima` (sin dejar
+  factores con menos de tres ítems) y sugiere covarianzas entre errores y
+  cargas cruzadas según los índices de modificación.
+* Plantillas de AFC y AFE con estos pasos.
+* Guía: las imágenes tenían rutas absolutas y no se veían en GitHub.
+
 # apaMultivariate 0.10.0
 
 * `modelo_alternativo()`: propone un modelo alternativo de trayectorias o SEM.

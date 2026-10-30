@@ -2,17 +2,36 @@
 # de trayectorias o SEM ya estimado: quita las trayectorias no significativas
 # y, si se pide, agrega las que sugieren los índices de modificación.
 
+# Vuelve a estimar un modelo con otra sintaxis, conservando sus opciones
+# (estimador, likelihood, datos perdidos...). Se evalúa donde el usuario llamó
+# a la función; si los datos ya no están ahí, se usan los del modelo.
+#' @noRd
+reestimar <- function(fit, sintaxis, entorno, ...) {
+  cl <- stats::update(fit, evaluate = FALSE); cl$model <- sintaxis
+  extra <- list(...); for (k in names(extra)) cl[[k]] <- extra[[k]]
+  r <- tryCatch(suppressWarnings(eval(cl, entorno)), error = function(e) e)
+  if (inherits(r, "error") && grepl("not found|no encontrado", conditionMessage(r))) {
+    cl$data <- obtener_datos(fit)
+    r <- tryCatch(suppressWarnings(eval(cl, entorno)), error = function(e) e)
+  }
+  r
+}
+
 # Escribe la sintaxis de lavaan a partir de una tabla de parámetros
 #' @noRd
 sintaxis_de_tabla <- function(pt) {
   der <- function(r) {
-    pre <- if (!is.na(r$free) && r$free == 0 && r$op %in% c("=~", "~", "~~") && !is.na(r$ustart)) paste0(format(r$ustart), "*")
+    pre <- if (isTRUE(r$marcador)) ""
+           else if (!is.na(r$free) && r$free == 0 && r$op %in% c("=~", "~", "~~") && !is.na(r$ustart)) paste0(format(r$ustart), "*")
            else if (nzchar(r$label)) paste0(r$label, "*") else ""
     if (r$op == "~1") return(paste0(r$lhs, " ~ ", pre, "1"))
     paste0(r$lhs, " ", r$op, " ", pre, r$rhs)
   }
   ord <- c("=~", "~", "~~", "~1", ":=", "==", "<", ">")
   pt <- pt[order(match(pt$op, ord), match(pt$lhs, unique(pt$lhs)), seq_len(nrow(pt))), ]
+  primero <- !duplicated(paste(pt$lhs, pt$op)) & pt$op == "=~"
+  pt$marcador <- primero & pt$free == 0 & !is.na(pt$ustart) & pt$ustart == 1
+
   lin <- character(0); i <- 1
   while (i <= nrow(pt)) {
     r <- pt[i, ]
@@ -58,6 +77,16 @@ crea_ciclo <- function(reg, lhs, rhs) {
 #'
 #' Además dibuja el diagrama del modelo alternativo.
 #'
+#' **En un AFC** (sin trayectorias), la propuesta es otra: quita uno por uno
+#' los ítems con carga estandarizada menor que `carga_minima` (el más bajo
+#' primero, sin dejar un factor con menos de tres ítems) y lista las
+#' covarianzas entre errores y las cargas cruzadas que sugieren los índices
+#' de modificación; con `agregar` las incorpora. Como el modelo cambia de
+#' ítems, el original y el alternativo no son comparables con
+#' \eqn{\Delta\chi^2}: se reporta el ajuste de cada uno. Para comparar
+#' estructuras teóricas (un factor, segundo orden, bifactor) usa
+#' [modelos_rivales()].
+#'
 #' **Advertencia.** Una reespecificación basada en los resultados es
 #' exploratoria: aprovecha las particularidades de tu muestra y puede no
 #' replicarse (MacCallum et al., 1992). Repórtala como tal, justifica cada
@@ -72,6 +101,9 @@ crea_ciclo <- function(reg, lhs, rhs) {
 #'   modificación (0 = ninguna; solo se listan las sugeridas).
 #' @param minimo_im Índice de modificación mínimo para sugerir o agregar una
 #'   trayectoria (3.84, que corresponde a \eqn{p < .05}).
+#' @param carga_minima Solo en un AFC: carga estandarizada mínima; los ítems
+#'   con cargas menores se quitan uno por uno (sin dejar un factor con menos
+#'   de tres ítems).
 #' @param dibujar Si es `TRUE`, dibuja el diagrama del modelo alternativo.
 #' @param archivo Si se indica, guarda el diagrama del modelo alternativo.
 #' @param ... Otras opciones para [diagrama_sem()] (por ejemplo, `estilo`).
@@ -88,7 +120,7 @@ crea_ciclo <- function(reg, lhs, rhs) {
 #' tabla_efectos(alt$fit, bootstrap = 0)
 #' @export
 modelo_alternativo <- function(fit, quitar = TRUE, alfa = .05, agregar = 0, minimo_im = 3.84,
-                               dibujar = TRUE, archivo = NULL, ...) {
+                               carga_minima = .40, dibujar = TRUE, archivo = NULL, ...) {
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo estimado con sem() de lavaan.", call. = FALSE)
   entorno <- parent.frame()
   exigir_un_grupo(fit)
@@ -99,21 +131,16 @@ modelo_alternativo <- function(fit, quitar = TRUE, alfa = .05, agregar = 0, mini
   pe <- lavaan::parameterEstimates(fit, standardized = TRUE)
   if (is.null(pe$label)) pe$label <- ""
   reg <- pe[pe$op == "~", ]
-  if (!nrow(reg)) stop("El modelo no tiene trayectorias (~). Para un AFC, compara modelos te\u00f3ricos alternativos con tabla_comparacion().", call. = FALSE)
+  if (!nrow(reg)) {
+    if (!any(pt$op == "=~")) stop("El modelo no tiene trayectorias (~) ni factores (=~).", call. = FALSE)
+    return(alternativo_afc(fit, usr, entorno, quitar, carga_minima, agregar, minimo_im, dibujar, archivo, ...))
+  }
   lab_usados <- unlist(regmatches(usr$rhs[usr$op %in% c(":=", "==", "<", ">")],
                                   gregexpr("[A-Za-z.][A-Za-z0-9._]*", usr$rhs[usr$op %in% c(":=", "==", "<", ">")])))
   cambios <- data.frame(cambio = character(0), trayectoria = character(0), beta = numeric(0),
                         criterio = character(0), stringsAsFactors = FALSE)
   clave <- function(d) paste(d$lhs, d$op, d$rhs)
-  ajustar <- function(a) {
-    cl <- stats::update(fit, evaluate = FALSE); cl$model <- sintaxis_de_tabla(a)
-    r <- tryCatch(suppressWarnings(eval(cl, entorno)), error = function(e) e)
-    if (inherits(r, "error") && grepl("not found|no encontrado", conditionMessage(r))) {
-      cl$data <- obtener_datos(fit)            # los datos ya no est\u00e1n donde se estim\u00f3: se usan los del modelo
-      r <- tryCatch(suppressWarnings(eval(cl, entorno)), error = function(e) e)
-    }
-    r
-  }
+  ajustar <- function(a) reestimar(fit, sintaxis_de_tabla(a), entorno)
   sugerir <- function(f) {
     mi <- tryCatch(suppressWarnings(lavaan::modindices(f, sort. = TRUE, standardized = TRUE)), error = function(e) NULL)
     if (is.null(mi)) return(mi)
@@ -205,8 +232,75 @@ modelo_alternativo <- function(fit, quitar = TRUE, alfa = .05, agregar = 0, mini
     if (!is.null(archivo)) guardar_diagrama(d, archivo)
   }
   structure(list(sintaxis = sint, fit = nuevo, original = fit, cambios = cambios, fuera = fuera,
-                 prueba = prueba, sugeridas = sugeridas, comparacion = comp, diagrama = d, alfa = alfa),
+                 prueba = prueba, sugeridas = sugeridas, comparacion = comp, diagrama = d, alfa = alfa, tipo = "trayectorias"),
             class = "modelo_alternativo")
+}
+
+# Reespecificación exploratoria de un AFC
+#' @noRd
+alternativo_afc <- function(fit, usr, entorno, quitar, carga_minima, agregar, minimo_im, dibujar, archivo, ...) {
+  lv <- lavaan::lavNames(fit, "lv")
+  clave <- function(d) paste(d$lhs, d$op, d$rhs)
+  ajustar <- function(a) reestimar(fit, sintaxis_de_tabla(a), entorno)
+  cambios <- data.frame(cambio = character(0), trayectoria = character(0), beta = numeric(0), criterio = character(0), stringsAsFactors = FALSE)
+  sugerir <- function(f) {
+    mi <- tryCatch(suppressWarnings(lavaan::modindices(f, sort. = TRUE, standardized = TRUE)), error = function(e) NULL)
+    if (is.null(mi)) return(NULL)
+    ov <- lavaan::lavNames(f, "ov")
+    mi[mi$mi >= minimo_im & ((mi$op == "~~" & mi$lhs %in% ov & mi$rhs %in% ov & mi$lhs != mi$rhs) |
+                               (mi$op == "=~" & mi$lhs %in% lv & mi$rhs %in% ov)), , drop = FALSE]
+  }
+  alt <- usr; actual <- fit; fuera <- character(0); avisos <- character(0)
+  # 1. Quitar ítems con cargas bajas, uno por uno
+  if (quitar) repeat {
+    pa <- lavaan::parameterEstimates(actual, standardized = TRUE)
+    L <- pa[pa$op == "=~" & !pa$rhs %in% lv, ]
+    n_it <- table(L$lhs)
+    cand <- L[abs(L$std.all) < carga_minima, ]
+    if (!nrow(cand)) break
+    cand <- cand[order(abs(cand$std.all)), ]
+    bloq <- n_it[cand$lhs] <= 3 & vapply(cand$rhs, function(v) sum(L$rhs == v) == 1, logical(1))
+    if (any(bloq)) avisos <- unique(c(avisos, paste0(cand$rhs[bloq], " (", f_apa(cand$std.all[bloq], 2), tx(", su factor quedar\u00eda con menos de tres \u00edtems)", ", its factor would keep fewer than three items)"))))
+    cand <- cand[!bloq, ]
+    if (!nrow(cand)) break
+    r <- cand[1, ]
+    otras <- sum(L$rhs == r$rhs) > 1          # el ítem carga también en otro factor: solo se quita esa carga
+    alt2 <- if (otras) alt[!(alt$op == "=~" & alt$lhs == r$lhs & alt$rhs == r$rhs), ]
+            else alt[!((alt$op == "=~" & alt$rhs == r$rhs) | (alt$op %in% c("~~", "~1") & (alt$lhs == r$rhs | alt$rhs == r$rhs))), ]
+    f2 <- ajustar(alt2)
+    if (inherits(f2, "error") || !lavaan::lavInspect(f2, "converged")) break
+    alt <- alt2; actual <- f2; if (!otras) fuera <- c(fuera, r$rhs)
+    cambios <- rbind(cambios, data.frame(cambio = if (otras) tx("Se quita la carga cruzada", "Cross-loading removed") else tx("Se quita el \u00edtem", "Item removed"),
+                                         trayectoria = paste(r$lhs, "\u2192", r$rhs),
+                                         beta = r$std.all, criterio = paste0("\u03bb < ", f_apa(carga_minima, 2)), stringsAsFactors = FALSE))
+  }
+  # 2. Agregar (si se pide) covarianzas entre errores o cargas cruzadas sugeridas por los IM
+  for (j in seq_len(agregar)) {
+    mi <- sugerir(actual)
+    if (is.null(mi) || !nrow(mi)) break
+    r <- mi[1, ]
+    alt2 <- rbind(alt, data.frame(lhs = r$lhs, op = r$op, rhs = r$rhs, free = 1, ustart = NA, label = "", user = 1))
+    f2 <- ajustar(alt2)
+    if (inherits(f2, "error") || !lavaan::lavInspect(f2, "converged")) break
+    alt <- alt2; actual <- f2
+    cambios <- rbind(cambios, data.frame(
+      cambio = if (r$op == "~~") tx("Se agrega covarianza de errores", "Error covariance added") else tx("Se agrega carga cruzada", "Cross-loading added"),
+      trayectoria = if (r$op == "~~") paste(r$lhs, "\u2194", r$rhs) else paste(r$lhs, "\u2192", r$rhs),
+      beta = r$sepc.all, criterio = paste0(tx("IM = ", "MI = "), f_num(r$mi, 2)), stringsAsFactors = FALSE))
+  }
+  sugeridas <- if (agregar == 0) sugerir(actual) else NULL
+  if (!nrow(cambios)) message(tx("No hay cambios que proponer: todas las cargas son de ", "No changes to propose: all loadings are at least "), f_apa(carga_minima, 2),
+                              tx(" o m\u00e1s", ""), if (!is.null(sugeridas) && nrow(sugeridas)) tx("; revisa las sugerencias abajo.", "; see the suggestions below.") else ".")
+  comp <- if (nrow(cambios)) tabla_comparacion(Original = fit, Alternativo = actual, anidados = TRUE,
+                                               titulo = tx("Modelo original y modelo alternativo", "Original and alternative models")) else NULL
+  d <- NULL
+  if (dibujar || !is.null(archivo)) {
+    d <- diagrama_sem(actual, dibujar = dibujar, ...)
+    if (!is.null(archivo)) guardar_diagrama(d, archivo)
+  }
+  structure(list(sintaxis = sintaxis_de_tabla(alt), fit = actual, original = fit, cambios = cambios, fuera = fuera,
+                 prueba = NULL, sugeridas = sugeridas, comparacion = comp, diagrama = d, alfa = NA, tipo = "afc",
+                 avisos = avisos, carga_minima = carga_minima), class = "modelo_alternativo")
 }
 
 #' @export
@@ -216,11 +310,15 @@ print.modelo_alternativo <- function(x, ...) {
     cel <- cbind(x$cambios$cambio, x$cambios$trayectoria, f_apa(x$cambios$beta, 2), x$cambios$criterio)
     print(nueva_tabla(tx("Cambios respecto del modelo original", "Changes from the original model"),
                       c(tx("Cambio", "Change"), tx("Trayectoria", "Path"), "\u03b2", tx("Criterio", "Criterion")), cel,
-                      nota = tx(paste0("Se quitan las trayectorias con p \u2265 ", f_apa(x$alfa, 2), "; se agregan las que sugieren los \u00edndices de modificaci\u00f3n (IM). \u03b2 = coeficiente estandarizado (en las agregadas, el cambio esperado)."),
+                      nota = if (identical(x$tipo, "afc"))
+                        tx(paste0("Se quitan, uno por uno, los \u00edtems con carga estandarizada (\u03bb) menor que ", f_apa(x$carga_minima, 2), "; se agregan las covarianzas de errores o cargas cruzadas que sugieren los \u00edndices de modificaci\u00f3n (IM). Columna \u03b2: carga estandarizada (en lo agregado, el cambio esperado)."),
+                           paste0("Items with standardized loading (\u03bb) below ", f_apa(x$carga_minima, 2), " are removed one at a time; error covariances or cross-loadings suggested by modification indices (MI) are added. \u03b2 column: standardized loading (expected change for added parameters)."))
+                      else tx(paste0("Se quitan las trayectorias con p \u2265 ", f_apa(x$alfa, 2), "; se agregan las que sugieren los \u00edndices de modificaci\u00f3n (IM). \u03b2 = coeficiente estandarizado (en las agregadas, el cambio esperado)."),
                                 paste0("Paths with p \u2265 ", f_apa(x$alfa, 2), " are removed; paths suggested by modification indices (MI) are added. \u03b2 = standardized coefficient (expected change for added paths)."))))
   } else cat(tx("Sin cambios.\n\n", "No changes.\n\n"))
-  if (length(x$fuera)) cat(tx("Salen del modelo (se quedaron sin relaciones): ", "Removed from the model (no remaining paths): "),
+  if (length(x$fuera) && !identical(x$tipo, "afc")) cat(tx("Salen del modelo (se quedaron sin relaciones): ", "Removed from the model (no remaining paths): "),
                            paste(x$fuera, collapse = ", "), "\n\n", sep = "")
+  if (length(x$avisos)) cat(tx("Cargas bajas que no se quitaron: ", "Low loadings not removed: "), paste(x$avisos, collapse = "; "), ".\n\n", sep = "")
   if (!is.null(x$prueba)) {
     p <- x$prueba[["p"]]
     cat(tx("\u00bfQuitar esas trayectorias empeora el ajuste? ", "Does removing those paths worsen fit? "),
@@ -234,13 +332,15 @@ print.modelo_alternativo <- function(x, ...) {
   if (!is.null(x$comparacion)) print(x$comparacion)
   if (!is.null(x$sugeridas) && nrow(x$sugeridas)) {
     s <- utils::head(x$sugeridas, 5)
-    cat(tx("Trayectorias que sugieren los \u00edndices de modificaci\u00f3n (no se agregaron; solo si tienen sustento te\u00f3rico, usa agregar = 1):\n",
-           "Paths suggested by modification indices (not added; only if theoretically justified, use agregar = 1):\n"),
-        paste0("  ", s$rhs, " \u2192 ", s$lhs, "  (", tx("IM = ", "MI = "), f_num(s$mi, 2), ", \u03b2 ", tx("esperado", "expected"), " = ", f_apa(s$sepc.all, 2), ")", collapse = "\n"),
+    desc <- ifelse(s$op == "~", paste0(s$rhs, " \u2192 ", s$lhs),
+                   ifelse(s$op == "~~", paste0(tx("errores de ", "errors of "), s$lhs, " \u2194 ", s$rhs), paste0(tx("carga cruzada ", "cross-loading "), s$lhs, " \u2192 ", s$rhs)))
+    cat(tx("Lo que sugieren los \u00edndices de modificaci\u00f3n (no se agreg\u00f3; solo si tiene sustento te\u00f3rico, usa agregar = 1):\n",
+           "Suggested by modification indices (not added; only if theoretically justified, use agregar = 1):\n"),
+        paste0("  ", desc, "  (", tx("IM = ", "MI = "), f_num(s$mi, 2), ifelse(is.na(s$sepc.all), "", paste0(", ", tx("cambio esperado", "expected change"), " = ", f_apa(s$sepc.all, 2))), ")", collapse = "\n"),
         "\n\n", sep = "")
   }
-  cat(strwrap(tx("Atenci\u00f3n: este modelo se obtuvo a partir de los resultados, as\u00ed que es exploratorio. Justifica cada cambio con la teor\u00eda, rep\u00f3rtalo como modificado despu\u00e9s de ver los datos y, si puedes, conf\u00edrmalo en otra muestra (MacCallum et al., 1992). Para sus tablas usa $fit, por ejemplo tabla_efectos(alt$fit).",
-                  "Caution: this model was derived from the results, so it is exploratory. Justify each change theoretically, report it as modified after seeing the data and, if possible, confirm it in another sample (MacCallum et al., 1992). Use $fit for its tables, e.g., tabla_efectos(alt$fit)."), width = 80), sep = "\n")
+  cat(strwrap(tx("Atenci\u00f3n: este modelo se obtuvo a partir de los resultados, as\u00ed que es exploratorio. Justifica cada cambio con la teor\u00eda, rep\u00f3rtalo como modificado despu\u00e9s de ver los datos y, si puedes, conf\u00edrmalo en otra muestra (MacCallum et al., 1992). Para sus tablas usa $fit, por ejemplo tabla_cargas(alt$fit) o tabla_efectos(alt$fit).",
+                  "Caution: this model was derived from the results, so it is exploratory. Justify each change theoretically, report it as modified after seeing the data and, if possible, confirm it in another sample (MacCallum et al., 1992). Use $fit for its tables, e.g., tabla_cargas(alt$fit) or tabla_efectos(alt$fit)."), width = 80), sep = "\n")
   cat("\n")
   invisible(x)
 }

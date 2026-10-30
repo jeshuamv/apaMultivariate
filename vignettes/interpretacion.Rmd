@@ -239,6 +239,17 @@ ajusta mejor) y el ΔCFI. En no anidados, el AIC y el BIC (más bajo es mejor).
 > El modelo de tres factores ajustó significativamente mejor que el de un factor,
 > Δχ²(3) = 226.96, *p* < .001, ΔCFI = .254, y presentó un AIC y un BIC menores.
 
+Para un AFC, `modelos_rivales(fit)` estima y compara de una vez los rivales
+habituales (un factor, factores independientes, segundo orden y bifactor). Ejemplo
+con los datos `ChurchSurvey` de la tarea de AFC (cuatro factores):
+
+> Se compararon cuatro modelos rivales. El modelo de cuatro factores
+> correlacionados ajustó significativamente mejor que el de un factor,
+> Δχ²(6) = 2,870.75, *p* < .001, y que el de factores independientes,
+> Δχ²(6) = 1,519.20, *p* < .001. El modelo de segundo orden mostró un ajuste
+> prácticamente igual (ΔCFI = −.002), lo que indica que un factor general puede
+> explicar las correlaciones entre las cuatro dimensiones.
+
 ### Invarianza de medición — `tabla_invarianza()`
 
 **Criterio.** Cada nivel (configural → métrica → escalar → estricta) se sostiene si el

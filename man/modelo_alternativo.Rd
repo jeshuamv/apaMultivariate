@@ -10,6 +10,7 @@ modelo_alternativo(
   alfa = 0.05,
   agregar = 0,
   minimo_im = 3.84,
+  carga_minima = 0.4,
   dibujar = TRUE,
   archivo = NULL,
   ...
@@ -27,6 +28,10 @@ modificación (0 = ninguna; solo se listan las sugeridas).}
 
 \item{minimo_im}{Índice de modificación mínimo para sugerir o agregar una
 trayectoria (3.84, que corresponde a \eqn{p < .05}).}
+
+\item{carga_minima}{Solo en un AFC: carga estandarizada mínima; los ítems
+con cargas menores se quitan uno por uno (sin dejar un factor con menos
+de tres ítems).}
 
 \item{dibujar}{Si es \code{TRUE}, dibuja el diagrama del modelo alternativo.}
 
@@ -61,6 +66,16 @@ Si no es significativa, el modelo más simple es defendible.
 }
 
 Además dibuja el diagrama del modelo alternativo.
+
+\strong{En un AFC} (sin trayectorias), la propuesta es otra: quita uno por uno
+los ítems con carga estandarizada menor que \code{carga_minima} (el más bajo
+primero, sin dejar un factor con menos de tres ítems) y lista las
+covarianzas entre errores y las cargas cruzadas que sugieren los índices
+de modificación; con \code{agregar} las incorpora. Como el modelo cambia de
+ítems, el original y el alternativo no son comparables con
+\eqn{\Delta\chi^2}: se reporta el ajuste de cada uno. Para comparar
+estructuras teóricas (un factor, segundo orden, bifactor) usa
+\code{\link[=modelos_rivales]{modelos_rivales()}}.
 
 \strong{Advertencia.} Una reespecificación basada en los resultados es
 exploratoria: aprovecha las particularidades de tu muestra y puede no

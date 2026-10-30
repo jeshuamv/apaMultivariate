@@ -26,10 +26,10 @@
 #'   \item Datos y supuestos: [tabla_descriptivos()], [tabla_perdidos()],
 #'     [tabla_normalidad()], [grafica_normalidad()], [tabla_atipicos()],
 #'     [quitar_atipicos()], [tabla_vif()].
-#'   \item Análisis exploratorio: [tabla_factorabilidad()], [tabla_cargas()].
+#'   \item Análisis exploratorio: [tabla_factorabilidad()], [comparar_soluciones()], [tabla_cargas()].
 #'   \item Medición: [tabla_cargas()], [tabla_confiabilidad()], [tabla_validez()],
 #'     [tabla_htmt()], [tabla_bifactor()], [tabla_metodo_comun()].
-#'   \item Ajuste: [tabla_ajuste()], [tabla_criterios_ajuste()], [tabla_comparacion()],
+#'   \item Ajuste: [tabla_ajuste()], [tabla_criterios_ajuste()], [tabla_comparacion()], [modelos_rivales()],
 #'     [tabla_modificacion()], [tabla_residuales()], [tabla_invarianza()].
 #'   \item Modelo estructural: [tabla_parametros()], [tabla_efectos()], [tabla_hipotesis()],
 #'     [modelo_alternativo()].
