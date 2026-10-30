@@ -45,7 +45,7 @@ install.packages(c("psych", "GPArotation"))  <i># AFE</i></pre>
 <pre>library(apaMultivariate)
 plantilla("afc")
 <i># también: "afe", "trayectorias", "sem",</i>
-<i>#          "moderacion", "manova"</i></pre>
+<i>#          "moderacion", "manova", "regresion"</i></pre>
 <p>Crea un script con todo el análisis explicado. Cambia solo lo marcado con <code>&gt;&gt;&gt; CAMBIA AQUÍ &lt;&lt;&lt;</code>.</p>
 </section><section><h2><b>2</b>Leer y revisar los datos</h2>
 <pre>library(lavaan)
@@ -82,7 +82,7 @@ datos &lt;- quitar_atipicos(datos, modelo)</pre>
 <tr><td>tabla_atipicos(fit)</td><td>Mahalanobis, p1 y p2</td></tr>
 <tr class="etapa"><td colspan="2">Análisis factorial</td></tr>
 <tr><td>tabla_factorabilidad(items)</td><td>KMO, Bartlett, paralelo, MAP</td></tr>
-<tr><td>comparar_soluciones(items)</td><td>AFE con 2, 3, 4… factores</td></tr>
+<tr><td>comparar_soluciones(items)</td><td>Nº de factores o rotaciones</td></tr>
 <tr><td>tabla_cargas(afe o fit)</td><td>Cargas, h², R²</td></tr>
 <tr><td>tabla_confiabilidad(fit)</td><td>α (IC), ω, r ítem-total</td></tr>
 <tr><td>tabla_validez(fit)</td><td>CR, AVE, Fornell-Larcker</td></tr>
@@ -102,6 +102,8 @@ datos &lt;- quitar_atipicos(datos, modelo)</pre>
 <tr><td>modelo_alternativo(fit)</td><td>Propone un modelo alternativo y su diagrama</td></tr>
 <tr class="etapa"><td colspan="2">Otros análisis</td></tr>
 <tr><td>tabla_moderacion(datos, x=, w=, y=)</td><td>PROCESS 1, 7, 14</td></tr>
+<tr><td>tabla_regresion(lm(...))</td><td>Regresión: B, β, sr², VIF</td></tr>
+<tr><td>tabla_supuestos_regresion(fit)</td><td>Supuestos; influyentes: tabla_influencia</td></tr>
 <tr><td>tabla_manova(datos, c("Y1","Y2"), "g")</td><td>MANOVA y post hoc</td></tr>
 </table>
 </section></div><div><section><h2><b>6</b>Diagrama</h2>
@@ -136,7 +138,7 @@ citation("apaMultivariate")</pre>
 </table>
 <p class="nota" style="margin-top:1.2mm">Son convenciones, no leyes: cita su fuente. Cómo interpretarlos y redactarlos: guía <b>INTERPRETACION.md</b>.</p>
 </section></div></div>
-<footer><span>Errores comunes: mayúsculas distintas · comillas sin cerrar · paréntesis sin cerrar · no correr las líneas en orden</span><span>v0.11.0</span></footer>
+<footer><span>Errores comunes: mayúsculas distintas · comillas sin cerrar · paréntesis sin cerrar · no correr las líneas en orden</span><span>v0.12.0</span></footer>
 
 <div class="pagina2">
 <header>

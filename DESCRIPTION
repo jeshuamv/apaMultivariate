@@ -1,7 +1,7 @@
 Package: apaMultivariate
 Type: Package
 Title: Tablas y Diagramas APA para Analisis Multivariado
-Version: 0.11.0
+Version: 0.12.0
 Authors@R: person("Jeshua", "Moreno Valladares", email = "jeshuamv@gmail.com",
                   role = c("aut", "cre"))
 URL: https://github.com/jeshuamv/apaMultivariate
@@ -25,7 +25,7 @@ Encoding: UTF-8
 Language: es
 Depends: R (>= 4.0.0)
 Imports: lavaan (>= 0.6-9), graphics, grDevices, haven, readxl, stats, tools, utils, zip
-Suggests: rstudioapi, writexl, car, rstatix, testthat (>= 3.0.0), knitr, rmarkdown, psych, GPArotation, semTools
+Suggests: rstudioapi, writexl, car, rstatix, testthat (>= 3.0.0), knitr, rmarkdown, psych, GPArotation, semTools, MASS
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 RoxygenNote: 7.3.1

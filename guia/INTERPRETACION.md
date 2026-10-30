@@ -23,12 +23,13 @@ honestidad en lugar de forzar la conclusión.
     confirmatorio](#análisis-factorial-confirmatorio)
 5.  [Trayectorias y SEM](#trayectorias-y-sem)
 6.  [Moderación y mediación moderada](#moderación-y-mediación-moderada)
-7.  [MANOVA](#manova)
-8.  [Errores comunes y prácticas
+7.  [Regresión lineal múltiple](#regresión-lineal-múltiple)
+8.  [MANOVA](#manova)
+9.  [Errores comunes y prácticas
     cuestionables](#errores-comunes-y-prácticas-cuestionables)
-9.  [Orden sugerido de la sección de
+10. [Orden sugerido de la sección de
     resultados](#orden-sugerido-de-la-sección-de-resultados)
-10. [Lista de verificación para reportar un AFC o un
+11. [Lista de verificación para reportar un AFC o un
     SEM](#lista-de-verificación-para-reportar-un-afc-o-un-sem)
 
 ------------------------------------------------------------------------
@@ -142,6 +143,13 @@ paralelo** y a la **MAP de Velicer**; la regla de Kaiser (autovalores
 > Los datos resultaron adecuados para el análisis factorial (KMO = .76;
 > prueba de Bartlett, χ²(36) = 904.10, *p* \< .001). El análisis
 > paralelo y la prueba MAP sugirieron retener tres factores.
+
+**Gráfica de sedimentación — `grafica_sedimentacion()`.** Reporta la
+gráfica con la línea del análisis paralelo: es más convincente que el
+“codo” solo, que es subjetivo. Si comparas rotaciones con
+`comparar_soluciones(..., rotate = c("none", "varimax", "promax"))`,
+recuerda que la varianza total y el ajuste son los mismos; lo que cambia
+es cuán clara es la estructura (cada ítem en un factor).
 
 ### Cargas — `tabla_cargas(afe)`
 
@@ -412,6 +420,44 @@ moderador.
 
 ------------------------------------------------------------------------
 
+## Regresión lineal múltiple
+
+**Qué mirar, en este orden.**
+
+1.  **Supuestos — `tabla_supuestos_regresion()`:** normalidad de los
+    residuos, homocedasticidad (Breusch-Pagan), linealidad (RESET) y
+    multicolinealidad (VIF ≤ 5). Si falla la homocedasticidad, usa
+    `tabla_regresion(fit, robusto = TRUE)` (errores HC3; Long y Ervin,
+    2000); si los residuos no son normales y la muestra es pequeña,
+    `bootstrap = 2000`. Con muestras pequeñas estas pruebas tienen poca
+    potencia.
+2.  **Casos influyentes — `tabla_influencia()`:** distancia de Cook \>
+    4/*N* para revisar y \> 1 para preocuparse. No quites casos solo por
+    superar un corte; la tabla de sensibilidad muestra si las
+    conclusiones cambian sin el más influyente.
+3.  **El modelo — `tabla_regresion()`:** *R*² (y *R*² ajustada) con su
+    *F*.
+4.  **Cada predictor:** *B* con su IC, β para comparar predictores
+    medidos en distintas escalas y *sr*² para la varianza que aporta
+    cada uno por sí solo.
+
+> Se realizó una regresión lineal múltiple para predecir el calor
+> desprendido a partir de los cuatro ingredientes. El modelo explicó 98
+> % de la varianza, *R*² = .98, *F*(4, 8) = 111.48, *p* \< .001; sin
+> embargo, ningún predictor fue significativo por separado y los VIF
+> fueron mayores que 38, lo que indica multicolinealidad grave (Tabla
+> 3). Los supuestos de normalidad, homocedasticidad y linealidad no se
+> rechazaron, aunque con 13 casos las pruebas tienen poca potencia.
+
+**Cuidado.** Un *R*² alto con coeficientes no significativos es la señal
+típica de multicolinealidad: el modelo predice bien, pero no puede
+separar el efecto de cada predictor. Y la búsqueda del “mejor”
+subconjunto (`tabla_subconjuntos()`) es exploratoria: si varios modelos
+quedan a menos de 2 puntos de AICc, tienen un apoyo parecido y la teoría
+debe decidir.
+
+------------------------------------------------------------------------
+
 ## MANOVA
 
 **Qué mirar, en este orden.**
@@ -615,6 +661,13 @@ punto si ya está en tu texto.
   Reporting practices in confirmatory factor analysis: An overview and
   some recommendations. *Psychological Methods, 14*(1), 6–23.
   <https://doi.org/10.1037/a0014694>
+- Hurvich, C. M., & Tsai, C.-L. (1989). Regression and time series model
+  selection in small samples. *Biometrika, 76*(2), 297–307.
+  <https://doi.org/10.1093/biomet/76.2.297>
+- Long, J. S., & Ervin, L. H. (2000). Using heteroscedasticity
+  consistent standard errors in the linear regression model. *The
+  American Statistician, 54*(3), 217–224.
+  <https://doi.org/10.1080/00031305.2000.10474549>
 - MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model
   modifications in covariance structure analysis: The problem of
   capitalization on chance. *Psychological Bulletin, 111*(3), 490–504.

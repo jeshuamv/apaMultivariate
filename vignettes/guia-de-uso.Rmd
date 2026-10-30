@@ -39,6 +39,7 @@ párrafo de método. Esta guía muestra cómo usarlo, paso a paso.
    - [Invarianza de medición](#invarianza-de-medición)
    - [Efectos directos, indirectos y totales](#efectos-directos-indirectos-y-totales)
    - [Análisis de trayectorias y SEM paso a paso](#análisis-de-trayectorias-y-sem-paso-a-paso)
+   - [Regresión lineal múltiple](#regresión-lineal-múltiple)
    - [MANOVA de un factor](#manova-de-un-factor)
    - [Modelos bifactor y de segundo orden](#modelos-bifactor-y-de-segundo-orden)
    - [Moderación y mediación moderada](#moderación-y-mediación-moderada)
@@ -438,6 +439,34 @@ soluciones
 Elige la que tenga sentido teórico y una estructura clara; sus cargas, con
 `tabla_cargas(soluciones$soluciones[["3"]])`.
 
+La **gráfica de sedimentación** muestra los mismos autovalores que la tabla,
+con la línea del análisis paralelo: se retienen los factores cuyo punto queda
+por encima de la línea punteada.
+
+```{r, message = FALSE, fig.width = 4.5, fig.height = 3.6}
+grafica_sedimentacion(items, iteraciones = 50)
+```
+
+Para **comparar rotaciones** (o métodos de extracción) con un número de
+factores fijo, pasa varias a `rotate` (o a `fm`). La rotación no cambia la
+varianza total explicada ni el ajuste; solo reparte la varianza entre los
+factores. La segunda tabla muestra en qué factor carga cada ítem en cada
+solución:
+
+```{r, message = FALSE}
+rotaciones <- comparar_soluciones(items, 3, rotate = c("none", "varimax", "promax"),
+                                  fm = "pa", dibujar = FALSE)
+rotaciones
+```
+
+La tabla completa de una de ellas: `tabla_cargas(rotaciones$soluciones[["promax"]])`.
+
+**Si limpias los datos y los guardas en CSV**, usa
+`write.csv(datos, "archivo.csv", row.names = FALSE)`. Sin `row.names = FALSE`,
+R agrega una columna con los números de fila que, al volver a leer el
+archivo con `read.csv()`, entra al análisis como si fuera un ítem.
+`leer_datos()` la quita sola y `revisar_datos()` avisa si la encuentra.
+
 ### Cargas factoriales
 
 En un **exploratorio**, la tabla incluye la matriz de cargas (de patrón si la
@@ -687,6 +716,46 @@ estándares de reporte recomiendan incluir:
 ```{r}
 tabla_residuales(fit)
 ```
+
+### Regresión lineal múltiple
+
+Para una regresión estimada con `lm()` hay cuatro tablas; la plantilla
+`plantilla("regresion")` las reúne. Con los datos del cemento de Hald (13
+mezclas, calor desprendido según cuatro ingredientes):
+
+```{r}
+fit_hald <- lm(y ~ x1 + x2 + x3 + x4, data = MASS::cement)
+tabla_regresion(fit_hald)
+```
+
+La nota avisa de los dos problemas de este ejemplo clásico: VIF muy altos
+(los ingredientes suman casi 100 %, así que unos se predicen con otros) y muy
+pocos casos por predictor. Por eso ningún coeficiente es significativo aunque
+el R² sea de .98. Con `robusto = TRUE` se usan errores estándar HC3 y con
+`bootstrap = 2000`, intervalos por bootstrap.
+
+Los supuestos, con su interpretación:
+
+```{r}
+tabla_supuestos_regresion(fit_hald)
+```
+
+Los casos influyentes y cuánto cambian los coeficientes sin el más
+influyente:
+
+```{r}
+tabla_influencia(fit_hald)
+```
+
+Y todas las combinaciones de predictores, ordenadas por AICc:
+
+```{r}
+tabla_subconjuntos(fit_hald)
+```
+
+Con x1 y x2 se obtiene casi el mismo R² con mejores AICc, BIC y PRESS. Pero
+elegir predictores con los mismos datos aprovecha el azar: trátalo como
+exploratorio y deja que la teoría decida.
 
 ### MANOVA de un factor
 

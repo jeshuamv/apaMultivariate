@@ -3,9 +3,9 @@ bibentry(
   title = "{apaMultivariate}: Tablas y diagramas APA para análisis multivariado",
   author = person("Jeshua", "Moreno Valladares"),
   year = "2026",
-  note = paste("Paquete de R, versión", utils::packageVersion("apaMultivariate")),
+  note = paste("Paquete de R, versión", meta$Version),
   url = "https://github.com/jeshuamv/apaMultivariate",
   textVersion = paste0("Moreno Valladares, J. (", "2026",
                        "). apaMultivariate: Tablas y diagramas APA para análisis multivariado (Paquete de R, versión ",
-                       utils::packageVersion("apaMultivariate"), "). https://github.com/jeshuamv/apaMultivariate")
+                       meta$Version, "). https://github.com/jeshuamv/apaMultivariate")
 )

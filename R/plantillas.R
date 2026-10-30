@@ -5,7 +5,8 @@ TIPOS_PLANTILLA <- c(afe = "An\u00e1lisis factorial exploratorio",
                      trayectorias = "An\u00e1lisis de trayectorias (path)",
                      sem = "Modelo de ecuaciones estructurales (medici\u00f3n + estructural)",
                      moderacion = "Moderaci\u00f3n y mediaci\u00f3n moderada (PROCESS 1, 7 y 14)",
-                     manova = "MANOVA de un factor")
+                     manova = "MANOVA de un factor",
+                     regresion = "Regresi\u00f3n lineal m\u00faltiple")
 
 #' Abrir una plantilla de análisis lista para llenar
 #'
@@ -19,7 +20,7 @@ TIPOS_PLANTILLA <- c(afe = "An\u00e1lisis factorial exploratorio",
 #' número al nombre (`analisis_afc_2.R`, ...).
 #'
 #' @param tipo Tipo de análisis: `"afe"`, `"afc"`, `"trayectorias"`, `"sem"`,
-#'   `"moderacion"` o `"manova"`. Sin argumento, muestra la lista.
+#'   `"moderacion"`, `"manova"` o `"regresion"`. Sin argumento, muestra la lista.
 #' @param archivo Nombre del script que se crea. Por defecto
 #'   `analisis_<tipo>.R` en la carpeta de trabajo (`getwd()`).
 #' @param abrir Si es `TRUE` (por defecto en sesiones interactivas), abre el
@@ -40,6 +41,7 @@ plantilla <- function(tipo = NULL, archivo = NULL, abrir = interactive()) {
   if (tipo %in% c("path", "trayectoria")) tipo <- "trayectorias"
   if (tipo == "cfa") tipo <- "afc"
   if (tipo == "efa") tipo <- "afe"
+  if (tipo %in% c("regression", "regresion_multiple", "lm")) tipo <- "regresion"
   if (!tipo %in% names(TIPOS_PLANTILLA))
     stop("No hay plantilla \"", tipo, "\". Las disponibles son: ",
          paste0("\"", names(TIPOS_PLANTILLA), "\"", collapse = ", "), ".", call. = FALSE)

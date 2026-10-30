@@ -1,3 +1,31 @@
+# apaMultivariate 0.12.0
+
+* Regresión lineal múltiple (con `lm()`), con su plantilla `plantilla("regresion")`:
+  * `tabla_regresion()`: B, EE, IC, β, *t*, *p*, sr² y VIF, con R², R²
+    ajustada y *F* en la nota; errores estándar robustos HC3 (`robusto = TRUE`)
+    e intervalos por bootstrap (`bootstrap = 2000`). Avisa si hay
+    multicolinealidad grave o pocos casos por predictor.
+  * `tabla_supuestos_regresion()`: Shapiro-Wilk, Breusch-Pagan (Koenker),
+    RESET, Durbin-Watson, VIF máximo y distancia de Cook, con una columna de
+    interpretación. Coincide con `lmtest::bptest()` y `lmtest::resettest()`.
+  * `tabla_influencia()`: residuo estudentizado, apalancamiento, Cook, DFFITS,
+    DFBETAS y COVRATIO con sus puntos de corte, y una tabla de sensibilidad con
+    los coeficientes con y sin el caso más influyente.
+  * `tabla_subconjuntos()`: todas las combinaciones de predictores con R²
+    ajustada, Cp de Mallows, AICc, BIC y PRESS.
+* `grafica_sedimentacion()`: gráfica de sedimentación con la línea del análisis
+  paralelo (factores, componentes o ambos); coincide con `tabla_factorabilidad()`.
+* `comparar_soluciones()` compara también rotaciones (`rotate = c("none",
+  "varimax", "promax")`) y métodos de extracción (`fm = c("pa", "ml")`), con la
+  varianza de cada factor y una tabla del factor en que carga cada ítem en cada
+  solución. La varianza explicada ahora es la suma de las comunalidades (antes,
+  con rotaciones oblicuas, se sumaban las cargas de patrón al cuadrado).
+* `leer_datos()` quita la columna de números de fila que agrega
+  `write.csv()` sin `row.names = FALSE`, y `revisar_datos()` avisa si una
+  columna parece números de fila o un identificador.
+* Plantilla de AFE con la gráfica de sedimentación y la comparación de
+  rotaciones.
+
 # apaMultivariate 0.11.0
 
 * `modelos_rivales()`: compara un AFC con sus rivales teóricos (un factor,

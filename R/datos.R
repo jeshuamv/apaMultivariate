@@ -4,6 +4,16 @@
 sin_acentos <- function(x) chartr("\u00e1\u00e9\u00ed\u00f3\u00fa\u00c1\u00c9\u00cd\u00d3\u00da\u00f1\u00d1\u00fc\u00dc\u00e0\u00e8\u00ec\u00f2\u00f9",
                                   "aeiouAEIOUnNuUaeiou", x)
 
+# Columna con los números de fila que agregan write.csv(row.names = TRUE) o
+# Excel/pandas: sin nombre (o "X", "...1", "Unnamed: 0") y con enteros únicos
+# en orden creciente.
+#' @noRd
+nombre_de_indice <- function(n) tolower(trimws(n)) %in% c("", "x", "...1", "unnamed: 0", "v1", "variable", "row.names", "rownames")
+#' @noRd
+es_correlativa <- function(x) {
+  is.numeric(x) && length(x) >= 5 && !anyNA(x) && all(x == round(x)) && all(diff(x) > 0)
+}
+
 # Nombres que lavaan acepta sin problemas: letras, números y guion bajo
 #' @noRd
 nombres_limpios <- function(n) {
@@ -95,6 +105,12 @@ leer_datos <- function(archivo = NULL, hoja = 1, perdidos = NULL, limpiar_nombre
     cambios <- 0
     for (j in seq_along(d)) if (is.numeric(d[[j]])) { k <- d[[j]] %in% perdidos; cambios <- cambios + sum(k); d[[j]][k] <- NA }
     message("Se marcaron como perdidos ", cambios, " valores con los c\u00f3digos ", paste(perdidos, collapse = ", "), ".")
+  }
+  ind <- which(vapply(seq_along(d), function(j) nombre_de_indice(names(d)[j]) && es_correlativa(d[[j]]), logical(1)))
+  if (length(ind) && ind[1] == 1) {
+    message("Quit\u00e9 la primera columna", if (nzchar(trimws(names(d)[1]))) paste0(" ('", names(d)[1], "')"), ": no tiene un nombre real y solo contiene los n\u00fameros de fila ",
+            "(la agrega write.csv() cuando no se pone row.names = FALSE). Si no la quitara, entrar\u00eda al an\u00e1lisis como si fuera una variable.")
+    d <- d[, -1, drop = FALSE]
   }
   if (limpiar_nombres) {
     nuevos <- nombres_limpios(names(d)); cambio <- nuevos != names(d)
@@ -222,6 +238,17 @@ revisar_datos <- function(datos, modelo = NULL, variables = NULL) {
     }
     num <- setdiff(names(d), no_num)
     if (length(num)) {
+      corr <- num[vapply(num, function(v) es_correlativa(d[[v]]), logical(1))]
+      ind <- corr[nombre_de_indice(corr)]
+      if (length(ind))
+        agregar(if (is.null(modelo)) "problema" else "aviso",
+                paste0("La columna '", ind[1], "' solo contiene los n\u00fameros de fila (la agrega write.csv() si no pones row.names = FALSE). ",
+                       "Qu\u00edtala antes de analizar, o entrar\u00e1 como si fuera un \u00edtem: datos$", if (grepl("^[A-Za-z.][A-Za-z0-9._]*$", ind[1])) ind[1] else paste0("`", ind[1], "`"),
+                       " <- NULL. Al guardar un CSV, usa write.csv(datos, \"archivo.csv\", row.names = FALSE)."))
+      otras <- setdiff(corr, ind)
+      if (length(otras) && is.null(modelo))
+        agregar("aviso", paste0("Estas columnas parecen un n\u00famero de caso o identificador (enteros distintos en orden creciente): ", paste(otras, collapse = ", "),
+                                ". No las incluyas en el an\u00e1lisis; para dejar solo los \u00edtems usa, por ejemplo, datos[, c(\"item1\", \"item2\")] o subset(datos, select = -c(", otras[1], "))."))
       cte <- num[vapply(num, function(v) length(unique(stats::na.omit(d[[v]]))) <= 1, logical(1))]
       if (length(cte)) agregar("problema", paste0("Estas variables tienen el mismo valor en todos los casos: ", paste(cte, collapse = ", "),
                                                   ". No aportan informaci\u00f3n y hacen fallar el an\u00e1lisis; qu\u00edtalas del modelo."))

@@ -8,7 +8,7 @@ plantilla(tipo = NULL, archivo = NULL, abrir = interactive())
 }
 \arguments{
 \item{tipo}{Tipo de análisis: \code{"afe"}, \code{"afc"}, \code{"trayectorias"}, \code{"sem"},
-\code{"moderacion"} o \code{"manova"}. Sin argumento, muestra la lista.}
+\code{"moderacion"}, \code{"manova"} o \code{"regresion"}. Sin argumento, muestra la lista.}
 
 \item{archivo}{Nombre del script que se crea. Por defecto
 \verb{analisis_<tipo>.R} en la carpeta de trabajo (\code{getwd()}).}

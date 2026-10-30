@@ -36,6 +36,7 @@ método. Esta guía muestra cómo usarlo, paso a paso.
       totales](#efectos-directos-indirectos-y-totales)
     - [Análisis de trayectorias y SEM paso a
       paso](#análisis-de-trayectorias-y-sem-paso-a-paso)
+    - [Regresión lineal múltiple](#regresión-lineal-múltiple)
     - [MANOVA de un factor](#manova-de-un-factor)
     - [Modelos bifactor y de segundo
       orden](#modelos-bifactor-y-de-segundo-orden)
@@ -616,24 +617,117 @@ soluciones
 #> ─────────────────────────────────────────────────────────────────────────────
 #> Factores  % var.  Sin carga  Cruzadas  < 3 ítems  r máx.  RMSEA   TLI    BIC 
 #> ─────────────────────────────────────────────────────────────────────────────
-#> 2          42.7       1         0          0       .35    .138   .762   19.2 
-#> 3          52.4       0         1          0       .33    .053   .964   -46.1
-#> 4          52.6       0         2          2       .72    .000   1.003  -28.7
+#> 2          43.4       1         0          0       .35    .138   .762   19.2 
+#> 3          53.9       0         1          0       .33    .053   .964   -46.1
+#> 4          58.4       0         2          2       .72    .000   1.003  -28.7
 #> ─────────────────────────────────────────────────────────────────────────────
 #> Nota. Extracción ml, rotación oblimin. % var. = varianza común explicada
-#> acumulada; Sin carga = ítems sin ninguna carga ≥ .40; Cruzadas = ítems con
-#> dos cargas ≥ .30 que difieren en menos de .20; < 3 ítems = factores con
-#> menos de tres ítems; r máx. = correlación más alta entre factores. En
-#> negritas, lo que conviene revisar. 2 factores (sin carga: x2). 3 factores
-#> (cruzadas: x9). 4 factores (cruzadas: x6, x9).
+#> (suma de comunalidades); Sin carga = ítems sin ninguna carga ≥ .40; Cruzadas
+#> = ítems con dos cargas ≥ .30 que difieren en menos de .20; < 3 ítems =
+#> factores con menos de tres ítems; r máx. = correlación más alta entre
+#> factores. En negritas, lo que conviene revisar. 2 factores (sin carga: x2).
+#> 3 factores (cruzadas: x9). 4 factores (cruzadas: x6, x9).
+#> 
+#> Factor con la carga más alta de cada ítem, por solución
+#> ────────────────────────────────────────
+#> Ítem  2 factores  3 factores  4 factores
+#> ────────────────────────────────────────
+#> x1    ML2 (.43)   ML3 (.60)   ML4 (.63) 
+#> x2    ML2 (.25)   ML3 (.51)   ML4 (.51) 
+#> x3    ML2 (.46)   ML3 (.69)   ML4 (.67) 
+#> x4    ML1 (.85)   ML1 (.84)   ML2 (.85) 
+#> x5    ML1 (.87)   ML1 (.89)   ML1 (.97) 
+#> x6    ML1 (.82)   ML1 (.81)   ML2 (.41) 
+#> x7    ML2 (.45)   ML2 (.72)   ML3 (.77) 
+#> x8    ML2 (.63)   ML2 (.70)   ML3 (.65) 
+#> x9    ML2 (.74)   ML2 (.46)   ML3 (.42) 
+#> ────────────────────────────────────────
+#> Nota. Entre paréntesis, la carga (de patrón, si la rotación
+#> es oblicua). Para la tabla completa de una solución:
+#> tabla_cargas(r$soluciones[["nombre"]]).
 #> 
 #> Elige la solución que tenga sentido teórico y una estructura clara: cada ítem
 #> en un solo factor y al menos tres ítems por factor. Para ver sus cargas:
-#> tabla_cargas(r$soluciones[["3"]]) (cambia el 3 por el número de factores).
+#> tabla_cargas(r$soluciones[["2"]]) (nombres disponibles: 2, 3, 4).
 ```
 
 Elige la que tenga sentido teórico y una estructura clara; sus cargas,
 con `tabla_cargas(soluciones$soluciones[["3"]])`.
+
+La **gráfica de sedimentación** muestra los mismos autovalores que la
+tabla, con la línea del análisis paralelo: se retienen los factores cuyo
+punto queda por encima de la línea punteada.
+
+``` r
+grafica_sedimentacion(items, iteraciones = 50)
+```
+
+<img src="GUIA_files/figure-gfm/unnamed-chunk-25-1.png" width="100%" />
+
+Para **comparar rotaciones** (o métodos de extracción) con un número de
+factores fijo, pasa varias a `rotate` (o a `fm`). La rotación no cambia
+la varianza total explicada ni el ajuste; solo reparte la varianza entre
+los factores. La segunda tabla muestra en qué factor carga cada ítem en
+cada solución:
+
+``` r
+rotaciones <- comparar_soluciones(items, 3, rotate = c("none", "varimax", "promax"),
+                                  fm = "pa", dibujar = FALSE)
+rotaciones
+#> 
+#> Comparación de soluciones factoriales
+#> ─────────────────────────────────────────────────────────────────────────────────────────────
+#> Rotación   % var.   % por factor   Sin carga  Cruzadas  < 3 ítems  r máx.  RMSEA  TLI    BIC 
+#> ─────────────────────────────────────────────────────────────────────────────────────────────
+#> sin rotar   54.0   31.4/13.5/9.0       1         5          2        —     .054   .963  -45.9
+#> varimax     54.0   24.3/14.9/14.8      0         1          0        —     .054   .963  -45.9
+#> promax      54.0   24.6/14.7/14.6      0         1          0       .39    .054   .963  -45.9
+#> ─────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. Extracción pa, 3 factores. % var. = varianza común explicada (suma de
+#> comunalidades); % por factor = varianza de cada factor después de rotar; Sin
+#> carga = ítems sin ninguna carga ≥ .40; Cruzadas = ítems con dos cargas ≥ .30
+#> que difieren en menos de .20; < 3 ítems = factores con menos de tres ítems; r
+#> máx. = correlación más alta entre factores. En negritas, lo que conviene
+#> revisar. La rotación no cambia la varianza total explicada ni el ajuste
+#> (RMSEA, TLI, BIC); solo reparte la varianza entre los factores para que cada
+#> ítem cargue en uno (estructura simple). Las rotaciones oblicuas (promax,
+#> oblimin) permiten que los factores se correlacionen, lo habitual en ciencias
+#> sociales. sin rotar (sin carga: x2; cruzadas: x2, x3, x7, x8, x9). varimax
+#> (cruzadas: x9). promax (cruzadas: x9).
+#> 
+#> Factor con la carga más alta de cada ítem, por solución
+#> ──────────────────────────────────────
+#> Ítem  sin rotar    varimax    promax  
+#> ──────────────────────────────────────
+#> x1    PA1 (.58)   PA3 (.61)  PA3 (.60)
+#> x2    PA3 (.39)   PA3 (.49)  PA3 (.53)
+#> x3    PA3 (.44)   PA3 (.66)  PA3 (.70)
+#> x4    PA1 (.77)   PA1 (.83)  PA1 (.85)
+#> x5    PA1 (.75)   PA1 (.86)  PA1 (.89)
+#> x6    PA1 (.76)   PA1 (.80)  PA1 (.80)
+#> x7    PA3 (-.48)  PA2 (.70)  PA2 (.75)
+#> x8    PA2 (.54)   PA2 (.70)  PA2 (.71)
+#> x9    PA1 (.51)   PA2 (.52)  PA2 (.48)
+#> ──────────────────────────────────────
+#> Nota. Entre paréntesis, la carga (de patrón, si la rotación
+#> es oblicua). Para la tabla completa de una solución:
+#> tabla_cargas(r$soluciones[["nombre"]]).
+#> 
+#> Elige la solución que tenga sentido teórico y una estructura clara: cada ítem
+#> en un solo factor y al menos tres ítems por factor. Para ver sus cargas:
+#> tabla_cargas(r$soluciones[["none"]]) (nombres disponibles: none, varimax,
+#> promax).
+```
+
+La tabla completa de una de ellas:
+`tabla_cargas(rotaciones$soluciones[["promax"]])`.
+
+**Si limpias los datos y los guardas en CSV**, usa
+`write.csv(datos, "archivo.csv", row.names = FALSE)`. Sin
+`row.names = FALSE`, R agrega una columna con los números de fila que,
+al volver a leer el archivo con `read.csv()`, entra al análisis como si
+fuera un ítem. `leer_datos()` la quita sola y `revisar_datos()` avisa si
+la encuentra.
 
 ### Cargas factoriales
 
@@ -1070,7 +1164,7 @@ multivariada, los puntos siguen la línea punteada; los atípicos (*p* \<
 grafica_normalidad(fit3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-38-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-40-1.png" width="100%" />
 
 **2. Diagrama** estandarizado (cargas y β, R²) y no estandarizado (B, y,
 como en AMOS, la varianza de cada variable exógena y de cada error):
@@ -1079,7 +1173,7 @@ como en AMOS, la varianza de cada variable exógena y de cada error):
 diagrama_sem(fit3, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-39-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-41-1.png" width="100%" />
 
 **3. Ajuste e identificación.** Cada índice contra los criterios
 excelente y aceptable, con su fuente, y la identificación del modelo
@@ -1222,7 +1316,7 @@ modelo original.
 alt <- modelo_alternativo(fit3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-44-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-46-1.png" width="100%" />
 
 ``` r
 alt
@@ -1337,6 +1431,152 @@ tabla_residuales(fit)
 #> 5 de 36 pares. El residual más grande es el de x2 y x7
 #> (-.19). SRMR = .065.
 ```
+
+### Regresión lineal múltiple
+
+Para una regresión estimada con `lm()` hay cuatro tablas; la plantilla
+`plantilla("regresion")` las reúne. Con los datos del cemento de Hald
+(13 mezclas, calor desprendido según cuatro ingredientes):
+
+``` r
+fit_hald <- lm(y ~ x1 + x2 + x3 + x4, data = MASS::cement)
+tabla_regresion(fit_hald)
+#> 
+#> Regresión lineal múltiple para predecir y
+#> ─────────────────────────────────────────────────────────────────────────────
+#> Predictor       B     EE        IC 95 %        β      t     p    sr²    VIF  
+#> ─────────────────────────────────────────────────────────────────────────────
+#> (Intercepto)  62.41  70.07  [-99.18, 223.99]        0.89   .399              
+#> x1            1.55   0.74    [-0.17, 3.27]    .61   2.08   .071  .010  38.50 
+#> x2            0.51   0.72    [-1.16, 2.18]    .53   0.70   .501  .001  254.42
+#> x3            0.10   0.75    [-1.64, 1.84]    .04   0.14   .896  .000  46.87 
+#> x4            -0.14  0.71    [-1.78, 1.49]    -.16  -0.20  .844  .000  282.51
+#> ─────────────────────────────────────────────────────────────────────────────
+#> Nota. N = 13. R² = .982, R² ajustada = .974, F(4, 8) = 111.48, p < .001. B =
+#> coeficiente no estandarizado; EE = error estándar; IC = intervalo de
+#> confianza; β = coeficiente estandarizado; sr² = correlación semiparcial al
+#> cuadrado (varianza que explica cada predictor por sí solo); VIF = factor de
+#> inflación de la varianza. Hay VIF mayores que 10 (en negritas): la
+#> multicolinealidad es grave y los coeficientes individuales son inestables y
+#> difíciles de interpretar, aunque el R² del modelo sí es válido. Con 3.2
+#> casos por predictor (se recomiendan al menos 10 a 15), las estimaciones son
+#> poco estables.
+```
+
+La nota avisa de los dos problemas de este ejemplo clásico: VIF muy
+altos (los ingredientes suman casi 100 %, así que unos se predicen con
+otros) y muy pocos casos por predictor. Por eso ningún coeficiente es
+significativo aunque el R² sea de .98. Con `robusto = TRUE` se usan
+errores estándar HC3 y con `bootstrap = 2000`, intervalos por bootstrap.
+
+Los supuestos, con su interpretación:
+
+``` r
+tabla_supuestos_regresion(fit_hald)
+#> 
+#> Supuestos de la regresión lineal
+#> ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Supuesto                      Prueba                 Estadístico       p    Interpretación                                                                                                                              
+#> ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Normalidad de los residuos    Shapiro-Wilk            W = .970        .890  No se rechaza la normalidad de los residuos.                                                                                                
+#> Homocedasticidad              Breusch-Pagan         χ²(4) = 1.46      .833  La varianza de los residuos es constante.                                                                                                   
+#> Linealidad y especificación   RESET                F(2, 6) = 0.04     .958  No hay señales de relaciones no lineales ni de variables omitidas.                                                                          
+#> Independencia de los errores  Durbin-Watson           DW = 2.05        —    Entre 1.5 y 2.5: sin autocorrelación importante. Solo tiene sentido si el orden de los casos importa (por ejemplo, mediciones en el tiempo).
+#> Multicolinealidad             VIF máximo             282.51 (x4)       —    Grave (VIF > 10): los coeficientes individuales son inestables; considera quitar o combinar predictores muy correlacionados.                
+#> Casos influyentes             Distancia de Cook  máx. = .39 (caso 8)   —    1 caso(s) con D > 4/N (.31) y 0 con D > 1. Revísalos con tabla_influencia(fit).                                                             
+#> ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. N = 13. Pruebas con α = .05; en negritas, los resultados que indican un
+#> problema. Breusch-Pagan en la versión estudentizada de Koenker; RESET con los
+#> predichos al cuadrado y al cubo. Con una muestra pequeña, estas pruebas
+#> tienen poca potencia: un resultado no significativo no demuestra que el
+#> supuesto se cumpla; revisa también las gráficas de residuos (plot(fit)).
+#> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
+```
+
+Los casos influyentes y cuánto cambian los coeficientes sin el más
+influyente:
+
+``` r
+tabla_influencia(fit_hald)
+#> 
+#> Diagnóstico de casos influyentes
+#> ────────────────────────────────────────────────────────────────
+#> Caso    r     h    D   DFFITS  DFBETAS máx.  COVRATIO  Criterios
+#> ────────────────────────────────────────────────────────────────
+#> 8     -1.97  .41  .39  -1.64     .64 (x3)      0.36        3    
+#> 3     -1.06  .58  .30  -1.24    1.10 (x4)      2.19        2    
+#> 6     2.02   .12  .08   0.76     .20 (x4)      0.23        1    
+#> 10    0.20   .70  .02   0.30     .12 (x1)      6.33        1    
+#> 12    0.44   .26  .02   0.26     .14 (x2)      2.31        1    
+#> 5     0.12   .36  .00   0.09     .02 (x2)      3.00        1    
+#> 1     0.00   .55  .00   0.00     .00 (x4)      4.34        1    
+#> ────────────────────────────────────────────────────────────────
+#> Nota. N = 13, p = 5 coeficientes. Puntos de corte: |r| > 2; h >
+#> 2p/N = .77; D > 4/N = .31 (muy influyente si D > 1); |DFFITS| >
+#> 2√(p/N) = 1.24; |DFBETAS| > 2/√N = .55 (entre paréntesis, el
+#> coeficiente más afectado); |COVRATIO − 1| > 3p/N = 1.15. r =
+#> residuo estudentizado; h = apalancamiento; D = distancia de
+#> Cook. En negritas, los valores que superan el corte; Criterios
+#> = cuántos supera. Un caso influyente no se elimina solo por
+#> superar un corte: revisa si es un error de captura y reporta
+#> los resultados con y sin él.
+#> 
+#> Sensibilidad: coeficientes con y sin el caso 8
+#> ───────────────────────────────────────────────────────
+#>               B (todos)   p    B (sin 8)   p    Cambio 
+#> ───────────────────────────────────────────────────────
+#> (Intercepto)    62.41    .399    37.25    .564  -40.3 %
+#> x1              1.55     .071    1.88     .025  21.2 % 
+#> x2              0.51     .501    0.73     .283  43.8 % 
+#> x3              0.10     .896    0.52     .471  409.0 %
+#> x4              -0.14    .844    0.10     .872  172.3 %
+#> R²              .982             .986                  
+#> ───────────────────────────────────────────────────────
+#> Nota. Se quitó el caso con mayor distancia de Cook (D =
+#> .39). En negritas, coeficientes que cambian más de 20 % o
+#> cuya significancia cambia. Si las conclusiones no cambian,
+#> los resultados son robustos a ese caso.
+```
+
+Y todas las combinaciones de predictores, ordenadas por AICc:
+
+``` r
+tabla_subconjuntos(fit_hald)
+#> 
+#> Comparación de todos los subconjuntos de predictores
+#> ─────────────────────────────────────────────────────────────────
+#> Predictores     k   R²   R² aj.    Cp     AICc    BIC     PRESS  
+#> ─────────────────────────────────────────────────────────────────
+#> x1, x2          2  .979   .974    2.68   69.31   66.57    93.88  
+#> x1, x2, x4      3  .982   .976    3.02   72.44   66.69    85.35  
+#> x1, x2, x3      3  .982   .976    3.04   72.48   66.73    90.00  
+#> x1, x4          2  .972   .967    5.50   72.63   69.89    121.22 
+#> x1, x3, x4      3  .981   .975    3.50   73.19   67.44    94.54  
+#> x2, x3, x4      3  .973   .964    7.34   78.04   72.29    146.85 
+#> x1, x2, x3, x4  4  .982   .974    5.00   79.84   69.23    110.35 
+#> x3, x4          2  .935   .922   22.37   83.74   81.00    294.01 
+#> x2, x3          2  .847   .816   62.44   94.93   92.19    701.74 
+#> x4              1  .675   .645   138.73  100.41  99.44   1,194.22
+#> x2              1  .666   .636   142.49  100.74  99.77   1,202.09
+#> x2, x4          2  .680   .616   138.23  104.52  101.78  1,461.81
+#> x1              1  .534   .492   202.55  105.08  104.11  1,699.61
+#> x1, x3          2  .548   .458   198.09  109.01  106.27  2,218.12
+#> x3              1  .286   .221   315.15  110.63  109.65  2,616.36
+#> ─────────────────────────────────────────────────────────────────
+#> Nota. N = 13. Modelos ordenados por AICc. k = número de
+#> coeficientes sin el intercepto; Cp = Cp de Mallows (un buen
+#> modelo tiene Cp cercano a k + 1); AICc = AIC corregido para
+#> muestras pequeñas; PRESS = suma de los errores de predicción
+#> dejando fuera cada caso. Menores AICc, BIC y PRESS indican un
+#> mejor modelo; en negritas, el mejor valor de cada columna.
+#> Elegir predictores con los mismos datos aprovecha el azar;
+#> trátalo como exploratorio y, si puedes, valida el modelo en otra
+#> muestra.
+```
+
+Con x1 y x2 se obtiene casi el mismo R² con mejores AICc, BIC y PRESS.
+Pero elegir predictores con los mismos datos aprovecha el azar: trátalo
+como exploratorio y deja que la teoría decida.
 
 ### MANOVA de un factor
 
@@ -1542,7 +1782,7 @@ región de Johnson-Neyman. La gráfica de la interacción:
 grafica_interaccion(mod)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-51-1.png" width="60%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="60%" />
 
 Con `archivo = "figura2.pdf"` se guarda al ancho de una columna.
 
@@ -1569,7 +1809,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 #> 
 #> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
 #> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
-#> Jorgensen et al., 2022) y apaMultivariate (versión 0.11.0; Moreno Valladares,
+#> Jorgensen et al., 2022) y apaMultivariate (versión 0.12.0; Moreno Valladares,
 #> 2026). El análisis factorial confirmatorio se estimó con una muestra de 301
 #> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
 #> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
@@ -1590,7 +1830,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 #>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
 #> 
 #> Moreno Valladares, J. (2026). apaMultivariate: Tablas y diagramas APA para
-#>     análisis multivariado (Paquete de R, versión 0.11.0).
+#>     análisis multivariado (Paquete de R, versión 0.12.0).
 #>     https://github.com/jeshuamv/apaMultivariate.
 #> 
 #> R Core Team. (2024). R: A language and environment for statistical computing. R
@@ -1667,7 +1907,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-64-1.png" width="100%" />
 
 Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -1677,7 +1917,7 @@ Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-65-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados y,
 como en AMOS, en lugar de la R² se escribe la varianza de cada variable
@@ -1687,7 +1927,7 @@ exógena y de cada error:
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-60-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-66-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -1695,13 +1935,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-61-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-67-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-61-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-67-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -1721,20 +1961,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-63-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-69-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-63-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-69-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-63-3.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-69-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -1747,7 +1987,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-64-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-70-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -1756,7 +1996,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="GUIA_files/figure-gfm/unnamed-chunk-65-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-71-1.png" width="100%" />
 
 ## Guardar el diagrama
 

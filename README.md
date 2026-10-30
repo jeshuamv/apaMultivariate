@@ -2,7 +2,7 @@
 
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE) [![R-CMD-check](https://github.com/jeshuamv/apaMultivariate/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jeshuamv/apaMultivariate/actions/workflows/R-CMD-check.yaml)
 
-**Tablas APA y diagramas para tus análisis factoriales, de trayectorias, SEM, moderación y MANOVA.**
+**Tablas APA y diagramas para tus análisis factoriales, de trayectorias, SEM, regresión múltiple, moderación y MANOVA.**
 
 *Multivariate analysis, APA-ready.* Lee tus datos de Excel o SPSS, revisa que todo esté
 bien, dibuja el diagrama al estilo AMOS y te entrega las tablas en formato APA en Word,
@@ -68,6 +68,7 @@ plantilla("afe")            # análisis factorial exploratorio
 plantilla("sem")            # ecuaciones estructurales (medición + estructural)
 plantilla("moderacion")     # moderación y mediación moderada
 plantilla("manova")         # MANOVA
+plantilla("regresion")      # regresión lineal múltiple
 ```
 
 Se crea un script (`analisis_trayectorias.R`, …) en tu carpeta y se abre en RStudio.
@@ -275,7 +276,7 @@ la misma lógica y agregan las tablas de medición (cargas, confiabilidad, valid
 | Código | Qué hace |
 |---|---|
 | `leer_datos("archivo")` | Lee Excel, SPSS, CSV (coma o punto y coma), Stata, SAS o texto; sin nada, abre una ventana. Quita las etiquetas de SPSS y arregla los nombres con espacios o acentos. `perdidos = c(99)` marca códigos de dato perdido |
-| `revisar_datos(datos)` | Revisa los datos: columnas de texto o constantes, códigos de perdido, % de perdidos, ítems tipo Likert, tamaño de muestra |
+| `revisar_datos(datos)` | Revisa los datos: columnas de texto o constantes, códigos de perdido, % de perdidos, ítems tipo Likert, tamaño de muestra, y columnas de números de fila o identificadores que no deben entrar al análisis |
 | `revisar_datos(datos, modelo)` | Lo mismo, y además que los nombres del modelo existan en los datos |
 | `revisar_modelo(fit)` | Después de estimar: explica en español los avisos de `lavaan` (no convergió, no identificado, casos Heywood…) y qué hacer |
 | `plantilla("tipo")` | Crea el script completo de un análisis |
@@ -293,7 +294,8 @@ Listas para Word, las que suelen pedirse en una tarea, una tesis o un artículo:
 | | `tabla_atipicos(datos)` | Atípicos multivariados (Mahalanobis, p1 y p2) |
 | | `quitar_atipicos(datos, modelo)` | Devuelve los datos sin los atípicos (*p* < .001) y te dice cuántos quitó |
 | AFE | `tabla_factorabilidad(datos)` | KMO, Bartlett y cuántos factores retener (Kaiser, análisis paralelo, MAP) |
-| | `comparar_soluciones(datos)` | Compara soluciones con distinto número de factores (ítems sin carga, cargas cruzadas, ajuste) y dibuja cada una |
+| | `grafica_sedimentacion(datos)` | Gráfica de sedimentación con la línea del análisis paralelo |
+| | `comparar_soluciones(datos)` | Compara soluciones con distinto número de factores, rotaciones (`rotate = c("none", "varimax", "promax")`) o métodos de extracción (`fm = c("pa", "ml")`): ítems sin carga, cargas cruzadas, ajuste; dibuja cada una |
 | | `tabla_cargas(afe)` | Cargas, comunalidades, varianza explicada |
 | Medición | `tabla_cargas(fit)` | Cargas estandarizadas, EE, *p* y R² |
 | | `tabla_confiabilidad(fit)` | Alfa de Cronbach (con IC), omega de McDonald, correlaciones ítem-total |
@@ -314,6 +316,10 @@ Listas para Word, las que suelen pedirse en una tarea, una tesis o un artículo:
 | | `tabla_hipotesis(fit, c(H1 = "X -> Y (+)"))` | Cada hipótesis: se sostiene o se rechaza |
 | | `tabla_vif(fit)` | Multicolinealidad entre predictores |
 | Moderación | `tabla_moderacion(datos, x = "X", w = "W", y = "Y")` | Moderación (modelo 1 de PROCESS) con pendientes simples y Johnson-Neyman; mediación moderada (modelos 7 y 14) con el índice de mediación moderada. `grafica_interaccion()` dibuja la interacción |
+| Regresión | `tabla_regresion(fit)` | Regresión múltiple con `lm()`: B, EE, IC, β, *t*, *p*, sr² y VIF; R², R² ajustada y *F*. `robusto = TRUE` (HC3) o `bootstrap = 2000` |
+| | `tabla_supuestos_regresion(fit)` | Normalidad (Shapiro-Wilk), homocedasticidad (Breusch-Pagan), linealidad (RESET), Durbin-Watson, VIF y Cook, con su interpretación |
+| | `tabla_influencia(fit)` | Casos influyentes (residuo, *h*, Cook, DFFITS, DFBETAS, COVRATIO) y coeficientes con y sin el más influyente |
+| | `tabla_subconjuntos(fit)` | Todas las combinaciones de predictores con R² ajustada, Cp de Mallows, AICc, BIC y PRESS |
 | MANOVA | `tabla_manova(datos, c("Y1", "Y2"), "grupo")` | Pillai, Wilks, Hotelling, Roy con η²p; M de Box y demás supuestos; ANOVA de seguimiento; post hoc (Tukey o Games-Howell) con *d* de Cohen |
 | Método | `parrafo_metodo(fit)` | Párrafo de software y estimación (con Wishart y atípicos quitados, si los hubo), con referencias APA |
 
@@ -471,6 +477,8 @@ Revisa siempre las instrucciones para autores de tu revista. Más detalles en la
 - **Moderación con variables observadas** (puntajes de las escalas), como PROCESS; no
   hace interacciones entre variables latentes.
 - **MANOVA de un factor**; no hace diseños factoriales ni de medidas repetidas.
+- **Regresión lineal** con `lm()`; no hace regresión logística ni jerárquica por pasos
+  (para comparar bloques de predictores usa `anova(fit1, fit2)`).
 - **No cubre** modelos multinivel, de crecimiento, teoría de respuesta al ítem ni análisis
   de redes.
 - **Diagramas complejos**: en modelos con muchas relaciones cruzadas, el acomodo

@@ -40,11 +40,26 @@ tabla_descriptivos(items)
 # Para el número de factores, da más peso al análisis paralelo y a la MAP.
 tabla_factorabilidad(items)
 
+# Gráfica de sedimentación con el análisis paralelo: se retienen los factores
+# cuyo punto queda por encima de la línea punteada (datos aleatorios).
+grafica_sedimentacion(items)
+grafica_sedimentacion(items, archivo = "figura_sedimentacion.png")
+
 # Compara las soluciones con el número de factores que sugieren los criterios:
 # ítems sin carga, cargas cruzadas, factores con menos de tres ítems, ajuste.
 # Elige la que tenga sentido teórico y una estructura clara.
 soluciones <- comparar_soluciones(items)
 soluciones
+
+# Compara rotaciones con el número de factores elegido (sin rotar, varimax,
+# promax). La rotación no cambia la varianza total ni el ajuste: solo reparte
+# las cargas para que cada ítem quede en un factor.
+# >>> CAMBIA AQUÍ <<<  el 3 por tu número de factores; fm = "pa" (ejes
+# principales) o "ml" (máxima verosimilitud), el que use tu clase.
+rotaciones <- comparar_soluciones(items, 3, rotate = c("none", "varimax", "promax"), fm = "pa", dibujar = FALSE)
+rotaciones
+# Tabla completa de cargas de una de ellas:
+# tabla_cargas(rotaciones$soluciones[["promax"]])
 
 
 # --- 4. Estimar el AFE ------------------------------------------------------------
@@ -72,6 +87,7 @@ tabla_confiabilidad(items, factores = list(
 guardar_tablas(
   tabla_descriptivos(items),
   tabla_factorabilidad(items),
+  rotaciones$tabla,
   tabla_cargas(afe),
   archivo = "tablas_afe.docx"
 )
