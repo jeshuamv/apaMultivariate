@@ -47,7 +47,8 @@ grafica_normalidad <- function(datos, variables = NULL, alfa = .001, archivo = N
     lim <- range(c(0, q, res$d2))
     graphics::plot(res$cuantil, res$d2, pch = 16, cex = 0.55, col = ifelse(res$atipico, "#B03A2E", "#1A1A1A"),
                    xlim = lim, ylim = lim, bty = "l",
-                   xlab = txt_disp(tx(paste0("Cuantiles te\u00f3ricos \u03c7\u00b2 (gl = ", k, ")"), paste0("Theoretical \u03c7\u00b2 quantiles (df = ", k, ")"))),
+                   xlab = if (en()) bquote("Theoretical " * chi^2 * " quantiles (df = " * .(k) * ")")
+                          else bquote("Cuantiles te\u00f3ricos " * chi^2 * " (gl = " * .(k) * ")"),
                    ylab = txt_disp(tx("Distancia de Mahalanobis (D\u00b2)", "Mahalanobis distance (D\u00b2)")), cex.lab = 0.95, cex.axis = 0.85)
     graphics::abline(0, 1, lty = 2, col = "#6E6E6E")
     lim_at <- stats::qchisq(1 - alfa, k)
