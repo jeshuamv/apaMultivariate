@@ -56,6 +56,7 @@ revisar_modelo(fit)          # ¿hubo problemas al estimar?
 # --- 4. Supuestos ---------------------------------------------------------------
 normalidad <- tabla_normalidad(fit)
 normalidad                   # c.r. multivariado < 2: normalidad multivariada
+grafica_normalidad(fit)      # gráfica Q-Q chi-cuadrado: los puntos deben seguir la línea
 atipicos <- tabla_atipicos(fit)
 atipicos                     # p1 ≤ .001: caso atípico multivariado
 tabla_vif(fit)               # VIF > 5: multicolinealidad
@@ -110,16 +111,25 @@ hipotesis
 
 
 # --- 9. (Opcional) Modelo alternativo ---------------------------------------------
-# Por ejemplo, sin una trayectoria no significativa; compáralo con el original.
-# alterno <- sem("Examination ~ Education
-#                 Fertility ~ Education + Catholic", data = datos, likelihood = "wishart")
-# tabla_comparacion("Original" = fit, "Alternativo" = alterno, anidados = FALSE)
+# Si el ajuste no es bueno o hay trayectorias no significativas, el paquete
+# propone un modelo alternativo: quita una por una las trayectorias no
+# significativas, prueba si eso empeora el ajuste, lo compara con el original
+# y dibuja su diagrama. Es exploratorio: justifica cada cambio con la teoría.
+# alt <- modelo_alternativo(fit, archivo = "diagrama_alternativo.png")
+# alt                                   # cambios, prueba, sintaxis y comparación
+# Si además quieres agregar la trayectoria que más sugieren los índices de
+# modificación (solo si tiene sustento teórico):
+# alt <- modelo_alternativo(fit, agregar = 1, archivo = "diagrama_alternativo.png")
+# Sus tablas, igual que las del modelo original, pero con alt$fit:
+# tabla_criterios_ajuste(alt$fit)
+# tabla_efectos(alt$fit)
 
 
 # --- 10. Guardar en Word ------------------------------------------------------------
 guardar_tablas(normalidad, atipicos, ajuste, parametros, efectos, hipotesis,
                archivo = "tablas_trayectorias.docx")
 parrafo_metodo(fit, bootstrap = 1000, archivo = "metodo_trayectorias.docx")
+# Si quitaste atípicos, el párrafo lo menciona si agregas:  atipicos = datos
 getwd()                      # carpeta donde quedaron el Word y los diagramas
 
 

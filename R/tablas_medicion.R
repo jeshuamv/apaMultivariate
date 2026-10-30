@@ -165,10 +165,16 @@ tabla_comparacion <- function(..., referencia = c("anterior", "primero"), anidad
   nms <- names(fits); if (is.null(nms)) nms <- rep("", length(fits))
   nms[nms == ""] <- paste(tx("Modelo", "Model"), which(nms == ""))
   I <- as.data.frame(do.call(rbind, lapply(fits, indices)))
+  # Comparables: mismas variables observadas y mismos casos. Si no, el chi-cuadrado,
+  # el AIC y el BIC miden cosas distintas y no deben compararse.
+  vars <- lapply(fits, function(f) sort(lavaan::lavNames(f, "ov")))
+  ns <- vapply(fits, function(f) sum(unlist(lavaan::lavInspect(f, "nobs"))), numeric(1))
+  comparable <- vapply(seq_along(fits), function(i) identical(vars[[i]], vars[[1]]) && ns[i] == ns[1], logical(1))
+  todos_comp <- all(comparable)
   n <- length(fits); dif <- matrix(NA_real_, n, 5, dimnames = list(NULL, c("dchi", "dgl", "p", "dcfi", "drmsea")))
   for (i in 2:n) {
     r <- if (referencia == "anterior") i - 1 else 1
-    if (anidados) dif[i, 1:3] <- diferencia_chi(fits[[i]], fits[[r]])
+    if (anidados && identical(vars[[i]], vars[[r]]) && ns[i] == ns[r]) dif[i, 1:3] <- diferencia_chi(fits[[i]], fits[[r]])
     dif[i, 4] <- I$cfi[i] - I$cfi[r]; dif[i, 5] <- I$rmsea[i] - I$rmsea[r]
   }
   f_d <- function(x, d = 3) { r <- round(x, d); r[!is.na(r) & r == 0] <- 0
@@ -183,17 +189,28 @@ tabla_comparacion <- function(..., referencia = c("anterior", "primero"), anidad
   }
   cel <- cbind(cel, f_d(dif[, 4]), f_d(dif[, 5])); cols <- c(cols, "\u0394CFI", "\u0394RMSEA")
   cel[1, (ncol(cel) - if (anidados) 3 else 1):ncol(cel)] <- "\u2014"
+  if (!todos_comp) { cel[, 8:9] <- "\u2014"; if (anidados) cel[, 10:11] <- "\u2014" }
   mejor_aic <- nms[which.min(I$aic)]; mejor_bic <- nms[which.min(I$bic)]
-  nota <- paste0(if (any(as.logical(I$robusto))) tx("\u00cdndices corregidos del estimador robusto. ", "Robust (scaled) indices. ") else "",
+  aviso <- if (todos_comp) "" else {
+    difv <- nms[!vapply(vars, identical, logical(1), vars[[1]])]; difn <- nms[ns != ns[1]]
+    paste0(tx("Atenci\u00f3n: los modelos no usan ", "Caution: the models do not use "),
+           if (length(difv) && length(difn)) tx("las mismas variables ni los mismos casos", "the same variables or the same cases")
+           else if (length(difv)) tx("las mismas variables", "the same variables") else tx("los mismos casos", "the same cases"),
+           " (", paste(unique(c(difv, difn)), collapse = ", "), ")",
+           tx(", as\u00ed que su \u03c7\u00b2, AIC y BIC no son comparables y no se muestran las pruebas de diferencia ni AIC y BIC (\u2014). Compara el ajuste de cada modelo por separado con sus propios criterios. ",
+              ", so their \u03c7\u00b2, AIC, and BIC are not comparable; difference tests, AIC, and BIC are not shown (\u2014). Evaluate each model's fit separately against its own criteria. "))
+  }
+  nota <- paste0(aviso, if (any(as.logical(I$robusto))) tx("\u00cdndices corregidos del estimador robusto. ", "Robust (scaled) indices. ") else "",
                  tx("Diferencias respecto ", "Differences relative to "),
                  if (referencia == "anterior") tx("del modelo anterior", "the previous model") else paste0(tx("de ", ""), nms[1]), ". ",
                  if (anidados) tx("\u0394\u03c7\u00b2 v\u00e1lida solo para modelos anidados. ", "\u0394\u03c7\u00b2 is valid only for nested models. ") else "",
-                 tx("Un \u0394CFI menor que \u2212.010 junto con un \u0394RMSEA mayor que .015 indica un ajuste apreciablemente peor (Chen, 2007). AIC y BIC: menor es mejor; el AIC m\u00e1s bajo es el de ",
-                    "A \u0394CFI below \u2212.010 together with a \u0394RMSEA above .015 indicates appreciably worse fit (Chen, 2007). AIC and BIC: lower is better; the lowest AIC is for "),
-                 mejor_aic, if (mejor_bic == mejor_aic) tx(" y tambi\u00e9n el BIC.", ", which also has the lowest BIC.")
-                 else paste0(tx(" y el BIC m\u00e1s bajo, el de ", " and the lowest BIC for "), mejor_bic, "."))
+                 tx("Un \u0394CFI menor que \u2212.010 junto con un \u0394RMSEA mayor que .015 indica un ajuste apreciablemente peor (Chen, 2007).",
+                    "A \u0394CFI below \u2212.010 together with a \u0394RMSEA above .015 indicates appreciably worse fit (Chen, 2007)."),
+                 if (todos_comp) paste0(tx(" AIC y BIC: menor es mejor; el AIC m\u00e1s bajo es el de ", " AIC and BIC: lower is better; the lowest AIC is for "),
+                   mejor_aic, if (mejor_bic == mejor_aic) tx(" y tambi\u00e9n el BIC.", ", which also has the lowest BIC.")
+                   else paste0(tx(" y el BIC m\u00e1s bajo, el de ", " and the lowest BIC for "), mejor_bic, ".")) else "")
   t <- nueva_tabla(if (is.null(titulo)) tx("Comparaci\u00f3n de modelos alternativos", "Comparison of alternative models") else titulo, cols, cel, nota = nota,
-                   datos = cbind(modelo = nms, I, dif))
+                   datos = cbind(modelo = nms, I, dif, comparable = comparable))
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
 }

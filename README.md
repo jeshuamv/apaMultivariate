@@ -234,6 +234,19 @@ guardar_tablas(tabla_criterios_ajuste(fit), tabla_parametros(fit), tabla_efectos
 parrafo_metodo(fit, bootstrap = 1000, archivo = "metodo.docx")
 ```
 
+Si el ajuste no es bueno o hay trayectorias no significativas, el paquete puede
+proponer un modelo alternativo, con su diagrama:
+
+```r
+alt <- modelo_alternativo(fit)          # quita las trayectorias no significativas
+alt                                     # qué cambió, si empeora el ajuste, sintaxis y comparación
+tabla_efectos(alt$fit)                  # sus tablas: igual, con alt$fit
+```
+
+Con `agregar = 1` también agrega la trayectoria que más sugieren los índices de
+modificación. Es un análisis exploratorio: cada cambio debe tener sustento teórico y
+reportarse como hecho después de ver los datos.
+
 Es lo mismo que hace `plantilla("trayectorias")`. Para AFC y SEM, las plantillas siguen
 la misma lógica y agregan las tablas de medición (cargas, confiabilidad, validez, HTMT).
 
@@ -276,6 +289,7 @@ Listas para Word, las que suelen pedirse en una tarea, una tesis o un artículo:
 | Datos | `tabla_descriptivos(datos)` | n, M, DE, asimetría, curtosis y correlaciones (la "Tabla 1") |
 | | `tabla_perdidos(datos)` | Datos perdidos por variable |
 | | `tabla_normalidad(datos)` | Normalidad: asimetría y curtosis con c.r. (como AMOS) y Mardia |
+| | `grafica_normalidad(fit)` | Gráfica Q-Q chi-cuadrado de las distancias de Mahalanobis (normalidad multivariada) |
 | | `tabla_atipicos(datos)` | Atípicos multivariados (Mahalanobis, p1 y p2) |
 | | `quitar_atipicos(datos, modelo)` | Devuelve los datos sin los atípicos (*p* < .001) y te dice cuántos quitó |
 | AFE | `tabla_factorabilidad(datos)` | KMO, Bartlett y cuántos factores retener (Kaiser, análisis paralelo, MAP) |
@@ -290,7 +304,8 @@ Listas para Word, las que suelen pedirse en una tarea, una tesis o un artículo:
 | | `tabla_criterios_ajuste(fit)` | Cada índice (χ², χ²/gl, RMSEA, SRMR, CFI, TLI, GFI, PNFI, PRATIO) contra criterios excelente/aceptable (cámbialos con `cortes`; IC del RMSEA al 95 % con `ic_rmsea = .95`), identificación del modelo (p, q, gl) y variables exógenas y endógenas |
 | | `tabla_modificacion(fit)` | Índices de modificación |
 | | `tabla_residuales(fit)` | Residuales de correlación: dónde ajusta mal el modelo |
-| | `tabla_comparacion("A" = fit1, "B" = fit2)` | Modelos alternativos: Δχ², ΔCFI, AIC, BIC |
+| | `tabla_comparacion("A" = fit1, "B" = fit2)` | Modelos alternativos: Δχ², ΔCFI, AIC, BIC (avisa si los modelos no son comparables) |
+| | `modelo_alternativo(fit)` | Propone un modelo alternativo: quita las trayectorias no significativas, prueba el cambio, lo compara y dibuja su diagrama |
 | | `tabla_invarianza(modelo, datos, grupo = "sexo")` | Invarianza configural, métrica, escalar y estricta |
 | Estructural | `tabla_parametros(fit)` | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas |
 | | `tabla_efectos(fit)` | Efectos directos, indirectos (bootstrap) y totales |
@@ -298,7 +313,7 @@ Listas para Word, las que suelen pedirse en una tarea, una tesis o un artículo:
 | | `tabla_vif(fit)` | Multicolinealidad entre predictores |
 | Moderación | `tabla_moderacion(datos, x = "X", w = "W", y = "Y")` | Moderación (modelo 1 de PROCESS) con pendientes simples y Johnson-Neyman; mediación moderada (modelos 7 y 14) con el índice de mediación moderada. `grafica_interaccion()` dibuja la interacción |
 | MANOVA | `tabla_manova(datos, c("Y1", "Y2"), "grupo")` | Pillai, Wilks, Hotelling, Roy con η²p; M de Box y demás supuestos; ANOVA de seguimiento; post hoc (Tukey o Games-Howell) con *d* de Cohen |
-| Método | `parrafo_metodo(fit)` | Párrafo de software y estimación, con referencias APA |
+| Método | `parrafo_metodo(fit)` | Párrafo de software y estimación (con Wishart y atípicos quitados, si los hubo), con referencias APA |
 
 Todas se ven en la consola. Para Word:
 

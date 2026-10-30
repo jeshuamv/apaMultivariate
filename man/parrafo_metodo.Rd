@@ -8,6 +8,7 @@ parrafo_metodo(
   fit,
   bootstrap = NULL,
   paquetes = c("apaMultivariate"),
+  atipicos = NULL,
   archivo = NULL
 )
 }
@@ -19,6 +20,10 @@ parrafo_metodo(
 
 \item{paquetes}{Otros paquetes que se usaron y deben citarse: cualquiera de
 \code{"semTools"}, \code{"psych"} y \code{"apaMultivariate"}.}
+
+\item{atipicos}{Si quitaste casos atípicos, el número de casos quitados o
+los datos que devolvió \code{\link[=quitar_atipicos]{quitar_atipicos()}}; se menciona en el párrafo
+con su criterio.}
 
 \item{archivo}{Si se indica, guarda el texto en \code{.docx} o \code{.txt}.}
 }

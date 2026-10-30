@@ -57,6 +57,7 @@ revisar_modelo(fit)          # ¿hubo problemas al estimar? (avisos de lavaan en
 # Supuesto de normalidad: si el c.r. multivariado es mayor que 2, vuelve a
 # estimar con estimador robusto quitando el # de la línea siguiente:
 tabla_normalidad(fit)
+grafica_normalidad(fit)      # gráfica Q-Q chi-cuadrado: los puntos deben seguir la línea
 # fit <- update(fit, estimator = "MLR")
 tabla_atipicos(fit)          # casos atípicos multivariados
 # Si decides quitar los atípicos (justifícalo y repórtalo), quita los # de

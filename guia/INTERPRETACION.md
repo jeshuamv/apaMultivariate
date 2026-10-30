@@ -99,6 +99,10 @@ que marca `tabla_normalidad()`); muchos autores aceptan valores de hasta
 > (c.r. = 6.40). Por ello, el modelo se estimó con máxima verosimilitud
 > robusta (MLR).
 
+`grafica_normalidad(fit)` muestra lo mismo en una gráfica Q-Q
+chi-cuadrado: si hay normalidad multivariada, los puntos siguen la línea
+punteada.
+
 **Cuidado.** Si no hay normalidad multivariada, no basta con decirlo:
 cambia el estimador (`estimator = "MLR"`) y repórtalo. Con ítems de
 menos de cinco opciones de respuesta, usa `ordered = TRUE` (WLSMV).
@@ -332,6 +336,35 @@ La tabla dice si cada hipótesis se sostiene (signo esperado y *p* \<
 efecto”; puede faltar potencia estadística.
 
 ------------------------------------------------------------------------
+
+### Modelos alternativos — `modelo_alternativo()` y `tabla_comparacion()`
+
+**Qué mirar.** Si el modelo no ajusta bien o tiene trayectorias no
+significativas, `modelo_alternativo(fit)` propone uno más simple: quita
+esas trayectorias una por una y prueba, con una Δχ², si quitarlas
+empeora el ajuste. Si la prueba no es significativa, el modelo más
+simple es defendible.
+
+**Criterios.** Δχ² no significativa al quitar trayectorias; mejores
+índices de ajuste en el modelo alternativo; y, sobre todo, que cada
+cambio tenga sentido teórico. El χ², el AIC y el BIC solo se comparan
+entre modelos con **las mismas variables y los mismos casos**: si una
+variable sale del modelo o si quitaste atípicos en uno solo, no son
+comparables, y `tabla_comparacion()` lo indica.
+
+> El modelo original no mostró un ajuste aceptable, χ²(1) = 26.09, *p*
+> \< .001; CFI = .725; RMSEA = .739. La trayectoria del examen a la
+> fecundidad no fue significativa (β = −.03, *p* = .798), por lo que se
+> probó un modelo sin ella; quitarla no empeoró el ajuste, Δχ²(1) =
+> 0.04, *p* = .847. Esta modificación se realizó después de examinar los
+> resultados, por lo que debe considerarse exploratoria.
+
+**Cuidado.** Quitar trayectorias no significativas o agregar las que
+sugieren los índices de modificación aprovecha las particularidades de
+tu muestra (MacCallum et al., 1992). Repórtalo como una modificación
+posterior, justifícala y, si puedes, confírmala en otra muestra. Y nota
+que en el ejemplo quitar la trayectoria no arregló el ajuste: un modelo
+mal especificado no se corrige quitando lo que no es significativo.
 
 ## Moderación y mediación moderada
 
@@ -570,6 +603,10 @@ punto si ya está en tu texto.
   Reporting practices in confirmatory factor analysis: An overview and
   some recommendations. *Psychological Methods, 14*(1), 6–23.
   <https://doi.org/10.1037/a0014694>
+- MacCallum, R. C., Roznowski, M., & Necowitz, L. B. (1992). Model
+  modifications in covariance structure analysis: The problem of
+  capitalization on chance. *Psychological Bulletin, 111*(3), 490–504.
+  <https://doi.org/10.1037/0033-2909.111.3.490>
 - Nunnally, J. C., & Bernstein, I. H. (1994). *Psychometric theory* (3rd
   ed.). McGraw-Hill.
 - Rodriguez, A., Reise, S. P., & Haviland, M. G. (2016). Evaluating

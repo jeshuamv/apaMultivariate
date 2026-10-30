@@ -969,6 +969,16 @@ tabla_vif(fit3)
 #> = 5.
 ```
 
+La misma idea en una gráfica Q-Q chi-cuadrado: si hay normalidad
+multivariada, los puntos siguen la línea punteada; los atípicos (*p* \<
+.001) se marcan con su número de fila.
+
+``` r
+grafica_normalidad(fit3)
+```
+
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-36-1.png" width="100%" />
+
 **2. Diagrama** estandarizado (cargas y β, R²) y no estandarizado (B, y,
 como en AMOS, la varianza de cada variable exógena y de cada error):
 
@@ -976,7 +986,7 @@ como en AMOS, la varianza de cada variable exógena y de cada error):
 diagrama_sem(fit3, estandarizado = FALSE)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-36-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-37-1.png" width="100%" />
 
 **3. Ajuste e identificación.** Cada índice contra los criterios
 excelente y aceptable, con su fuente, y la identificación del modelo
@@ -1100,17 +1110,91 @@ tabla_hipotesis(fit3, c(H1 = "Education -> Examination (+)",
 #> ──────────────────────────────────────────────────────────────────────────────────────────────
 #> Nota. β = coeficiente estandarizado. Efectos directos: se sostienen si p <
 #> .05. Efectos indirectos: se sostienen si el intervalo de confianza al 95 %
-#> (bootstrap con 500 remuestreos) no incluye el 0. Si la hipótesis indica un
-#> signo (+ o −), el efecto debe tener ese signo.
+#> (bootstrap con 500 remuestreos, calculado con el efecto no estandarizado) no
+#> incluye el 0. Si la hipótesis indica un signo (+ o −), el efecto debe tener
+#> ese signo.
 ```
 
 **6. Efectos directos, indirectos y totales** con `tabla_efectos()`
 (véase arriba).
 
-**7. Modelo alternativo.** Si quitas trayectorias no significativas o
-agregas parámetros, compara los modelos con `tabla_comparacion()`. Los
-índices de modificación muestran qué parámetro agregado mejoraría el
-ajuste; solo deben liberarse si tiene sentido teórico:
+**7. Modelo alternativo.** `modelo_alternativo()` propone uno: quita una
+por una las trayectorias no significativas (la de mayor *p* primero,
+volviendo a estimar cada vez), prueba con una Δχ² si quitarlas empeora
+el ajuste, compara el modelo original con el alternativo y dibuja el
+diagrama del alternativo. Conserva el estimador y las demás opciones del
+modelo original.
+
+``` r
+alt <- modelo_alternativo(fit3)
+```
+
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-42-1.png" width="100%" />
+
+``` r
+alt
+#> 
+#> Modelo alternativo propuesto
+#> 
+#> 
+#> Cambios respecto del modelo original
+#> ─────────────────────────────────────────────────
+#> Cambio          Trayectoria         β    Criterio
+#> ─────────────────────────────────────────────────
+#> Se quita  Examination → Fertility  -.03  p = .796
+#> ─────────────────────────────────────────────────
+#> Nota. Se quitan las trayectorias con p ≥ .05; se agregan
+#> las que sugieren los índices de modificación (IM). β =
+#> coeficiente estandarizado (en las agregadas, el cambio
+#> esperado).
+#> 
+#> ¿Quitar esas trayectorias empeora el ajuste? Δχ²(1) = 0.04, p = .846. No: el modelo más simple ajusta igual de bien.
+#> 
+#> Sintaxis del modelo alternativo (cópiala a tu script):
+#> modelo_alt <- "
+#>   Examination ~ Education
+#>   Fertility ~ Education + Catholic
+#>   Examination ~~ 0*Fertility
+#>   # covarianza(s) fijada(s) en 0: lavaan la(s) agregaría solo y el modelo original no la(s) incluía
+#> "
+#> 
+#> 
+#> Modelo original y modelo alternativo
+#> ──────────────────────────────────────────────────────────────────────────────────────────────
+#> Modelo        χ²    gl  CFI    TLI   RMSEA  SRMR   AIC    BIC   Δχ² (Δgl)   p    ΔCFI   ΔRMSEA
+#> ──────────────────────────────────────────────────────────────────────────────────────────────
+#> Original     26.66  1   .725  -.375  .739   .156  637.7  648.8      —       —      —      —   
+#> Alternativo  26.70  2   .735  .338   .513   .158  635.7  644.9  0.04 (1)   .846  +.010  -.226 
+#> ──────────────────────────────────────────────────────────────────────────────────────────────
+#> Nota. Diferencias respecto del modelo anterior. Δχ² válida solo para modelos
+#> anidados. Un ΔCFI menor que −.010 junto con un ΔRMSEA mayor que .015 indica
+#> un ajuste apreciablemente peor (Chen, 2007). AIC y BIC: menor es mejor; el
+#> AIC más bajo es el de Alternativo y también el BIC.
+#> La tabla es más ancha que la consola y puede verse cortada. Agranda el panel de la consola o guárdala en Word: guardar_tabla(tabla, "tabla.docx").
+#> Trayectorias que sugieren los índices de modificación (no se agregaron; solo si tienen sustento teórico, usa agregar = 1):
+#>   Catholic → Examination  (IM = 20.35, β esperado = -.48)
+#> 
+#> Atención: este modelo se obtuvo a partir de los resultados, así que es
+#> exploratorio. Justifica cada cambio con la teoría, repórtalo como modificado
+#> después de ver los datos y, si puedes, confírmalo en otra muestra (MacCallum et
+#> al., 1992). Para sus tablas usa $fit, por ejemplo tabla_efectos(alt$fit).
+```
+
+Con `agregar = 1` (o más) también agrega, una por una, las trayectorias
+que más sugieren los índices de modificación. Sin ese argumento solo las
+lista, para que decidas si tienen sustento teórico. Las tablas del
+modelo alternativo se obtienen con `alt$fit`, por ejemplo
+`tabla_efectos(alt$fit)`.
+
+Dos cuidados. Primero, un modelo obtenido así es **exploratorio**:
+repórtalo como modificado después de ver los datos y justifica cada
+cambio. Segundo, si una variable sale del modelo o los modelos usan
+distintos casos, su χ², AIC y BIC ya no son comparables;
+`tabla_comparacion()` lo detecta y no muestra esas comparaciones.
+
+Los índices de modificación del modelo completo, con sus parámetros de
+cualquier tipo (no solo trayectorias), están en `tabla_modificacion()`;
+solo deben liberarse si tiene sentido teórico:
 
 ``` r
 tabla_modificacion(fit, n = 5)
@@ -1364,7 +1448,7 @@ región de Johnson-Neyman. La gráfica de la interacción:
 grafica_interaccion(mod)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-47-1.png" width="60%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-49-1.png" width="60%" />
 
 Con `archivo = "figura2.pdf"` se guarda al ancho de una columna.
 
@@ -1391,7 +1475,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 #> 
 #> Los análisis se realizaron en R (versión 4.3.3; R Core Team, 2024) con los
 #> paquetes lavaan (versión 0.6-17; Rosseel, 2012), semTools (versión 0.5-6;
-#> Jorgensen et al., 2022) y apaMultivariate (versión 0.9.1; Moreno Valladares,
+#> Jorgensen et al., 2022) y apaMultivariate (versión 0.10.0; Moreno Valladares,
 #> 2026). El análisis factorial confirmatorio se estimó con una muestra de 301
 #> participantes por máxima verosimilitud (ML). El ajuste se evaluó con la prueba
 #> χ², el índice de ajuste comparativo (CFI), el índice de Tucker-Lewis (TLI), el
@@ -1412,7 +1496,7 @@ parrafo_metodo(fit, paquetes = c("semTools", "apaMultivariate"))
 #>     versión 0.5-6). https://CRAN.R-project.org/package=semTools.
 #> 
 #> Moreno Valladares, J. (2026). apaMultivariate: Tablas y diagramas APA para
-#>     análisis multivariado (Paquete de R, versión 0.9.1).
+#>     análisis multivariado (Paquete de R, versión 0.10.0).
 #>     https://github.com/jeshuamv/apaMultivariate.
 #> 
 #> R Core Team. (2024). R: A language and environment for statistical computing. R
@@ -1489,7 +1573,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-54-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-56-1.png" width="100%" />
 
 Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -1499,7 +1583,7 @@ Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-55-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados y,
 como en AMOS, en lugar de la R² se escribe la varianza de cada variable
@@ -1509,7 +1593,7 @@ exógena y de cada error:
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-56-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -1517,13 +1601,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-57-2.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -1543,20 +1627,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-61-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-2.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-61-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-3.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-61-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -1569,7 +1653,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-60-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-62-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -1578,7 +1662,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-61-1.png" width="100%" />
+<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-63-1.png" width="100%" />
 
 ## Guardar el diagrama
 

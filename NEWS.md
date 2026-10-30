@@ -1,3 +1,20 @@
+# apaMultivariate 0.10.0
+
+* `modelo_alternativo()`: propone un modelo alternativo de trayectorias o SEM.
+  Quita una por una las trayectorias no significativas, prueba con Δχ² si eso
+  empeora el ajuste, lo compara con el original y dibuja su diagrama;
+  conserva el estimador y las demás opciones. Con `agregar = 1` agrega también
+  las trayectorias que sugieren los índices de modificación (sin crear
+  ciclos); si no, solo las lista. Advierte que la reespecificación es
+  exploratoria.
+* `grafica_normalidad()`: gráfica Q-Q chi-cuadrado de las distancias de
+  Mahalanobis, con los atípicos marcados.
+* `tabla_comparacion()`: ya no compara χ², AIC ni BIC entre modelos con
+  distintas variables o distintos casos (no son comparables); lo explica en la
+  nota.
+* `parrafo_metodo()`: menciona la verosimilitud de Wishart y, con
+  `atipicos =`, los casos atípicos quitados y su criterio.
+
 # apaMultivariate 0.9.5
 
 Plantillas revisadas resolviendo con ellas un ejercicio real de clase

@@ -39,6 +39,7 @@ afc <- cfa(medicion, data = datos)
 revisar_modelo(afc)            # ¿hubo problemas al estimar?
 
 tabla_normalidad(afc)          # si el c.r. multivariado > 2, usa estimator = "MLR"
+grafica_normalidad(afc)        # gráfica Q-Q chi-cuadrado
 tabla_atipicos(afc)            # casos atípicos multivariados
 # Si decides quitar los atípicos (justifícalo y repórtalo), quita los # de
 # estas dos líneas: se quitan los casos y se vuelve a estimar el modelo.
@@ -94,6 +95,10 @@ guardar_tablas(
   tabla_efectos(fit),
   archivo = "tablas_sem.docx"
 )
+# (Opcional) Modelo alternativo propuesto a partir de las trayectorias no
+# significativas (exploratorio; justifica cada cambio):
+# alt <- modelo_alternativo(fit, archivo = "diagrama_alternativo.png")
+# alt
 parrafo_metodo(fit, bootstrap = 1000, archivo = "metodo_sem.docx")
 getwd()
 

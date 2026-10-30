@@ -549,6 +549,14 @@ tabla_normalidad(fit3)
 tabla_vif(fit3)
 ```
 
+La misma idea en una gráfica Q-Q chi-cuadrado: si hay normalidad multivariada,
+los puntos siguen la línea punteada; los atípicos (*p* < .001) se marcan con su
+número de fila.
+
+```{r, fig.width = 4, fig.height = 4, message = FALSE}
+grafica_normalidad(fit3)
+```
+
 **2. Diagrama** estandarizado (cargas y β, R²) y no estandarizado (B, y, como
 en AMOS, la varianza de cada variable exógena y de cada error):
 
@@ -600,10 +608,31 @@ tabla_hipotesis(fit3, c(H1 = "Education -> Examination (+)",
 **6. Efectos directos, indirectos y totales** con `tabla_efectos()` (véase
 arriba).
 
-**7. Modelo alternativo.** Si quitas trayectorias no significativas o agregas
-parámetros, compara los modelos con `tabla_comparacion()`. Los índices de
-modificación muestran qué parámetro agregado mejoraría el ajuste; solo deben
-liberarse si tiene sentido teórico:
+**7. Modelo alternativo.** `modelo_alternativo()` propone uno: quita una por
+una las trayectorias no significativas (la de mayor *p* primero, volviendo a
+estimar cada vez), prueba con una Δχ² si quitarlas empeora el ajuste, compara el
+modelo original con el alternativo y dibuja el diagrama del alternativo. Conserva
+el estimador y las demás opciones del modelo original.
+
+```{r, fig.height = 3}
+alt <- modelo_alternativo(fit3)
+alt
+```
+
+Con `agregar = 1` (o más) también agrega, una por una, las trayectorias que más
+sugieren los índices de modificación. Sin ese argumento solo las lista, para que
+decidas si tienen sustento teórico. Las tablas del modelo alternativo se obtienen
+con `alt$fit`, por ejemplo `tabla_efectos(alt$fit)`.
+
+Dos cuidados. Primero, un modelo obtenido así es **exploratorio**: repórtalo como
+modificado después de ver los datos y justifica cada cambio. Segundo, si una
+variable sale del modelo o los modelos usan distintos casos, su χ², AIC y BIC ya
+no son comparables; `tabla_comparacion()` lo detecta y no muestra esas
+comparaciones.
+
+Los índices de modificación del modelo completo, con sus parámetros de cualquier
+tipo (no solo trayectorias), están en `tabla_modificacion()`; solo deben liberarse
+si tiene sentido teórico:
 
 ```{r}
 tabla_modificacion(fit, n = 5)

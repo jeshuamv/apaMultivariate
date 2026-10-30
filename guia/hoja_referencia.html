@@ -78,6 +78,7 @@ datos &lt;- quitar_atipicos(datos, modelo)</pre>
 <tr><td>tabla_descriptivos(datos)</td><td>M, DE, asimetría, curtosis, correlaciones</td></tr>
 <tr><td>tabla_perdidos(datos)</td><td>Datos perdidos</td></tr>
 <tr><td>tabla_normalidad(fit)</td><td>c.r. y Mardia (como AMOS)</td></tr>
+<tr><td>grafica_normalidad(fit)</td><td>Gráfica Q-Q chi-cuadrado</td></tr>
 <tr><td>tabla_atipicos(fit)</td><td>Mahalanobis, p1 y p2</td></tr>
 <tr class="etapa"><td colspan="2">Análisis factorial</td></tr>
 <tr><td>tabla_factorabilidad(items)</td><td>KMO, Bartlett, paralelo, MAP</td></tr>
@@ -96,6 +97,7 @@ datos &lt;- quitar_atipicos(datos, modelo)</pre>
 <tr><td>tabla_parametros(fit)</td><td>B, EE, C.R., p, β</td></tr>
 <tr><td>tabla_efectos(fit)</td><td>Directos, indirectos (bootstrap), totales</td></tr>
 <tr><td>tabla_hipotesis(fit, c(H1 = "X -&gt; Y (+)"))</td><td>¿Se sostiene?</td></tr>
+<tr><td>modelo_alternativo(fit)</td><td>Propone un modelo alternativo y su diagrama</td></tr>
 <tr class="etapa"><td colspan="2">Otros análisis</td></tr>
 <tr><td>tabla_moderacion(datos, x=, w=, y=)</td><td>PROCESS 1, 7, 14</td></tr>
 <tr><td>tabla_manova(datos, c("Y1","Y2"), "g")</td><td>MANOVA y post hoc</td></tr>
@@ -132,7 +134,7 @@ citation("apaMultivariate")</pre>
 </table>
 <p class="nota" style="margin-top:1.2mm">Son convenciones, no leyes: cita su fuente. Cómo interpretarlos y redactarlos: guía <b>INTERPRETACION.md</b>.</p>
 </section></div></div>
-<footer><span>Errores comunes: mayúsculas distintas · comillas sin cerrar · paréntesis sin cerrar · no correr las líneas en orden</span><span>v0.9.5</span></footer>
+<footer><span>Errores comunes: mayúsculas distintas · comillas sin cerrar · paréntesis sin cerrar · no correr las líneas en orden</span><span>v0.10.0</span></footer>
 
 <div class="pagina2">
 <header>

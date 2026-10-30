@@ -234,6 +234,9 @@ cita_paquete <- function(p, autores, cita, titulo, extra = "") {
 #'   [tabla_efectos()]), número de remuestreos para mencionarlo.
 #' @param paquetes Otros paquetes que se usaron y deben citarse: cualquiera de
 #'   `"semTools"`, `"psych"` y `"apaMultivariate"`.
+#' @param atipicos Si quitaste casos atípicos, el número de casos quitados o
+#'   los datos que devolvió [quitar_atipicos()]; se menciona en el párrafo
+#'   con su criterio.
 #' @param archivo Si se indica, guarda el texto en `.docx` o `.txt`.
 #' @return Un objeto de clase `texto_apa` con `$parrafo` y `$referencias`,
 #'   que se imprime en la consola listo para copiar.
@@ -243,7 +246,7 @@ cita_paquete <- function(p, autores, cita, titulo, extra = "") {
 #'             textual =~ x4 + x5 + x6", data = HolzingerSwineford1939)
 #' parrafo_metodo(fit)
 #' @export
-parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"), archivo = NULL) {
+parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"), atipicos = NULL, archivo = NULL) {
   if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
   op <- lavaan::lavInspect(fit, "options")
   est <- op$estimator; if (any(op$test %in% "satorra.bentler") && est == "ML") est <- "MLM"
@@ -254,6 +257,11 @@ parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"
                                                     " Missing data were handled with full information maximum likelihood (FIML)."),
                  pairwise = tx(" Los datos perdidos se trataron con eliminaci\u00f3n por pares.", " Missing data were handled with pairwise deletion."), "")
   orig <- sum(unlist(lavaan::lavInspect(fit, "norig")))
+  if (is.data.frame(atipicos)) atipicos <- length(attr(atipicos, "atipicos"))
+  at_txt <- if (!is.null(atipicos) && atipicos > 0) tx(paste0(" Se excluyeron ", atipicos, " casos at\u00edpicos multivariados (distancia de Mahalanobis al cuadrado con p < .001; Kline, 2016)."),
+                                                     paste0(" A total of ", atipicos, " multivariate outliers were excluded (squared Mahalanobis distance with p < .001; Kline, 2016).")) else ""
+  wis <- identical(op$likelihood, "wishart")
+  wis_txt <- if (wis) tx(", con la verosimilitud de Wishart (divisor N \u2212 1, como en AMOS)", ", with the Wishart likelihood (divisor N \u2212 1, as in AMOS)") else ""
   if (op$missing %in% c("listwise", "default") && orig > n) perd <- paste0(tx(" Se excluyeron ", " A total of "), orig - n,
                                                                        tx(" casos con datos perdidos (eliminaci\u00f3n por lista).", " cases with missing data were excluded (listwise deletion)."))
   rver <- paste(R.version$major, R.version$minor, sep = "."); ranio <- R.version$year
@@ -281,7 +289,7 @@ parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"
   parrafo <- if (en()) paste0(
     "Analyses were conducted in R (version ", rver, "; R Core Team, ", ranio, ") using ", lista, ". The ", tipo,
     " was estimated with a sample of ", n, " participants", if (ng > 1) paste0(" in ", ng, " groups") else "",
-    " using ", nombre_estimador(est), ".", perd,
+    " using ", nombre_estimador(est), wis_txt, ".", at_txt, perd,
     " Model fit was evaluated with the \u03c7\u00b2 test, the comparative fit index (CFI), the Tucker-Lewis index (TLI), ",
     "the root mean square error of approximation (RMSEA) with its 90% confidence interval, and the standardized ",
     "root mean square residual (SRMR). CFI and TLI \u2265 .95, RMSEA \u2264 .06, and SRMR \u2264 .08 were considered indicative ",
@@ -291,13 +299,15 @@ parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"
   else paste0(
     "Los an\u00e1lisis se realizaron en R (versi\u00f3n ", rver, "; R Core Team, ", ranio, ") con ", lista, ". El ", tipo,
     " se estim\u00f3 con una muestra de ", n, " participantes", if (ng > 1) paste0(" en ", ng, " grupos") else "",
-    " por ", nombre_estimador(est), ".", perd,
+    " por ", nombre_estimador(est), wis_txt, ".", at_txt, perd,
     " El ajuste se evalu\u00f3 con la prueba \u03c7\u00b2, el \u00edndice de ajuste comparativo (CFI), el \u00edndice de Tucker-Lewis (TLI), ",
     "el error cuadr\u00e1tico medio de aproximaci\u00f3n (RMSEA) con su intervalo de confianza al 90 % y la ra\u00edz del residuo ",
     "cuadr\u00e1tico medio estandarizado (SRMR). Se consideraron indicadores de buen ajuste CFI y TLI \u2265 .95, RMSEA \u2264 .06 ",
     "y SRMR \u2264 .08 (Hu y Bentler, 1999).",
     if (!is.null(bootstrap)) paste0(" Los efectos indirectos se evaluaron con intervalos de confianza al 95 % obtenidos por bootstrap de percentiles con ",
                                     bootstrap, " remuestreos; un efecto se consider\u00f3 significativo cuando su intervalo no inclu\u00eda el cero.") else "")
+  if (nzchar(at_txt)) refs <- c(refs, tx("Kline, R. B. (2016). Principles and practice of structural equation modeling (4.\u00aa ed.). Guilford Press.",
+                                     "Kline, R. B. (2016). Principles and practice of structural equation modeling (4th ed.). Guilford Press."))
   refs <- sort(refs)
   t <- structure(list(parrafo = parrafo, referencias = refs), class = "texto_apa")
   if (!is.null(archivo)) {
