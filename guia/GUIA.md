@@ -83,7 +83,7 @@ fit <- cfa(modelo, data = HolzingerSwineford1939)
 diagrama_sem(fit)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
 
 Qué se ve en el diagrama:
 
@@ -186,7 +186,7 @@ Para elegir otro:
 diagrama_sem(fit, acomodo = "dos_filas")
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
 
 ## Segundo orden
 
@@ -196,7 +196,7 @@ fit2 <- cfa(paste(modelo, "\n Mental =~ visual + textual + speed"),
 diagrama_sem(fit2)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
 
 Los constructos de primer orden llevan su propio error (perturbación) y
 su R², que indica cuánto de su varianza explica el factor general.
@@ -227,7 +227,7 @@ diagrama_sem(fit3, etiquetas = c(Education = "Educación", Examination = "Examen
                                  Fertility = "Fecundidad", Catholic = "Católicos"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
 
 Cómo se lee:
 
@@ -271,7 +271,7 @@ fit4 <- sem("ind60 =~ x1 + x2 + x3
 diagrama_sem(fit4)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
 
 Cada constructo coloca sus ítems donde menos estorban a las flechas
 entre constructos. Las covarianzas entre errores se dibujan como arcos
@@ -289,7 +289,7 @@ afe <- fa(items, nfactors = 3, rotate = "oblimin", fm = "ml")
 diagrama_sem(afe)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />
 
 En un exploratorio cada ítem carga en todos los factores, así que el
 diagrama muestra solo lo importante:
@@ -311,7 +311,7 @@ Los nombres `ML1`, `ML2`… los pone `psych`; cámbialos con `etiquetas`:
 diagrama_sem(afe, etiquetas = c(ML1 = "Verbal", ML2 = "Velocidad", ML3 = "Visual"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-14-1.png" width="100%" />
 
 Con `lavaan::efa()` es igual. Si pediste varias soluciones (por ejemplo,
 `nfactors = 2:4`), indica cuál dibujar:
@@ -336,13 +336,13 @@ contenido.
 diagrama_sem(fit, estilo = "revista")
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-16-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-16-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, estilo = "color")
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-17-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-17-1.png" width="100%" />
 
 Qué cambia en los estilos `"revista"` y `"color"`:
 
@@ -977,7 +977,7 @@ multivariada, los puntos siguen la línea punteada; los atípicos (*p* \<
 grafica_normalidad(fit3)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-36-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-36-1.png" width="100%" />
 
 **2. Diagrama** estandarizado (cargas y β, R²) y no estandarizado (B, y,
 como en AMOS, la varianza de cada variable exógena y de cada error):
@@ -986,7 +986,7 @@ como en AMOS, la varianza de cada variable exógena y de cada error):
 diagrama_sem(fit3, estandarizado = FALSE)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-37-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-37-1.png" width="100%" />
 
 **3. Ajuste e identificación.** Cada índice contra los criterios
 excelente y aceptable, con su fuente, y la identificación del modelo
@@ -1129,7 +1129,7 @@ modelo original.
 alt <- modelo_alternativo(fit3)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-42-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-42-1.png" width="100%" />
 
 ``` r
 alt
@@ -1448,7 +1448,7 @@ región de Johnson-Neyman. La gráfica de la interacción:
 grafica_interaccion(mod)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-49-1.png" width="60%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-49-1.png" width="60%" />
 
 Con `archivo = "figura2.pdf"` se guarda al ancho de una columna.
 
@@ -1573,7 +1573,7 @@ diagrama_sem(fit, etiquetas = c(visual = "Visual", textual = "Verbal",
                                 speed = "Velocidad", x1 = "Ítem 1"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-56-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-56-1.png" width="100%" />
 
 Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 
@@ -1583,7 +1583,7 @@ Usa `"\n"` dentro de un nombre para partirlo en dos renglones.
 diagrama_sem(fit, estrellas = TRUE, decimales = 3)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-57-1.png" width="100%" />
 
 Con `estandarizado = FALSE` se muestran los valores no estandarizados y,
 como en AMOS, en lugar de la R² se escribe la varianza de cada variable
@@ -1593,7 +1593,7 @@ exógena y de cada error:
 diagrama_sem(fit, estandarizado = FALSE)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-58-1.png" width="100%" />
 
 ### Correlaciones
 
@@ -1601,13 +1601,13 @@ diagrama_sem(fit, estandarizado = FALSE)
 diagrama_sem(fit, correlaciones = FALSE)   # ocultarlas
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-59-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, correlaciones = 0.40)    # solo las de |r| >= .40
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-59-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-59-2.png" width="100%" />
 
 En AFC con 5 o más factores se ocultan automáticamente, porque se cruzan
 entre sí sin importar el acomodo. Siguen disponibles en el resultado:
@@ -1627,20 +1627,20 @@ d$correlaciones_ocultas
 diagrama_sem(fit, paleta = paleta_sem("verde"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-61-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-61-1.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem("blanco"), degradado = FALSE)
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-61-2.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-61-2.png" width="100%" />
 
 ``` r
 diagrama_sem(fit, paleta = paleta_sem(latente = c("white", "#FAD3B5"),
                                       observada = "#FFF3EA"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-61-3.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-61-3.png" width="100%" />
 
 Paletas incluidas: `"lila"` (por omisión), `"azul"`, `"verde"`,
 `"gris"`, `"durazno"` y `"blanco"`.
@@ -1653,7 +1653,7 @@ Hacia dónde van los ítems de un constructo:
 diagrama_sem(fit, lados = c(speed = "abajo"))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-62-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-62-1.png" width="100%" />
 
 Mover un elemento (un constructo se mueve con sus ítems y errores). La
 unidad equivale aproximadamente al ancho de un ítem:
@@ -1662,7 +1662,7 @@ unidad equivale aproximadamente al ancho de un ítem:
 diagrama_sem(fit, mover = list(speed = c(0, -1)))
 ```
 
-<img src="/home/claude/apaMultivariate/guia/GUIA_files/figure-gfm/unnamed-chunk-63-1.png" width="100%" />
+<img src="GUIA_files/figure-gfm/unnamed-chunk-63-1.png" width="100%" />
 
 ## Guardar el diagrama
 
