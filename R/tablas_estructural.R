@@ -108,8 +108,7 @@ tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, et
               "los intervalos se calculan con el m\u00e9todo delta.")
     } else {
       message("Calculando intervalos con ", bootstrap, " remuestreos bootstrap; puede tardar un poco...")
-      if (!is.null(semilla)) set.seed(semilla)
-      B <- tryCatch(suppressWarnings(lavaan::bootstrapLavaan(fit, R = bootstrap, FUN = function(x) valores_efectos(x, R, caminos, pares))),
+      B <- tryCatch(con_semilla(semilla, suppressWarnings(lavaan::bootstrapLavaan(fit, R = bootstrap, FUN = function(x) valores_efectos(x, R, caminos, pares)))),
                     error = function(e) {
                       message("El bootstrap fall\u00f3 (", conditionMessage(e), "); los intervalos se calculan con el m\u00e9todo delta.")
                       NULL
@@ -229,6 +228,13 @@ nombre_estimador <- function(e) switch(toupper(e),
            "robust maximum likelihood (MLR), with robust standard errors and the Yuan-Bentler scaled \u03c7\u00b2 statistic"),
   MLM = tx("m\u00e1xima verosimilitud con la correcci\u00f3n de Satorra-Bentler (MLM)", "maximum likelihood with the Satorra-Bentler correction (MLM)"),
   MLMV = tx("m\u00e1xima verosimilitud con correcci\u00f3n de media y varianza (MLMV)", "maximum likelihood with mean and variance adjustment (MLMV)"),
+  MLMVS = tx("m\u00e1xima verosimilitud con correcci\u00f3n de media y varianza de Satterthwaite (MLMVS)", "maximum likelihood with Satterthwaite mean and variance adjustment (MLMVS)"),
+  WLSM = tx("m\u00ednimos cuadrados ponderados diagonalmente con media ajustada (WLSM), adecuado para \u00edtems ordinales",
+            "diagonally weighted least squares with mean adjustment (WLSM), appropriate for ordinal items"),
+  WLSMVS = tx("m\u00ednimos cuadrados ponderados diagonalmente con media y varianza ajustadas de Satterthwaite (WLSMVS), adecuado para \u00edtems ordinales",
+              "diagonally weighted least squares with Satterthwaite mean and variance adjustment (WLSMVS), appropriate for ordinal items"),
+  ULSM = tx("m\u00ednimos cuadrados no ponderados con media ajustada (ULSM)", "unweighted least squares with mean adjustment (ULSM)"),
+  ULSMVS = tx("m\u00ednimos cuadrados no ponderados con media y varianza ajustadas de Satterthwaite (ULSMVS)", "unweighted least squares with Satterthwaite mean and variance adjustment (ULSMVS)"),
   WLSMV = tx("m\u00ednimos cuadrados ponderados diagonalmente con media y varianza ajustadas (WLSMV), adecuado para \u00edtems ordinales",
              "diagonally weighted least squares with mean and variance adjustment (WLSMV), appropriate for ordinal items"),
   DWLS = tx("m\u00ednimos cuadrados ponderados diagonalmente (DWLS)", "diagonally weighted least squares (DWLS)"),
@@ -276,9 +282,14 @@ cita_paquete <- function(p, autores, cita, titulo, extra = "") {
 parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"), atipicos = NULL, archivo = NULL) {
   exigir_lavaan(fit, "cfa() o sem()")
   op <- lavaan::lavInspect(fit, "options")
-  est <- op$estimator; if (any(op$test %in% "satorra.bentler") && est == "ML") est <- "MLM"
-  if (est == "ML" && any(c("yuan.bentler", "yuan.bentler.mplus") %in% op$test)) est <- "MLR"
-  if (est == "DWLS" && any(c("scaled.shifted", "mean.var.adjusted") %in% op$test)) est <- "WLSMV"
+  # lavaan guarda el estimador base (ML, DWLS, ULS) y la corrección en `test`
+  est <- toupper(op$estimator); prueba <- op$test
+  corr <- if (any(prueba %in% c("yuan.bentler", "yuan.bentler.mplus"))) "R" else if (any(prueba %in% "satorra.bentler")) "M"
+          else if (any(prueba %in% "scaled.shifted")) "MV" else if (any(prueba %in% "mean.var.adjusted")) "MVS" else ""
+  if (nzchar(corr)) est <- switch(est,
+    ML = switch(corr, R = "MLR", M = "MLM", MV = "MLMV", MVS = "MLMVS"),
+    DWLS = switch(corr, M = "WLSM", MV = "WLSMV", MVS = "WLSMVS", est),
+    ULS = switch(corr, M = "ULSM", MV = "ULSMV", MVS = "ULSMVS", est), est)
   n <- lavaan::lavInspect(fit, "ntotal"); ng <- lavaan::lavInspect(fit, "ngroups")
   perd <- switch(op$missing, ml = , ml.x = , fiml = tx(" Los datos perdidos se trataron mediante m\u00e1xima verosimilitud con informaci\u00f3n completa (FIML).",
                                                     " Missing data were handled with full information maximum likelihood (FIML)."),

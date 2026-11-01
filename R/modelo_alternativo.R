@@ -216,11 +216,6 @@ modelo_alternativo <- function(fit, quitar = TRUE, alfa = .05, agregar = 0, mini
                "No changes to propose: all paths are significant"),
             if (agregar == 0 && !is.null(sugeridas) && nrow(sugeridas)) tx("; revisa las trayectorias sugeridas abajo.", "; see the suggested paths below.") else ".")
   }
-  if (!nrow(cambios)) {
-    message(tx("No hay cambios que proponer: todas las trayectorias son significativas",
-               "No changes to propose: all paths are significant"),
-            if (agregar == 0 && !is.null(sugeridas) && nrow(sugeridas)) tx("; revisa las trayectorias sugeridas abajo.", "; see the suggested paths below.") else ".")
-  }
   sint <- sintaxis_de_tabla(alt)
   if (length(nuevas)) sint <- sub("\n$", paste0("\n  # ", tx("covarianza(s) fijada(s) en 0: lavaan la(s) agregar\u00eda solo y el modelo original no la(s) inclu\u00eda",
                                                              "covariance(s) fixed at 0: lavaan would add them by default and the original model did not include them"), "\n"), sint)

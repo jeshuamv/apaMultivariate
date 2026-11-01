@@ -15,6 +15,26 @@
 * `tabla_efectos()` y `tabla_hipotesis()`: si el modelo no admite bootstrap
   (variables ordinales con WLSMV, `conditional.x = TRUE`) o el bootstrap falla,
   usan el método delta y lo avisan; antes se detenían con un error de lavaan.
+* Correcciones de una revisión completa del código (validado contra psych,
+  semTools, lmtest, car, rstatix y lavaan):
+  * `tabla_influencia()` fallaba (o tomaba variables equivocadas del entorno)
+    cuando la fórmula tenía transformaciones (`log()`, `poly()`...) y algún
+    caso superaba el corte de Cook; la tabla de sensibilidad ahora se calcula
+    con la matriz del modelo.
+  * `tabla_subconjuntos()` fallaba con transformaciones en la fórmula (también
+    en la variable dependiente, como `log(y)`).
+  * `parrafo_metodo()` describía MLMV, MLMVS, WLSM, WLSMVS y ULSMV como ML,
+    WLSMV o ULS; ahora nombra el estimador correcto.
+  * `tabla_confiabilidad()` con un factor de un solo indicador daba alfa e IC
+    vacíos, omega = 1.00 y un aviso con "NA"; ahora muestra "—" y lo explica.
+  * `tabla_manova()` no reportaba los atípicos multivariados cuando los nombres
+    de fila de los datos eran texto; ahora da el número de fila en `datos`.
+  * `modelo_alternativo()` mostraba dos veces el mensaje "No hay cambios".
+  * `tabla_efectos()`, `tabla_moderacion()`, `tabla_regresion()` y
+    `tabla_factorabilidad()` ya no alteran el generador de números aleatorios
+    del usuario al usar `semilla` (las dos primeras lo dejaban cambiado).
+  * `guardar_tablas(t1, t2, "archivo.docx")` acepta el nombre del archivo sin
+    escribir `archivo =`.
 * `tabla_efectos()`: con el método delta, el error estándar de un indirecto
   con un tramo fijado usa el valor fijo de ese tramo (antes lo tomaba como 0).
   `$datos` incluye las columnas `de` y `a` de cada efecto.

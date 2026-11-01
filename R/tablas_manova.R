@@ -86,7 +86,8 @@ tabla_manova <- function(datos, dependientes, grupo, posthoc = c("auto", "tukey"
   falta <- setdiff(c(dependientes, grupo), names(datos))
   if (length(falta)) stop("No est\u00e1n en los datos: ", paste(falta, collapse = ", "), call. = FALSE)
   if (length(dependientes) < 2) stop("Se necesitan dos o m\u00e1s variables dependientes.", call. = FALSE)
-  d <- datos[stats::complete.cases(datos[, c(dependientes, grupo)]), c(dependientes, grupo)]
+  fila_orig <- which(stats::complete.cases(datos[, c(dependientes, grupo)]))   # número de fila en `datos`
+  d <- datos[fila_orig, c(dependientes, grupo)]
   g <- droplevels(as.factor(d[[grupo]])); Y <- as.matrix(d[, dependientes])
   k <- nlevels(g); p <- ncol(Y); N <- nrow(Y); ni <- table(g)
   if (k < 2) stop("El factor necesita al menos dos grupos.", call. = FALSE)
@@ -120,7 +121,7 @@ tabla_manova <- function(datos, dependientes, grupo, posthoc = c("auto", "tukey"
     idx <- which(g == l); Yl <- Y[idx, , drop = FALSE]
     if (length(idx) <= p + 1) return(integer(0))
     D2 <- stats::mahalanobis(Yl, colMeans(Yl), stats::cov(Yl))
-    as.integer(rownames(d)[idx][D2 > stats::qchisq(.999, p)]) }))
+    fila_orig[idx][D2 > stats::qchisq(.999, p)] }))
   R <- stats::cor(Y); rmax <- max(abs(R[upper.tri(R)]))
   si <- tx("Se cumple", "Met"); no <- tx("No se cumple", "Not met")
   fp <- function(x) if (x < .001) "< .001" else paste("=", f_apa(x, 3))

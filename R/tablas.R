@@ -23,6 +23,19 @@ nueva_tabla <- function(titulo, columnas, celdas, negritas = NULL, alinear = NUL
                  extra = extra), class = "tabla_apa")
 }
 
+# Fija la semilla solo mientras se evalúa `expr` y después deja el generador
+# de números aleatorios del usuario como estaba
+#' @noRd
+con_semilla <- function(semilla, expr) {
+  if (is.null(semilla)) return(expr)
+  hay <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+  viejo <- if (hay) get(".Random.seed", envir = globalenv(), inherits = FALSE)
+  on.exit(if (hay) assign(".Random.seed", viejo, envir = globalenv())
+          else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) rm(".Random.seed", envir = globalenv()))
+  set.seed(semilla)
+  expr
+}
+
 #' @noRd
 renombrar <- function(v, etiquetas) {
   if (is.null(etiquetas)) return(v)

@@ -190,6 +190,9 @@ tabla_html <- function(x, numero) {
 #' @export
 guardar_tablas <- function(..., archivo = "tablas_apa.docx", numero = 1) {
   tablas <- list(...)
+  # guardar_tablas(t1, t2, "archivo.docx"): el nombre del archivo sin `archivo =`
+  txt <- vapply(tablas, function(x) is.character(x) && length(x) == 1 && grepl("\\.docx$", x, ignore.case = TRUE), logical(1))
+  if (any(txt) && missing(archivo)) { archivo <- tablas[[which(txt)[1]]]; tablas <- tablas[!txt] }
   if (length(tablas) == 1 && !inherits(tablas[[1]], "tabla_apa") && is.list(tablas[[1]])) tablas <- tablas[[1]]
   if (!length(tablas) || !all(vapply(tablas, inherits, logical(1), "tabla_apa")))
     stop("Pasa tablas creadas con las funciones tabla_*().", call. = FALSE)

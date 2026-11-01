@@ -261,6 +261,8 @@ tabla_normalidad <- function(datos, variables = NULL, decimales = 2, titulo = NU
 #' @noRd
 alfa_cronbach <- function(X) {
   X <- as.matrix(X[stats::complete.cases(X), , drop = FALSE]); k <- ncol(X)
+  # Con un solo ítem no hay alfa ni correlación ítem-total
+  if (k < 2) return(list(alfa = NA_real_, n = nrow(X), k = k, rit = stats::setNames(NA_real_, colnames(X))))
   C <- stats::cov(X); a <- k / (k - 1) * (1 - sum(diag(C)) / sum(C))
   total <- rowSums(X)
   rit <- vapply(seq_len(k), function(i) stats::cor(X[, i], total - X[, i]), numeric(1))
@@ -336,7 +338,7 @@ tabla_confiabilidad <- function(x, factores = NULL, varianza = c("observada", "m
     if (!nrow(L)) stop("El modelo no tiene factores con \u00edtems.", call. = FALSE)
     factores <- split(L$rhs, factor(L$lhs, levels = unique(L$lhs)))
     d <- obtener_datos(x)
-    om <- vapply(names(factores), function(f) omega_fit(x, f, factores[[f]], varianza), numeric(1))
+    om <- vapply(names(factores), function(f) if (length(factores[[f]]) < 2) NA_real_ else omega_fit(x, f, factores[[f]], varianza), numeric(1))
   } else {
     if (is.null(factores) || !is.list(factores) || is.null(names(factores)))
       stop("Con un data.frame indica los \u00edtems de cada factor: factores = list(F1 = c(...), F2 = c(...)).", call. = FALSE)
@@ -350,17 +352,18 @@ tabla_confiabilidad <- function(x, factores = NULL, varianza = c("observada", "m
   }
   res <- lapply(names(factores), function(f) alfa_cronbach(d[, factores[[f]], drop = FALSE]))
   a <- vapply(res, `[[`, numeric(1), "alfa"); k <- vapply(res, `[[`, numeric(1), "k")
-  ic <- t(vapply(res, function(r) ic_feldt(r$alfa, r$n, r$k), numeric(2)))
+  ic <- t(vapply(res, function(r) if (r$k < 2) c(NA_real_, NA_real_) else ic_feldt(r$alfa, r$n, r$k), numeric(2)))
   rmin <- vapply(res, function(r) min(r$rit), numeric(1)); rmax <- vapply(res, function(r) max(r$rit), numeric(1))
-  negativos <- unlist(lapply(res, function(r) names(r$rit)[r$rit < 0]))
+  negativos <- unlist(lapply(res, function(r) names(r$rit)[!is.na(r$rit) & r$rit < 0]))
   if (length(negativos))
     warning("Correlaci\u00f3n \u00edtem-total negativa en: ", paste(negativos, collapse = ", "),
             ". \u00bfHay \u00edtems redactados en sentido inverso que deban recodificarse?", call. = FALSE)
   nf <- renombrar(names(factores), etiquetas)
-  cel <- cbind(nf, formatC(k, format = "d"), f_apa(a, decimales),
-               paste0("[", f_apa(ic[, 1], decimales), ", ", f_apa(ic[, 2], decimales), "]"),
+  uno <- k < 2
+  cel <- cbind(nf, formatC(k, format = "d"), ifelse(uno, "\u2014", f_apa(a, decimales)),
+               ifelse(uno, "\u2014", paste0("[", f_apa(ic[, 1], decimales), ", ", f_apa(ic[, 2], decimales), "]")),
                ifelse(is.na(om), "\u2014", f_apa(om, decimales)),
-               paste0(f_apa(rmin, decimales), "\u2013", f_apa(rmax, decimales)))
+               ifelse(uno, "\u2014", paste0(f_apa(rmin, decimales), "\u2013", f_apa(rmax, decimales))))
   nota <- paste0(tx("\u03b1 = alfa de Cronbach; IC 95 % de Feldt; \u03c9 = omega de McDonald", "\u03b1 = Cronbach's alpha with Feldt's 95% CI; \u03c9 = McDonald's omega"),
                  if (inherits(x, "lavaan")) tx(", calculado con las cargas del modelo", ", computed from the model loadings") else tx(", calculado con un AFC de un factor", ", computed from a one-factor CFA"),
                  if (varianza == "observada") tx(" y la varianza observada de la suma de los \u00edtems", " and the observed variance of the item sum")
@@ -370,7 +373,9 @@ tabla_confiabilidad <- function(x, factores = NULL, varianza = c("observada", "m
                  if (inherits(x, "lavaan") && length(lavaan::lavNames(x, "ov.ord")))
                    tx(" Con \u00edtems ordinales, \u03c9 es el omega ordinal (calculado con las correlaciones polic\u00f3ricas; Gadermann et al., 2012) y \u03b1 se calcula con los puntajes observados.",
                       " With ordinal items, \u03c9 is ordinal omega (computed from polychoric correlations; Gadermann et al., 2012) and \u03b1 is computed from the observed scores.") else "",
-                 if (any(is.na(om))) tx(" \u2014 = omega no calculable con menos de 3 \u00edtems.", " \u2014 = omega cannot be computed with fewer than 3 items.") else "",
+                 if (any(uno)) tx(" \u2014 = no calculable en factores de un solo \u00edtem (su confiabilidad no puede estimarse con los datos).",
+                                  " \u2014 = not computable for single-item factors (their reliability cannot be estimated from the data).")
+                 else if (any(is.na(om))) tx(" \u2014 = omega no calculable con menos de 3 \u00edtems.", " \u2014 = omega cannot be computed with fewer than 3 items.") else "",
                  " n = ", min(vapply(res, `[[`, numeric(1), "n")), if (length(unique(vapply(res, `[[`, numeric(1), "n"))) > 1) tx(" o m\u00e1s", " or more") else "",
                  tx(" casos completos.", " complete cases."))
   t <- nueva_tabla(if (is.null(titulo)) tx("Confiabilidad de las escalas", "Scale reliability") else titulo,

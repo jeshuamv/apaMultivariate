@@ -168,11 +168,10 @@ tabla_moderacion <- function(datos, x, w, y, m = NULL, modelo = 1, covariables =
   } else {
     est <- indirectos_condicionales(ml, modelo, wv)
     message("Calculando intervalos con ", bootstrap, " remuestreos bootstrap; puede tardar un poco...")
-    if (!is.null(semilla)) set.seed(semilla)
-    B <- t(replicate(bootstrap, {
+    B <- con_semilla(semilla, t(replicate(bootstrap, {
       db <- d[sample.int(n, n, replace = TRUE), , drop = FALSE]
       indirectos_condicionales(ajustar_moderacion(db, modelo, covariables), modelo, wv)
-    }))
+    })))
     ee <- apply(B, 2, stats::sd); li <- apply(B, 2, stats::quantile, .025); ls <- apply(B, 2, stats::quantile, .975)
     k <- length(wv)
     filas <- c(paste0(w_lab, if (!dic) paste0(" (", f_num(w_orig, decimales), ")") else ""), tx("\u00cdndice de mediaci\u00f3n moderada", "Index of moderated mediation"))

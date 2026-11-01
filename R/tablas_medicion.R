@@ -398,12 +398,10 @@ tabla_factorabilidad <- function(datos, variables = NULL, iteraciones = 100, fm 
   chi <- -(n - 1 - (2 * p + 5) / 6) * log(det(R)); gl <- p * (p - 1) / 2
   pb <- stats::pchisq(chi, gl, lower.tail = FALSE)
   ev <- eigen(R, symmetric = TRUE, only.values = TRUE)$values; evr <- autovalores_reducidos(R, fm, n)
-  if (!is.null(semilla)) { viejo <- if (exists(".Random.seed", envir = globalenv())) get(".Random.seed", envir = globalenv())
-                           set.seed(semilla); on.exit(if (!is.null(viejo)) assign(".Random.seed", viejo, envir = globalenv()), add = TRUE) }
-  sim <- replicate(iteraciones, {
+  sim <- con_semilla(semilla, replicate(iteraciones, {
     Rs <- stats::cor(matrix(stats::rnorm(n * p), n, p))
     c(eigen(Rs, symmetric = TRUE, only.values = TRUE)$values, autovalores_reducidos(Rs, fm, n))
-  })
+  }))
   q95 <- apply(sim, 1, stats::quantile, probs = .95)
   pc95 <- q95[1:p]; fa95 <- q95[(p + 1):(2 * p)]
   primero_bajo <- function(o, a) { b <- which(o <= a); if (length(b)) b[1] - 1 else length(o) }

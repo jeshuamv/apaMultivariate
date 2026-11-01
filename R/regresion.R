@@ -87,9 +87,7 @@ tabla_regresion <- function(fit, etiquetas = NULL, decimales = 2, ic = .95, robu
   tt <- b / ee; p <- 2 * stats::pt(-abs(tt), gl)
   q <- stats::qt(1 - (1 - ic) / 2, gl); li <- b - q * ee; ls <- b + q * ee
   if (bootstrap > 0) {
-    if (!is.null(semilla)) { viejo <- if (exists(".Random.seed", envir = globalenv())) get(".Random.seed", envir = globalenv())
-                             set.seed(semilla); on.exit(if (!is.null(viejo)) assign(".Random.seed", viejo, envir = globalenv()), add = TRUE) }
-    B <- replicate(bootstrap, { i <- sample.int(n, n, replace = TRUE); stats::lm.fit(X[i, , drop = FALSE], y[i])$coefficients })
+    B <- con_semilla(semilla, replicate(bootstrap, { i <- sample.int(n, n, replace = TRUE); stats::lm.fit(X[i, , drop = FALSE], y[i])$coefficients }))
     B <- B[, colSums(is.na(B)) == 0, drop = FALSE]
     li <- apply(B, 1, stats::quantile, probs = (1 - ic) / 2); ls <- apply(B, 1, stats::quantile, probs = 1 - (1 - ic) / 2)
     validos <- ncol(B)
@@ -300,13 +298,20 @@ tabla_influencia <- function(fit, todos = FALSE, maximo = 20, etiquetas = NULL, 
                    cel, neg, nota = nota, datos = D)
   i <- which.max(D$cook)
   if (D$cook[i] > cortes[["cook"]] && n - 1 > p) {
-    mf <- stats::model.frame(fit)
-    f2 <- stats::lm(stats::formula(fit), data = mf[-i, , drop = FALSE])
-    b1 <- stats::coef(fit); b2 <- stats::coef(f2)[names(b1)]
-    p1 <- summary(fit)$coefficients[, 4]; p2 <- summary(f2)$coefficients[names(b1), 4]
+    # Se reestima con la matriz del modelo (no con la fórmula), para que
+    # funcione con log(), poly(), factor() y demás transformaciones
+    X <- stats::model.matrix(fit); y <- stats::model.response(stats::model.frame(fit))
+    X2 <- X[-i, , drop = FALSE]; y2 <- y[-i]
+    f2 <- stats::lm.fit(X2, y2)
+    gl2 <- length(y2) - f2$rank
+    b1 <- stats::coef(fit); b2 <- f2$coefficients[names(b1)]
+    ee2 <- sqrt(diag(sum(f2$residuals^2) / gl2 * chol2inv(qr.R(f2$qr))))[order(f2$qr$pivot)]
+    p2 <- 2 * stats::pt(-abs(b2 / ee2), gl2)
+    p1 <- summary(fit)$coefficients[, 4]
     ee1 <- summary(fit)$coefficients[, 2]
     cambio <- (b2 - b1) / ee1          # cambio en errores estándar (como DFBETAS)
-    r21 <- summary(fit)$r.squared; r22 <- summary(f2)$r.squared
+    r21 <- summary(fit)$r.squared
+    r22 <- 1 - sum(f2$residuals^2) / (if ("(Intercept)" %in% names(b1)) sum((y2 - mean(y2))^2) else sum(y2^2))
     sens <- cbind(nombre_coef(names(b1), etiquetas), f_num(b1, 2), f_p(p1), f_num(b2, 2), f_p(p2), f_num(cambio, 2))
     sens <- rbind(sens, c("R\u00b2", f_apa(r21, 3), "", f_apa(r22, 3), "", ""))
     negs <- matrix(FALSE, nrow(sens), ncol(sens)); negs[seq_along(b1), 6] <- abs(cambio) > 1 | ((p1 < .05) != (p2 < .05))
@@ -362,7 +367,9 @@ tabla_subconjuntos <- function(fit, criterio = c("AICc", "BIC", "PRESS", "Cp", "
   mse <- sum(stats::residuals(fit)^2) / stats::df.residual(fit)
   subs <- unlist(lapply(seq_along(tl), function(m) utils::combn(tl, m, simplify = FALSE)), recursive = FALSE)
   filas <- lapply(subs, function(s) {
-    f <- stats::lm(stats::reformulate(s, yn), data = mf)
+    # Los nombres van entre comillas invertidas: así log(x), poly(x, 2) o
+    # factor(g) se leen como columnas del marco del modelo y no se recalculan
+    f <- stats::lm(stats::reformulate(paste0("`", s, "`"), paste0("`", yn, "`")), data = mf)
     sm <- summary(f); kk <- length(stats::coef(f)) - 1; K <- kk + 2
     sse <- sum(stats::residuals(f)^2); aic <- stats::AIC(f)
     h <- stats::hatvalues(f); press <- sum((stats::residuals(f) / (1 - h))^2)
