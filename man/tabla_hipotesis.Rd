@@ -40,7 +40,8 @@ Un objeto \code{tabla_apa}. Los valores están en \verb{$datos}.
 }
 \description{
 Resume la decisión sobre cada hipótesis del modelo: el coeficiente, su
-significancia y si la hipótesis se sostiene o se rechaza.
+significancia y si la hipótesis se sostiene o no. Un efecto no significativo
+no demuestra que la hipótesis sea falsa: solo que los datos no la respaldan.
 }
 \details{
 Cada hipótesis se escribe como una trayectoria con flechas: \code{"X -> Y"}

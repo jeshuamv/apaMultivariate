@@ -9,6 +9,7 @@ grafica_sedimentacion(
   variables = NULL,
   tipo = c("factores", "componentes", "ambos"),
   fm = "ml",
+  cor = "pearson",
   iteraciones = 100,
   semilla = 123,
   maximo = 20,
@@ -27,6 +28,12 @@ grafica_sedimentacion(
 \item{fm}{Método de extracción para el análisis paralelo de factores:
 \code{"ml"} (por defecto), \code{"minres"}, \code{"pa"}, etc., como en \code{\link[psych:fa]{psych::fa()}};
 o \code{"smc"}. Usa el mismo método que en tu análisis factorial.}
+
+\item{cor}{Correlaciones que se analizan: \code{"pearson"} (por defecto) o
+\code{"policorica"}, recomendada para ítems tipo Likert con 5 categorías o
+menos (Holgado-Tello et al., 2010). Con policóricas, el análisis paralelo
+compara con datos aleatorios normales (Pearson), y la prueba de Bartlett
+es aproximada.}
 
 \item{iteraciones}{Número de conjuntos de datos aleatorios del análisis
 paralelo.}

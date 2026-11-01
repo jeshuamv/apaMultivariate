@@ -10,6 +10,7 @@ comparar_soluciones(
   rotate = "oblimin",
   fm = "ml",
   umbral = 0.4,
+  cor = c("pearson", "policorica"),
   dibujar = TRUE,
   archivo = NULL
 )
@@ -25,6 +26,9 @@ abajo si todos coinciden.}
 
 \item{umbral}{Carga mínima para considerar que un ítem pertenece a un
 factor.}
+
+\item{cor}{\code{"pearson"} o \code{"policorica"} (ítems ordinales), como en
+\code{\link[=tabla_factorabilidad]{tabla_factorabilidad()}}.}
 
 \item{dibujar}{Si es \code{TRUE}, dibuja el diagrama de cada solución.}
 

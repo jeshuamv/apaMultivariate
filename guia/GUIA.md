@@ -394,7 +394,7 @@ solo líneas horizontales y nota) y guardan sus valores numéricos en
 |             | `tabla_invarianza()`       | Invarianza configural, métrica, escalar y estricta                                  |
 | Estructural | `tabla_parametros()`       | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas               |
 |             | `tabla_efectos()`          | Efectos directos, indirectos (bootstrap) y totales                                  |
-|             | `tabla_hipotesis()`        | Cada hipótesis: se sostiene o se rechaza                                            |
+|             | `tabla_hipotesis()`        | Cada hipótesis: se sostiene o no se sostiene                                        |
 |             | `tabla_vif()`              | Multicolinealidad entre predictores                                                 |
 | Moderación  | `tabla_moderacion()`       | Moderación y mediación moderada (modelos 1, 7 y 14 de PROCESS)                      |
 |             | `grafica_interaccion()`    | Gráfica de pendientes simples                                                       |
@@ -1287,14 +1287,14 @@ tabla_hipotesis(fit3, c(H1 = "Education -> Examination (+)",
                 bootstrap = 500)
 #> 
 #> Contraste de hipótesis
-#> ──────────────────────────────────────────────────────────────────────────────────────────────
-#> Hipótesis  Trayectoria                          Efecto      β      p / IC 95 %     Decisión   
-#> ──────────────────────────────────────────────────────────────────────────────────────────────
-#> H1         Education → Examination (+)          Directo    .70        < .001       Se sostiene
-#> H2         Examination → Fertility (-)          Directo    -.03        .796        Se rechaza 
-#> H3         Catholic → Fertility (+)             Directo    .36        < .001       Se sostiene
-#> H4         Education → Examination → Fertility  Indirecto  -.02  IC [-0.52, 0.23]  Se rechaza 
-#> ──────────────────────────────────────────────────────────────────────────────────────────────
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────
+#> Hipótesis  Trayectoria                          Efecto      β      p / IC 95 %     Decisión      
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────
+#> H1         Education → Examination (+)          Directo    .70        < .001       Se sostiene   
+#> H2         Examination → Fertility (-)          Directo    -.03        .796        No se sostiene
+#> H3         Catholic → Fertility (+)             Directo    .36        < .001       Se sostiene   
+#> H4         Education → Examination → Fertility  Indirecto  -.02  IC [-0.52, 0.23]  No se sostiene
+#> ─────────────────────────────────────────────────────────────────────────────────────────────────
 #> Nota. β = coeficiente estandarizado. Efectos directos: se sostienen si p <
 #> .05. Efectos indirectos: se sostienen si el intervalo de confianza al 95 %
 #> (bootstrap con 500 remuestreos, calculado con el efecto no estandarizado) no
@@ -1479,8 +1479,8 @@ tabla_supuestos_regresion(fit_hald)
 #> Supuesto                      Prueba                 Estadístico       p    Interpretación                                                                                                                              
 #> ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 #> Normalidad de los residuos    Shapiro-Wilk            W = .970        .890  No se rechaza la normalidad de los residuos.                                                                                                
-#> Homocedasticidad              Breusch-Pagan         χ²(4) = 1.46      .833  La varianza de los residuos es constante.                                                                                                   
-#> Linealidad y especificación   RESET                F(2, 6) = 0.04     .958  No hay señales de relaciones no lineales ni de variables omitidas.                                                                          
+#> Homocedasticidad              Breusch-Pagan         χ²(4) = 1.46      .833  No se rechaza la homocedasticidad (varianza constante de los residuos).                                                                     
+#> Linealidad y especificación   RESET                F(2, 6) = 0.04     .958  No se rechaza la especificación lineal (no se detectan relaciones no lineales ni variables omitidas).                                       
 #> Independencia de los errores  Durbin-Watson           DW = 2.05        —    Entre 1.5 y 2.5: sin autocorrelación importante. Solo tiene sentido si el orden de los casos importa (por ejemplo, mediciones en el tiempo).
 #> Multicolinealidad             VIF máximo             282.51 (x4)       —    Grave (VIF > 10): los coeficientes individuales son inestables; considera quitar o combinar predictores muy correlacionados.                
 #> Casos influyentes             Distancia de Cook  máx. = .39 (caso 8)   —    1 caso(s) con D > 4/N (.31) y 0 con D > 1. Revísalos con tabla_influencia(fit).                                                             
@@ -1522,20 +1522,22 @@ tabla_influencia(fit_hald)
 #> los resultados con y sin él.
 #> 
 #> Sensibilidad: coeficientes con y sin el caso 8
-#> ───────────────────────────────────────────────────────
-#>               B (todos)   p    B (sin 8)   p    Cambio 
-#> ───────────────────────────────────────────────────────
-#> (Intercepto)    62.41    .399    37.25    .564  -40.3 %
-#> x1              1.55     .071    1.88     .025  21.2 % 
-#> x2              0.51     .501    0.73     .283  43.8 % 
-#> x3              0.10     .896    0.52     .471  409.0 %
-#> x4              -0.14    .844    0.10     .872  172.3 %
-#> R²              .982             .986                  
-#> ───────────────────────────────────────────────────────
+#> ───────────────────────────────────────────────────────────
+#>               B (todos)   p    B (sin 8)   p    Cambio (EE)
+#> ───────────────────────────────────────────────────────────
+#> (Intercepto)    62.41    .399    37.25    .564     -0.36   
+#> x1              1.55     .071    1.88     .025     0.44    
+#> x2              0.51     .501    0.73     .283     0.31    
+#> x3              0.10     .896    0.52     .471     0.55    
+#> x4              -0.14    .844    0.10     .872     0.35    
+#> R²              .982             .986                      
+#> ───────────────────────────────────────────────────────────
 #> Nota. Se quitó el caso con mayor distancia de Cook (D =
-#> .39). En negritas, coeficientes que cambian más de 20 % o
-#> cuya significancia cambia. Si las conclusiones no cambian,
-#> los resultados son robustos a ese caso.
+#> .39). Cambio (EE) = diferencia entre los coeficientes, en
+#> errores estándar del modelo completo. En negritas,
+#> coeficientes que cambian más de un error estándar o cuya
+#> significancia (p < .05) cambia. Si las conclusiones no
+#> cambian, los resultados son robustos a ese caso.
 ```
 
 Y todas las combinaciones de predictores, ordenadas por AICc:

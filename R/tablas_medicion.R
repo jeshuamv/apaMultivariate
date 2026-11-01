@@ -309,6 +309,31 @@ mapa_velicer <- function(R) {
 }
 
 #' @noRd
+tipo_cor <- function(cor) {
+  cor <- tolower(sin_acentos(cor[1]))
+  if (cor %in% c("poly", "polychoric", "policorica", "policoricas")) "policorica"
+  else if (cor %in% c("pearson", "cor")) "pearson"
+  else stop("`cor` debe ser \"pearson\" o \"policorica\".", call. = FALSE)
+}
+
+#' @noRd
+pocas_categorias <- function(d) all(vapply(d, function(x) { x <- stats::na.omit(x); all(x == round(x)) && length(unique(x)) <= 5 }, logical(1)))
+
+# Matriz de correlaciones de Pearson o policóricas (ítems ordinales)
+#' @noRd
+matriz_cor <- function(d, cor = "pearson") {
+  if (cor == "pearson") return(stats::cor(d))
+  if (!requireNamespace("psych", quietly = TRUE)) stop("Las correlaciones polic\u00f3ricas necesitan el paquete psych: install.packages(\"psych\").", call. = FALSE)
+  ncat <- vapply(d, function(x) length(unique(stats::na.omit(x))), numeric(1))
+  malas <- names(d)[ncat > 8 | !vapply(d, function(x) all(stats::na.omit(x) == round(stats::na.omit(x))), logical(1))]
+  if (length(malas))
+    stop("Las correlaciones polic\u00f3ricas son para \u00edtems ordinales (enteros con 8 categor\u00edas o menos); estas variables no lo son: ",
+         paste(malas, collapse = ", "), ". Usa cor = \"pearson\".", call. = FALSE)
+  R <- suppressWarnings(suppressMessages(psych::polychoric(d)$rho))
+  dimnames(R) <- list(names(d), names(d)); R
+}
+
+#' @noRd
 autovalores_reducidos <- function(R, fm = "smc", n = NULL) {
   if (fm != "smc") {
     v <- tryCatch(suppressWarnings(suppressMessages(
@@ -344,6 +369,11 @@ autovalores_reducidos <- function(R, fm = "smc", n = NULL) {
 #' @param fm Método de extracción para el análisis paralelo de factores:
 #'   `"ml"` (por defecto), `"minres"`, `"pa"`, etc., como en [psych::fa()];
 #'   o `"smc"`. Usa el mismo método que en tu análisis factorial.
+#' @param cor Correlaciones que se analizan: `"pearson"` (por defecto) o
+#'   `"policorica"`, recomendada para ítems tipo Likert con 5 categorías o
+#'   menos (Holgado-Tello et al., 2010). Con policóricas, el análisis paralelo
+#'   compara con datos aleatorios normales (Pearson), y la prueba de Bartlett
+#'   es aproximada.
 #' @param semilla Semilla para el análisis paralelo (`NULL` para no fijarla).
 #' @inheritParams tabla_descriptivos
 #' @return Un objeto `tabla_apa` con tres partes. Los valores están en
@@ -352,8 +382,9 @@ autovalores_reducidos <- function(R, fm = "smc", n = NULL) {
 #' library(lavaan)
 #' tabla_factorabilidad(HolzingerSwineford1939[, paste0("x", 1:9)], iteraciones = 50)
 #' @export
-tabla_factorabilidad <- function(datos, variables = NULL, iteraciones = 100, fm = "ml", semilla = 123, etiquetas = NULL,
-                                 titulo = NULL, archivo = NULL) {
+tabla_factorabilidad <- function(datos, variables = NULL, iteraciones = 100, fm = "ml", cor = c("pearson", "policorica"), semilla = 123,
+                                 etiquetas = NULL, titulo = NULL, archivo = NULL) {
+  cor <- tipo_cor(cor)
   if (fm != "smc" && !requireNamespace("psych", quietly = TRUE)) {
     message("Para el an\u00e1lisis paralelo con fm = \"", fm, "\" se necesita el paquete psych; se usa fm = \"smc\". Inst\u00e1lalo con install.packages(\"psych\").")
     fm <- "smc"
@@ -361,7 +392,7 @@ tabla_factorabilidad <- function(datos, variables = NULL, iteraciones = 100, fm 
   d <- obtener_datos(datos, variables); d <- d[stats::complete.cases(d), , drop = FALSE]
   n <- nrow(d); p <- ncol(d)
   if (p < 3) stop("Se necesitan al menos tres variables.", call. = FALSE)
-  R <- stats::cor(d)
+  R <- matriz_cor(d, cor)
   if (det(R) <= 0) stop("La matriz de correlaciones es singular (hay variables redundantes).", call. = FALSE)
   K <- kmo(R)
   chi <- -(n - 1 - (2 * p + 5) / 6) * log(det(R)); gl <- p * (p - 1) / 2
@@ -389,6 +420,9 @@ tabla_factorabilidad <- function(datos, variables = NULL, iteraciones = 100, fm 
   nota1 <- paste0(tx("KMO = medida de adecuaci\u00f3n muestral de Kaiser-Meyer-Olkin (calificaci\u00f3n de Kaiser, 1974); MSA = adecuaci\u00f3n de cada \u00edtem. N = ",
                      "KMO = Kaiser-Meyer-Olkin measure of sampling adequacy (Kaiser's 1974 labels); MSA = item-level adequacy. N = "),
                   n, tx(" casos completos. ", " complete cases. "),
+                  if (cor == "policorica") tx("Correlaciones polic\u00f3ricas (la prueba de Bartlett es aproximada con ellas). ", "Polychoric correlations (Bartlett's test is approximate with them). ")
+                  else if (pocas_categorias(d)) tx("Los \u00edtems tienen 5 categor\u00edas o menos: considera usar correlaciones polic\u00f3ricas (cor = \"policorica\"). ",
+                                                   "Items have 5 or fewer categories: consider polychoric correlations (cor = \"policorica\"). ") else "",
                   if (length(bajos)) paste0(tx("\u00cdtems con MSA < .50, candidatos a eliminarse: ", "Items with MSA < .50 (candidates for removal): "), paste(renombrar(bajos, etiquetas), collapse = ", "), ".")
                   else tx("Todos los \u00edtems tienen MSA \u2265 .50.", "All items have MSA \u2265 .50."))
   cel2 <- rbind(c(tx("Autovalores mayores que 1 (Kaiser)", "Eigenvalues greater than 1 (Kaiser)"), n_kaiser),

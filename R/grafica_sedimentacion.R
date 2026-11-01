@@ -29,10 +29,10 @@
 #' }
 #' }
 #' @export
-grafica_sedimentacion <- function(datos, variables = NULL, tipo = c("factores", "componentes", "ambos"), fm = "ml",
+grafica_sedimentacion <- function(datos, variables = NULL, tipo = c("factores", "componentes", "ambos"), fm = "ml", cor = "pearson",
                                   iteraciones = 100, semilla = 123, maximo = 20, archivo = NULL, ancho = "columna", alto = NULL) {
   tipo <- match.arg(tipo)
-  tf <- suppressMessages(tabla_factorabilidad(datos, variables, iteraciones = iteraciones, fm = fm, semilla = semilla))
+  tf <- suppressMessages(tabla_factorabilidad(datos, variables, iteraciones = iteraciones, fm = fm, cor = cor, semilla = semilla))
   D <- tf$datos; p <- length(D$autovalores); m <- min(p, maximo); i <- seq_len(m)
   res <- data.frame(numero = i, componentes = D$autovalores[i], aleatorios_componentes = D$aleatorios_comp[i],
                     factores = D$autovalores_reducidos[i], aleatorios_factores = D$aleatorios_fact[i])

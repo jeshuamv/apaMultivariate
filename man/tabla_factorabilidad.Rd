@@ -9,6 +9,7 @@ tabla_factorabilidad(
   variables = NULL,
   iteraciones = 100,
   fm = "ml",
+  cor = c("pearson", "policorica"),
   semilla = 123,
   etiquetas = NULL,
   titulo = NULL,
@@ -26,6 +27,12 @@ paralelo.}
 \item{fm}{Método de extracción para el análisis paralelo de factores:
 \code{"ml"} (por defecto), \code{"minres"}, \code{"pa"}, etc., como en \code{\link[psych:fa]{psych::fa()}};
 o \code{"smc"}. Usa el mismo método que en tu análisis factorial.}
+
+\item{cor}{Correlaciones que se analizan: \code{"pearson"} (por defecto) o
+\code{"policorica"}, recomendada para ítems tipo Likert con 5 categorías o
+menos (Holgado-Tello et al., 2010). Con policóricas, el análisis paralelo
+compara con datos aleatorios normales (Pearson), y la prueba de Bartlett
+es aproximada.}
 
 \item{semilla}{Semilla para el análisis paralelo (\code{NULL} para no fijarla).}
 

@@ -132,6 +132,12 @@ Kaiser (autovalores > 1) tiende a sobreestimarlo.
 > Bartlett, χ²(36) = 904.10, *p* < .001). El análisis paralelo y la prueba MAP sugirieron
 > retener tres factores.
 
+**Ítems ordinales.** Con ítems tipo Likert de 5 opciones o menos, las correlaciones de
+Pearson subestiman la relación entre ítems; usa correlaciones policóricas
+(`cor = "policorica"` en `tabla_factorabilidad()` y `comparar_soluciones()`, y
+`cor = "poly"` en `psych::fa()`) y repórtalo en el método (Holgado-Tello et al., 2010).
+Con 6 o 7 opciones, las dos suelen dar resultados parecidos.
+
 **Gráfica de sedimentación — `grafica_sedimentacion()`.** Reporta la gráfica con la línea
 del análisis paralelo: es más convincente que el "codo" solo, que es subjetivo. Si
 comparas rotaciones con `comparar_soluciones(..., rotate = c("none", "varimax",
@@ -586,6 +592,10 @@ si ya está en tu texto.
 - Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for assessing
   discriminant validity in variance-based structural equation modeling. *Journal of the
   Academy of Marketing Science, 43*(1), 115–135.
+- Holgado-Tello, F. P., Chacón-Moscoso, S., Barbero-García, I., & Vila-Abad, E. (2010).
+  Polychoric versus Pearson correlations in exploratory and confirmatory factor analysis
+  of ordinal variables. *Quality & Quantity, 44*(1), 153–166.
+  https://doi.org/10.1007/s11135-008-9190-y
 - Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance
   structure analysis. *Structural Equation Modeling, 6*(1), 1–55.
 - Jackson, D. L., Gillaspy, J. A., Jr., & Purc-Stephenson, R. (2009). Reporting practices

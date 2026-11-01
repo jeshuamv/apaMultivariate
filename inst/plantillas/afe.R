@@ -39,6 +39,9 @@ tabla_descriptivos(items)
 # KMO ≥ .60 y Bartlett significativo: los datos son factorizables.
 # Para el número de factores, da más peso al análisis paralelo y a la MAP.
 tabla_factorabilidad(items)
+# Si tus ítems son tipo Likert con 5 opciones o menos, usa correlaciones
+# policóricas (y ponlo igual en comparar_soluciones y en fa: cor = "poly"):
+# tabla_factorabilidad(items, cor = "policorica")
 
 # Gráfica de sedimentación con el análisis paralelo: se retienen los factores
 # cuyo punto queda por encima de la línea punteada (datos aleatorios).

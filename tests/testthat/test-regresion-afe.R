@@ -91,3 +91,23 @@ test_that("se detecta la columna de numeros de fila de write.csv", {
   r <- capture.output(rv <- revisar_datos(X))
   expect_false(any(grepl("identificador|números de fila", rv$texto)))
 })
+
+test_that("correlaciones policoricas en el AFE", {
+  skip_if_not_installed("psych"); skip_if_not_installed("GPArotation")
+  b <- psych::bfi[1:600, 1:10]; b <- b[complete.cases(b), ]
+  t <- tabla_factorabilidad(b, iteraciones = 10, cor = "policorica")
+  expect_equal(unname(t$datos$kmo), unname(psych::KMO(psych::polychoric(b)$rho)$MSA))
+  expect_match(t$nota, "polic")
+  r <- comparar_soluciones(b, 2, cor = "policorica", dibujar = FALSE)
+  a <- psych::fa(b, 2, cor = "poly", fm = "ml", rotate = "oblimin")
+  expect_equal(r$tabla$datos$var, sum(a$communality) / 10, tolerance = 1e-4)
+  expect_error(tabla_factorabilidad(lavaan::HolzingerSwineford1939[, 7:15], cor = "policorica"), "ordinales")
+  expect_match(tabla_factorabilidad(b[, 1:5] * 0 + (b[, 1:5] > 3), iteraciones = 5)$nota, "polic")
+})
+
+test_that("tabla_hipotesis no dice 'se rechaza'", {
+  fit <- lavaan::sem("Fertility ~ Education + Agriculture", data = swiss)
+  h <- tabla_hipotesis(fit, c(H1 = "Education -> Fertility (-)", H2 = "Agriculture -> Fertility (-)"))
+  expect_false(any(grepl("rechaza", h$celdas)))
+  expect_true(any(grepl("No se sostiene", h$celdas)))
+})

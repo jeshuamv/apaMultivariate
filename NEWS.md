@@ -20,6 +20,15 @@
   varianza de cada factor y una tabla del factor en que carga cada ítem en cada
   solución. La varianza explicada ahora es la suma de las comunalidades (antes,
   con rotaciones oblicuas, se sumaban las cargas de patrón al cuadrado).
+* `tabla_factorabilidad()`, `comparar_soluciones()` y `grafica_sedimentacion()`
+  aceptan `cor = "policorica"` para ítems ordinales; con Pearson, la nota sugiere
+  policóricas si los ítems tienen 5 categorías o menos.
+* `tabla_hipotesis()`: una hipótesis no respaldada dice "No se sostiene" (antes
+  "Se rechaza"; un efecto no significativo no demuestra que sea falsa).
+* `tabla_supuestos_regresion()` dice "no se rechaza" en lugar de afirmar que el
+  supuesto se cumple, y la tabla de sensibilidad de `tabla_influencia()` mide el
+  cambio en errores estándar (el porcentaje se disparaba con coeficientes cercanos
+  a cero).
 * `leer_datos()` quita la columna de números de fila que agrega
   `write.csv()` sin `row.names = FALSE`, y `revisar_datos()` avisa si una
   columna parece números de fila o un identificador.

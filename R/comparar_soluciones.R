@@ -25,6 +25,8 @@
 #'   `2:4`). Por defecto, los que sugieren los criterios, más uno arriba y uno
 #'   abajo si todos coinciden.
 #' @param rotate,fm Rotación y método de extracción, como en [psych::fa()].
+#' @param cor `"pearson"` o `"policorica"` (ítems ordinales), como en
+#'   [tabla_factorabilidad()].
 #' @param umbral Carga mínima para considerar que un ítem pertenece a un
 #'   factor.
 #' @param dibujar Si es `TRUE`, dibuja el diagrama de cada solución.
@@ -42,8 +44,9 @@
 #' }
 #' }
 #' @export
-comparar_soluciones <- function(datos, nfactores = NULL, rotate = "oblimin", fm = "ml", umbral = 0.40,
+comparar_soluciones <- function(datos, nfactores = NULL, rotate = "oblimin", fm = "ml", umbral = 0.40, cor = c("pearson", "policorica"),
                                 dibujar = TRUE, archivo = NULL) {
+  cor <- tipo_cor(cor)
   if (!requireNamespace("psych", quietly = TRUE))
     stop("Se necesita el paquete psych: install.packages(c(\"psych\", \"GPArotation\")).", call. = FALSE)
   nec <- setdiff(rotate, c("none", "varimax", "quartimax"))
@@ -53,7 +56,7 @@ comparar_soluciones <- function(datos, nfactores = NULL, rotate = "oblimin", fm 
   p <- ncol(d)
   sugeridos <- NULL
   if (is.null(nfactores)) {
-    tf <- suppressMessages(tabla_factorabilidad(d, iteraciones = 50, fm = fm[1]))
+    tf <- suppressMessages(tabla_factorabilidad(d, iteraciones = 50, fm = fm[1], cor = cor))
     sugeridos <- tf$datos$factores
     s <- sort(unique(sugeridos[sugeridos >= 1]))
     nfactores <- if (length(rotate) > 1 || length(fm) > 1) max(1, sugeridos[["paralelo_factores"]])
@@ -61,6 +64,7 @@ comparar_soluciones <- function(datos, nfactores = NULL, rotate = "oblimin", fm 
   }
   nfactores <- sort(unique(nfactores[nfactores >= 1 & nfactores <= floor(p / 2)]))
   if (!length(nfactores)) stop("No hay un n\u00famero de factores v\u00e1lido para comparar (como m\u00e1ximo, la mitad de los \u00edtems).", call. = FALSE)
+  if (cor == "policorica") { Rpol <- matriz_cor(d, cor) } else Rpol <- NULL
   rejilla <- expand.grid(k = nfactores, fm = unique(fm), rotate = unique(rotate), stringsAsFactors = FALSE)
   rejilla <- rejilla[order(rejilla$k, match(rejilla$fm, fm), match(rejilla$rotate, rotate)), ]
   # con un factor no hay rotación: una sola fila por método
@@ -73,7 +77,7 @@ comparar_soluciones <- function(datos, nfactores = NULL, rotate = "oblimin", fm 
   sol <- list(); filas <- list(); asignaciones <- list()
   for (i in seq_len(nrow(rejilla))) {
     k <- rejilla$k[i]; f <- rejilla$fm[i]; r <- rejilla$rotate[i]
-    a <- tryCatch(suppressWarnings(suppressMessages(psych::fa(d, nfactors = k, rotate = r, fm = f))),
+    a <- tryCatch(suppressWarnings(suppressMessages(if (is.null(Rpol)) psych::fa(d, nfactors = k, rotate = r, fm = f) else psych::fa(Rpol, nfactors = k, rotate = r, fm = f, n.obs = nrow(d)))),
                   error = function(e) NULL)
     if (is.null(a)) next
     nm <- nombre(k, f, r)
@@ -122,7 +126,7 @@ comparar_soluciones <- function(datos, nfactores = NULL, rotate = "oblimin", fm 
     if (length(x)) paste0(etiqueta(i), " (", paste(x, collapse = "; "), ")") else ""
   }, character(1))
   detalle <- detalle[nzchar(detalle)]
-  partes <- c(if (!var_fm) paste0(tx("extracci\u00f3n ", "extraction: "), fm[1]), if (!var_rot) paste0(tx("rotaci\u00f3n ", "rotation: "), rot_txt(rejilla$rotate[1])),
+  partes <- c(if (cor == "policorica") tx("correlaciones polic\u00f3ricas", "polychoric correlations"), if (!var_fm) paste0(tx("extracci\u00f3n ", "extraction: "), fm[1]), if (!var_rot) paste0(tx("rotaci\u00f3n ", "rotation: "), rot_txt(rejilla$rotate[1])),
               if (!var_k) paste0(nfactores, tx(" factores", " factors")))
   fijo <- if (length(partes)) { x <- paste(partes, collapse = ", "); paste0(toupper(substr(x, 1, 1)), substring(x, 2), ". ") } else ""
   nota <- paste0(fijo,

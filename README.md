@@ -313,7 +313,7 @@ Listas para Word, las que suelen pedirse en una tarea, una tesis o un artículo:
 | | `tabla_invarianza(modelo, datos, grupo = "sexo")` | Invarianza configural, métrica, escalar y estricta |
 | Estructural | `tabla_parametros(fit)` | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas |
 | | `tabla_efectos(fit)` | Efectos directos, indirectos (bootstrap) y totales |
-| | `tabla_hipotesis(fit, c(H1 = "X -> Y (+)"))` | Cada hipótesis: se sostiene o se rechaza |
+| | `tabla_hipotesis(fit, c(H1 = "X -> Y (+)"))` | Cada hipótesis: se sostiene o no se sostiene |
 | | `tabla_vif(fit)` | Multicolinealidad entre predictores |
 | Moderación | `tabla_moderacion(datos, x = "X", w = "W", y = "Y")` | Moderación (modelo 1 de PROCESS) con pendientes simples y Johnson-Neyman; mediación moderada (modelos 7 y 14) con el índice de mediación moderada. `grafica_interaccion()` dibuja la interacción |
 | Regresión | `tabla_regresion(fit)` | Regresión múltiple con `lm()`: B, EE, IC, β, *t*, *p*, sr² y VIF; R², R² ajustada y *F*. `robusto = TRUE` (HC3) o `bootstrap = 2000` |

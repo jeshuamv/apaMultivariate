@@ -207,7 +207,8 @@ tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales 
 #' Tabla de contraste de hipótesis
 #'
 #' Resume la decisión sobre cada hipótesis del modelo: el coeficiente, su
-#' significancia y si la hipótesis se sostiene o se rechaza.
+#' significancia y si la hipótesis se sostiene o no. Un efecto no significativo
+#' no demuestra que la hipótesis sea falsa: solo que los datos no la respaldan.
 #'
 #' Cada hipótesis se escribe como una trayectoria con flechas: `"X -> Y"`
 #' para un efecto directo o `"X -> M -> Y"` para un efecto indirecto
@@ -277,7 +278,7 @@ tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etique
     c(nm, paste0(paste(renombrar(h$v, etiquetas), collapse = " \u2192 "), if (nzchar(h$signo)) paste0(" (", h$signo, ")") else ""),
       if (r$tipo == "Directo") tx("Directo", "Direct") else tx("Indirecto", "Indirect"), f_apa(r$beta, decimales),
       if (r$tipo == "Directo") f_p(r$p) else paste0(tx("IC [", "CI ["), f_num(r$ic[1], decimales), ", ", f_num(r$ic[2], decimales), "]"),
-      if (sostiene[[nm]]) tx("Se sostiene", "Supported") else tx("Se rechaza", "Not supported"))
+      if (sostiene[[nm]]) tx("Se sostiene", "Supported") else tx("No se sostiene", "Not supported"))
   }, character(6)))
   nota <- paste0(tx("\u03b2 = coeficiente estandarizado. Efectos directos: se sostienen si p < ", "\u03b2 = standardized coefficient. Direct effects are supported if p < "), f_apa(alfa, 2),
                  tx(". Efectos indirectos: se sostienen si el intervalo de confianza al 95 % (", ". Indirect effects are supported if the 95% confidence interval ("),

@@ -193,10 +193,10 @@ tabla_supuestos_regresion <- function(fit, alfa = .05, etiquetas = NULL, titulo 
       else si(norm[3], tx("No se rechaza la normalidad de los residuos.", "Normality of residuals is not rejected."),
               tx("Los residuos se apartan de la normalidad: revisa la gr\u00e1fica Q-Q y considera intervalos por bootstrap (bootstrap = 2000).", "Residuals depart from normality: check the Q-Q plot and consider bootstrap intervals (bootstrap = 2000)."))),
     c(tx("Homocedasticidad", "Homoscedasticity"), "Breusch-Pagan", paste0("\u03c7\u00b2(", k, ") = ", f_num(bp[1], 2)), pv(bp[3]),
-      si(bp[3], tx("La varianza de los residuos es constante.", "Residual variance is constant."),
+      si(bp[3], tx("No se rechaza la homocedasticidad (varianza constante de los residuos).", "Homoscedasticity is not rejected."),
          tx("La varianza de los residuos no es constante: usa errores est\u00e1ndar robustos (tabla_regresion(fit, robusto = TRUE)).", "Residual variance is not constant: use robust standard errors (tabla_regresion(fit, robusto = TRUE))."))),
     c(tx("Linealidad y especificaci\u00f3n", "Linearity and specification"), "RESET", if (is.na(reset[1])) "\u2014" else paste0("F(", reset[2], ", ", gl2, ") = ", f_num(reset[1], 2)), pv(reset[3]),
-      si(reset[3], tx("No hay se\u00f1ales de relaciones no lineales ni de variables omitidas.", "No signs of nonlinearity or omitted variables."),
+      si(reset[3], tx("No se rechaza la especificaci\u00f3n lineal (no se detectan relaciones no lineales ni variables omitidas).", "Linear specification is not rejected."),
          tx("Posible relaci\u00f3n no lineal o variables omitidas: revisa la gr\u00e1fica de residuos contra predichos y considera t\u00e9rminos cuadr\u00e1ticos.", "Possible nonlinearity or omitted variables: check residuals vs. fitted and consider quadratic terms."))),
     c(tx("Independencia de los errores", "Independence of errors"), "Durbin-Watson", paste0("DW = ", f_num(dw, 2)), "\u2014",
       paste0(if (dw >= 1.5 && dw <= 2.5) tx("Entre 1.5 y 2.5: sin autocorrelaci\u00f3n importante. ", "Between 1.5 and 2.5: no relevant autocorrelation. ")
@@ -302,16 +302,17 @@ tabla_influencia <- function(fit, todos = FALSE, maximo = 20, etiquetas = NULL, 
     f2 <- stats::lm(stats::formula(fit), data = mf[-i, , drop = FALSE])
     b1 <- stats::coef(fit); b2 <- stats::coef(f2)[names(b1)]
     p1 <- summary(fit)$coefficients[, 4]; p2 <- summary(f2)$coefficients[names(b1), 4]
-    cambio <- 100 * (b2 - b1) / abs(b1)
+    ee1 <- summary(fit)$coefficients[, 2]
+    cambio <- (b2 - b1) / ee1          # cambio en errores estándar (como DFBETAS)
     r21 <- summary(fit)$r.squared; r22 <- summary(f2)$r.squared
-    sens <- cbind(nombre_coef(names(b1), etiquetas), f_num(b1, 2), f_p(p1), f_num(b2, 2), f_p(p2), paste0(f_num(cambio, 1), " %"))
+    sens <- cbind(nombre_coef(names(b1), etiquetas), f_num(b1, 2), f_p(p1), f_num(b2, 2), f_p(p2), f_num(cambio, 2))
     sens <- rbind(sens, c("R\u00b2", f_apa(r21, 3), "", f_apa(r22, 3), "", ""))
-    negs <- matrix(FALSE, nrow(sens), ncol(sens)); negs[seq_along(b1), 6] <- abs(cambio) > 20 | ((p1 < .05) != (p2 < .05))
+    negs <- matrix(FALSE, nrow(sens), ncol(sens)); negs[seq_along(b1), 6] <- abs(cambio) > 1 | ((p1 < .05) != (p2 < .05))
     t$extra <- list(nueva_tabla(paste0(tx("Sensibilidad: coeficientes con y sin el caso ", "Sensitivity: coefficients with and without case "), D$caso[i]),
-                                c("", tx("B (todos)", "B (all)"), "p", paste0("B (", tx("sin ", "without "), D$caso[i], ")"), "p", tx("Cambio", "Change")),
+                                c("", tx("B (todos)", "B (all)"), "p", paste0("B (", tx("sin ", "without "), D$caso[i], ")"), "p", tx("Cambio (EE)", "Change (SE)")),
                                 sens, negs,
-                                nota = tx(paste0("Se quit\u00f3 el caso con mayor distancia de Cook (D = ", f_apa(D$cook[i], 2), "). En negritas, coeficientes que cambian m\u00e1s de 20 % o cuya significancia cambia. Si las conclusiones no cambian, los resultados son robustos a ese caso."),
-                                          paste0("The case with the largest Cook's distance (D = ", f_apa(D$cook[i], 2), ") was removed. In bold, coefficients that change by more than 20% or whose significance changes. If conclusions hold, results are robust to that case."))))
+                                nota = tx(paste0("Se quit\u00f3 el caso con mayor distancia de Cook (D = ", f_apa(D$cook[i], 2), "). Cambio (EE) = diferencia entre los coeficientes, en errores est\u00e1ndar del modelo completo. En negritas, coeficientes que cambian m\u00e1s de un error est\u00e1ndar o cuya significancia (p < .05) cambia. Si las conclusiones no cambian, los resultados son robustos a ese caso."),
+                                          paste0("The case with the largest Cook's distance (D = ", f_apa(D$cook[i], 2), ") was removed. Change (SE) = difference between coefficients in standard errors of the full model. In bold, coefficients that change by more than one standard error or whose significance (p < .05) changes. If conclusions hold, results are robust to that case."))))
     attr(t$datos, "sin_caso") <- f2
   }
   if (!is.null(archivo)) guardar_tabla(t, archivo)
