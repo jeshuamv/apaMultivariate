@@ -15,6 +15,12 @@ si alguna falla.
 | `tabla_vif()` | `car::vif()` | Iguales |
 | `tabla_factorabilidad()` | `psych::KMO()`, `psych::cortest.bartlett()`, `psych::vss()` (MAP) y `psych::fa.parallel()` | Iguales (el análisis paralelo usa datos aleatorios) |
 | `tabla_cargas()` (AFE) | `psych::fa()` y `lavaan::efa()` | Iguales |
+| `tabla_factorabilidad(cor = "policorica")`, `comparar_soluciones()` | `psych::polychoric()`, `psych::KMO()` y `psych::fa(cor = "poly")` | Iguales |
+| `grafica_sedimentacion()` | `tabla_factorabilidad()` (mismos autovalores) | Iguales |
+| `tabla_regresion()` | `lm()`, `confint()`, `scale()` (β), `sandwich::vcovHC(type = "HC3")`; VIF de Hald publicados (38.50, 254.42, 46.87, 282.51) | Iguales |
+| `tabla_supuestos_regresion()` | `shapiro.test()`, `lmtest::bptest()`, `lmtest::resettest()` y Durbin-Watson de `lmtest::dwtest()` | Iguales |
+| `tabla_influencia()` | `influence.measures()`, `cooks.distance()` | Iguales |
+| `tabla_subconjuntos()` | Cp de Mallows = *p* en el modelo completo; mejor subconjunto de Hald (x1 + x2) | Iguales |
 | `tabla_cargas()`, `tabla_parametros()` (AFC y SEM) | `lavaan::standardizedSolution()` y `parameterEstimates()` | Iguales |
 | `tabla_ajuste()`, `tabla_criterios_ajuste()` | `lavaan::fitMeasures()`; con estimadores robustos, los índices corregidos | Iguales |
 | `tabla_confiabilidad()` | `psych::alpha()` (α y *r* ítem-total) y `semTools::compRelSEM()` (ω) | Iguales |

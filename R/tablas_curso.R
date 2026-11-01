@@ -61,7 +61,7 @@ evalua <- function(v, exc, acep, mayor = TRUE) {
 #' @export
 tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "srmr", "cfi", "tli", "gfi", "pnfi", "pratio"),
                                    cortes = NULL, evaluacion = TRUE, ic_rmsea = .90, titulo = NULL, archivo = NULL) {
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   indices <- match.arg(indices, several.ok = TRUE)
   K <- list(chi2gl = c(2, 3), rmsea = c(.06, .08), srmr = c(.08, .10), cfi = c(.95, .90), tli = c(.95, .90),
             gfi = c(.95, .90), pnfi = c(NA, .50), pratio = c(NA, .50))
@@ -163,7 +163,7 @@ tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "
 #' @export
 tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
   exigir_un_grupo(fit)
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   pe <- lavaan::parameterEstimates(fit, standardized = TRUE)
   if ("group" %in% names(pe)) pe <- pe[pe$group == 1, ]
   et <- function(v) renombrar(v, etiquetas)
@@ -240,8 +240,9 @@ tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales 
 #' @export
 tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etiquetas = NULL, decimales = 2,
                             titulo = NULL, archivo = NULL) {
+  if (missing(hipotesis)) stop("Escribe tus hip\u00f3tesis, por ejemplo:\n  tabla_hipotesis(fit, c(H1 = \"X -> Y (+)\", H2 = \"X -> M -> Y\"))\n(+) o (-) si la hip\u00f3tesis predice el signo; con dos flechas, efecto indirecto.", call. = FALSE)
   exigir_un_grupo(fit)
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   if (is.null(names(hipotesis))) names(hipotesis) <- paste0("H", seq_along(hipotesis))
   ss <- lavaan::standardizedSolution(fit); pe <- lavaan::parameterEstimates(fit)
   if ("group" %in% names(pe)) { pe <- pe[pe$group == 1, ]; ss <- ss[ss$group == 1, ] }
@@ -327,7 +328,7 @@ tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etique
 tabla_modificacion <- function(fit, n = 10, minimo = 3.84, tipos = c("~~", "=~", "~"), etiquetas = NULL,
                                decimales = 2, titulo = NULL, archivo = NULL) {
   exigir_un_grupo(fit)
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   igualdad <- any(lavaan::parTable(fit)$op == "==") || any(duplicated(stats::na.omit(
     replace(lavaan::parTable(fit)$label, lavaan::parTable(fit)$label == "", NA))))
   mi <- suppressWarnings(lavaan::modindices(fit, sort. = TRUE, standardized = TRUE))
@@ -385,7 +386,7 @@ tabla_modificacion <- function(fit, n = 10, minimo = 3.84, tipos = c("~~", "=~",
 #' @export
 tabla_residuales <- function(fit, umbral = .10, etiquetas = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
   exigir_un_grupo(fit)
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   r <- lavaan::lavResiduals(fit, type = "cor", summary = FALSE)
   if (!is.null(r$cov)) R <- r$cov else R <- r[[1]]$cov
   R <- unclass(R); v <- rownames(R); k <- length(v)

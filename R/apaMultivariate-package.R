@@ -2,7 +2,8 @@
 #'
 #' Tablas en formato APA y diagramas para análisis factoriales exploratorios y
 #' confirmatorios, análisis de trayectorias, modelos de ecuaciones
-#' estructurales, moderación y MANOVA, en español o en inglés.
+#' estructurales, regresión múltiple, moderación y MANOVA, en español o en
+#' inglés.
 #'
 #' Para empezar:
 #' \itemize{
@@ -26,7 +27,7 @@
 #'   \item Datos y supuestos: [tabla_descriptivos()], [tabla_perdidos()],
 #'     [tabla_normalidad()], [grafica_normalidad()], [tabla_atipicos()],
 #'     [quitar_atipicos()], [tabla_vif()].
-#'   \item Análisis exploratorio: [tabla_factorabilidad()], [comparar_soluciones()], [tabla_cargas()].
+#'   \item Análisis exploratorio: [tabla_factorabilidad()], [grafica_sedimentacion()], [comparar_soluciones()], [tabla_cargas()].
 #'   \item Medición: [tabla_cargas()], [tabla_confiabilidad()], [tabla_validez()],
 #'     [tabla_htmt()], [tabla_bifactor()], [tabla_metodo_comun()].
 #'   \item Ajuste: [tabla_ajuste()], [tabla_criterios_ajuste()], [tabla_comparacion()], [modelos_rivales()],
@@ -35,6 +36,8 @@
 #'     [modelo_alternativo()].
 #'   \item Moderación y mediación moderada: [tabla_moderacion()],
 #'     [grafica_interaccion()].
+#'   \item Regresión múltiple: [tabla_regresion()], [tabla_supuestos_regresion()],
+#'     [tabla_influencia()], [tabla_subconjuntos()].
 #'   \item MANOVA: [tabla_manova()].
 #'   \item Redacción: [parrafo_metodo()].
 #'   \item Idioma (español o inglés): [idioma_sem()].
@@ -43,3 +46,9 @@
 #' Consulte la guía de uso con `vignette("guia-de-uso", package = "apaMultivariate")`.
 #' @keywords internal
 "_PACKAGE"
+
+.onAttach <- function(libname, pkgname) {
+  if (interactive())
+    packageStartupMessage("apaMultivariate ", utils::packageVersion("apaMultivariate"),
+                          ". Para empezar: plantilla() muestra las plantillas de an\u00e1lisis; ayuda: ?apaMultivariate")
+}

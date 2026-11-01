@@ -8,7 +8,8 @@
 \description{
 Tablas en formato APA y diagramas para análisis factoriales exploratorios y
 confirmatorios, análisis de trayectorias, modelos de ecuaciones
-estructurales, moderación y MANOVA, en español o en inglés.
+estructurales, regresión múltiple, moderación y MANOVA, en español o en
+inglés.
 }
 \details{
 Para empezar:
@@ -33,7 +34,7 @@ juntas, con \code{\link[=guardar_tablas]{guardar_tablas()}}):
 \item Datos y supuestos: \code{\link[=tabla_descriptivos]{tabla_descriptivos()}}, \code{\link[=tabla_perdidos]{tabla_perdidos()}},
 \code{\link[=tabla_normalidad]{tabla_normalidad()}}, \code{\link[=grafica_normalidad]{grafica_normalidad()}}, \code{\link[=tabla_atipicos]{tabla_atipicos()}},
 \code{\link[=quitar_atipicos]{quitar_atipicos()}}, \code{\link[=tabla_vif]{tabla_vif()}}.
-\item Análisis exploratorio: \code{\link[=tabla_factorabilidad]{tabla_factorabilidad()}}, \code{\link[=comparar_soluciones]{comparar_soluciones()}}, \code{\link[=tabla_cargas]{tabla_cargas()}}.
+\item Análisis exploratorio: \code{\link[=tabla_factorabilidad]{tabla_factorabilidad()}}, \code{\link[=grafica_sedimentacion]{grafica_sedimentacion()}}, \code{\link[=comparar_soluciones]{comparar_soluciones()}}, \code{\link[=tabla_cargas]{tabla_cargas()}}.
 \item Medición: \code{\link[=tabla_cargas]{tabla_cargas()}}, \code{\link[=tabla_confiabilidad]{tabla_confiabilidad()}}, \code{\link[=tabla_validez]{tabla_validez()}},
 \code{\link[=tabla_htmt]{tabla_htmt()}}, \code{\link[=tabla_bifactor]{tabla_bifactor()}}, \code{\link[=tabla_metodo_comun]{tabla_metodo_comun()}}.
 \item Ajuste: \code{\link[=tabla_ajuste]{tabla_ajuste()}}, \code{\link[=tabla_criterios_ajuste]{tabla_criterios_ajuste()}}, \code{\link[=tabla_comparacion]{tabla_comparacion()}}, \code{\link[=modelos_rivales]{modelos_rivales()}},
@@ -42,6 +43,8 @@ juntas, con \code{\link[=guardar_tablas]{guardar_tablas()}}):
 \code{\link[=modelo_alternativo]{modelo_alternativo()}}.
 \item Moderación y mediación moderada: \code{\link[=tabla_moderacion]{tabla_moderacion()}},
 \code{\link[=grafica_interaccion]{grafica_interaccion()}}.
+\item Regresión múltiple: \code{\link[=tabla_regresion]{tabla_regresion()}}, \code{\link[=tabla_supuestos_regresion]{tabla_supuestos_regresion()}},
+\code{\link[=tabla_influencia]{tabla_influencia()}}, \code{\link[=tabla_subconjuntos]{tabla_subconjuntos()}}.
 \item MANOVA: \code{\link[=tabla_manova]{tabla_manova()}}.
 \item Redacción: \code{\link[=parrafo_metodo]{parrafo_metodo()}}.
 \item Idioma (español o inglés): \code{\link[=idioma_sem]{idioma_sem()}}.

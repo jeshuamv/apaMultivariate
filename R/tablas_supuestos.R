@@ -99,7 +99,7 @@ tabla_atipicos <- function(datos, variables = NULL, alfa = .001, n = 10, decimal
 #' @export
 tabla_vif <- function(fit, etiquetas = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
   exigir_un_grupo(fit)
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   pe <- lavaan::parameterEstimates(fit); if ("group" %in% names(pe)) pe <- pe[pe$group == 1, ]
   reg <- pe[pe$op == "~", ]
   R <- lavaan::lavInspect(fit, "cor.all"); if (is.list(R) && !is.matrix(R)) R <- R[[1]]

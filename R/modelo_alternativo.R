@@ -121,7 +121,7 @@ crea_ciclo <- function(reg, lhs, rhs) {
 #' @export
 modelo_alternativo <- function(fit, quitar = TRUE, alfa = .05, agregar = 0, minimo_im = 3.84,
                                carga_minima = .40, dibujar = TRUE, archivo = NULL, ...) {
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo estimado con sem() de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   entorno <- parent.frame()
   exigir_un_grupo(fit)
   if (!lavaan::lavInspect(fit, "converged")) stop("El modelo original no convergi\u00f3; rev\u00edsalo con revisar_modelo(fit) antes de proponer otro.", call. = FALSE)

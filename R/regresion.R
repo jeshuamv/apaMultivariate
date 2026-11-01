@@ -5,7 +5,9 @@
 exigir_lm <- function(fit) {
   objeto_existe(fit, "fit", "Primero estima la regresi\u00f3n, por ejemplo: fit <- lm(y ~ x1 + x2, data = datos)")
   if (!inherits(fit, "lm") || inherits(fit, "glm") || inherits(fit, "mlm"))
-    stop("`fit` debe ser una regresi\u00f3n lineal estimada con lm(), por ejemplo: fit <- lm(y ~ x1 + x2, data = datos).", call. = FALSE)
+    stop("`fit` debe ser una regresi\u00f3n lineal estimada con lm(), por ejemplo: fit <- lm(y ~ x1 + x2, data = datos). ",
+         if (is.character(fit)) "Le pasaste el texto del modelo: primero est\u00edmalo con lm(modelo, data = datos)."
+         else if (is.data.frame(fit)) "Le pasaste los datos: primero estima la regresi\u00f3n con lm()." else pista_objeto(fit), call. = FALSE)
   if (anyNA(stats::coef(fit)))
     stop("Hay coeficientes que no se pudieron estimar (NA): ", paste(names(which(is.na(stats::coef(fit)))), collapse = ", "),
          ". Suele deberse a colinealidad perfecta (un predictor es combinaci\u00f3n exacta de otros); qu\u00edtalo del modelo.", call. = FALSE)

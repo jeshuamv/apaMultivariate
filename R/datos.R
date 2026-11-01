@@ -66,13 +66,20 @@ leer_datos <- function(archivo = NULL, hoja = 1, perdidos = NULL, limpiar_nombre
     archivo <- tryCatch(file.choose(), error = function(e) NULL)
     if (is.null(archivo)) stop("No se eligi\u00f3 ning\u00fan archivo.", call. = FALSE)
   }
-  if (!file.exists(archivo))
+  if (!file.exists(archivo)) {
+    cand <- list.files(dirname(archivo))
+    par <- cand[tolower(tools::file_path_sans_ext(cand)) == tolower(tools::file_path_sans_ext(basename(archivo))) |
+                agrepl(basename(archivo), cand, max.distance = 0.2, ignore.case = TRUE)]
+    if (length(par))
+      stop("No encuentro el archivo '", archivo, "'. \u00bfQuisiste decir '", if (dirname(archivo) == ".") par[1] else file.path(dirname(archivo), par[1]), "'? ",
+           "Escribe el nombre completo, con la extensi\u00f3n (.xlsx, .csv, .sav...).", call. = FALSE)
     stop("No encuentro el archivo '", archivo, "'.\n",
          "  La carpeta de trabajo es: ", getwd(), "\n",
          "  Opciones: escribe la ruta completa, mueve el archivo a esa carpeta o usa leer_datos() ",
          "sin nada entre los par\u00e9ntesis para elegirlo en una ventana.", call. = FALSE)
+  }
   ext <- tolower(tools::file_ext(archivo))
-  d <- switch(ext,
+  leer <- function() switch(ext,
     csv = {
       lin <- readLines(archivo, n = 5, warn = FALSE)
       cod <- if (all(validUTF8(lin))) "UTF-8" else "latin1"
@@ -92,6 +99,11 @@ leer_datos <- function(archivo = NULL, hoja = 1, perdidos = NULL, limpiar_nombre
     dta = as.data.frame(haven::zap_labels(haven::zap_missing(haven::read_dta(archivo)))),
     sas7bdat = as.data.frame(haven::zap_labels(haven::read_sas(archivo))),
     stop("No reconozco la extensi\u00f3n '.", ext, "'. Formatos aceptados: xlsx, xls, sav, csv, txt, tsv, dta, sas7bdat.", call. = FALSE))
+  d <- tryCatch(leer(), error = function(e) {
+    if (grepl("No reconozco", conditionMessage(e))) stop(e)
+    stop("No pude leer '", basename(archivo), "'. Revisa que no est\u00e9 abierto en otro programa (como Excel), que no est\u00e9 da\u00f1ado y que la extensi\u00f3n corresponda a su formato. ",
+         "Detalle: ", conditionMessage(e), call. = FALSE)
+  })
   for (j in seq_along(d)) {
     if (inherits(d[[j]], "haven_labelled")) d[[j]] <- as.vector(d[[j]])
     for (a in c("format.spss", "format.stata", "format.sas", "display_width", "label", "labels")) attr(d[[j]], a) <- NULL
@@ -191,6 +203,9 @@ variables_del_modelo <- function(modelo) {
 revisar_datos <- function(datos, modelo = NULL, variables = NULL) {
   objeto_existe(datos, "datos", "Primero lee tus datos, por ejemplo: datos <- leer_datos()")
   objeto_existe(modelo, "modelo", "Primero escribe tu modelo, por ejemplo:\n  modelo <- \"F1 =~ item1 + item2 + item3\"\nO revisa solo los datos con: revisar_datos(datos)")
+  if (is.character(datos) && is.data.frame(modelo))
+    stop("Los argumentos est\u00e1n al rev\u00e9s: primero van los datos y despu\u00e9s el modelo: revisar_datos(datos, modelo).", call. = FALSE)
+  if (inherits(datos, "lavaan")) stop("Le pasaste el modelo estimado; revisar_datos() revisa los datos antes de estimar: revisar_datos(datos, modelo). Para revisar el modelo ya estimado usa revisar_modelo(fit).", call. = FALSE)
   if (!is.data.frame(datos)) stop("`datos` debe ser un data.frame (por ejemplo, el que devuelve leer_datos()).", call. = FALSE)
   res <- list()
   agregar <- function(estado, texto) res[[length(res) + 1]] <<- data.frame(estado = estado, texto = texto, stringsAsFactors = FALSE)
@@ -319,11 +334,13 @@ print.revision_datos <- function(x, ...) {
 # de escribirlo), R da "object 'modelo' not found". Lo traducimos y decimos qué
 # hacer. Gracias a la evaluación perezosa, el error aparece al usar el argumento.
 #' @noRd
-objeto_existe <- function(x, nombre, ayuda) {
+objeto_existe <- function(x, nombre, ayuda = "") {
   ok <- tryCatch({ force(x); TRUE }, error = function(e) conditionMessage(e))
   if (isTRUE(ok)) return(invisible(TRUE))
   falta <- regmatches(ok, regexpr("(?<=object ').*?(?=' not found)|(?<=objeto ').*?(?=' no encontrado)", ok, perl = TRUE))
   if (!length(falta)) stop(ok, call. = FALSE)
-  stop("No existe un objeto llamado '", falta, "'. ", ayuda,
+  hay <- ls(globalenv())
+  par <- hay[agrepl(falta, hay, max.distance = 0.25, ignore.case = TRUE) & hay != falta]
+  stop("No existe un objeto llamado '", falta, "'. ", if (length(par)) paste0("\u00bfQuisiste decir '", par[1], "'? ") else "", ayuda,
        "\nRecuerda correr las l\u00edneas en orden (y que R distingue may\u00fasculas de min\u00fasculas).", call. = FALSE)
 }

@@ -28,7 +28,7 @@
 #' revisar_modelo(fit)
 #' @export
 revisar_modelo <- function(fit) {
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo estimado con cfa() o sem() de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   res <- list()
   agregar <- function(estado, texto) res[[length(res) + 1]] <<- data.frame(estado = estado, texto = texto, stringsAsFactors = FALSE)
   if (!lavaan::lavInspect(fit, "converged")) {
@@ -104,9 +104,34 @@ revisar_modelo <- function(fit) {
 # multigrupo: se explica qué hacer en lugar de mostrar en silencio el grupo 1.
 #' @noRd
 exigir_un_grupo <- function(fit) {
+  objeto_existe(fit, "fit")
   if (!inherits(fit, "lavaan") || lavaan::lavInspect(fit, "ngroups") <= 1) return(invisible(TRUE))
   g <- lavaan::lavInspect(fit, "group"); lab <- lavaan::lavInspect(fit, "group.label")
   stop("Este modelo es multigrupo (", g, ": ", paste(lab, collapse = ", "), ") y esta tabla describe un solo grupo. ",
        "Para comparar los grupos usa tabla_invarianza(). Para la tabla de un grupo, estima el modelo solo con sus datos, por ejemplo:\n",
        "  fit_", make.names(lab[1]), " <- cfa(modelo, data = datos[datos$", g, " == \"", lab[1], "\", ])", call. = FALSE)
+}
+
+# Explica qué objeto se pasó por error (lo más común: el texto del modelo o los
+# datos en lugar del modelo estimado).
+#' @noRd
+pista_objeto <- function(x) {
+  if (is.character(x)) {
+    if (any(grepl("~", x))) return("Le pasaste el texto del modelo, no el modelo estimado. Primero est\u00edmalo, por ejemplo: fit <- cfa(modelo, data = datos) (o sem(...)); despu\u00e9s usa fit.")
+    return("Le pasaste un texto; esta funci\u00f3n necesita el modelo estimado.")
+  }
+  if (is.data.frame(x) || is.matrix(x)) return("Le pasaste los datos; esta funci\u00f3n necesita el modelo ya estimado, por ejemplo: fit <- cfa(modelo, data = datos).")
+  if (inherits(x, "lm")) return("Es una regresi\u00f3n de lm(): para ella usa tabla_regresion(fit), tabla_supuestos_regresion(fit) y tabla_influencia(fit).")
+  if (inherits(x, c("fa", "psych"))) return("Es un an\u00e1lisis exploratorio de psych::fa(): para \u00e9l usa tabla_cargas() y diagrama_sem().")
+  if (inherits(x, "lavaan")) return("Es un modelo de lavaan: para sus coeficientes usa tabla_parametros(fit).")
+  if (inherits(x, "tabla_apa")) return("Le pasaste una tabla ya hecha; esta funci\u00f3n necesita el modelo estimado.")
+  ""
+}
+
+#' @noRd
+exigir_lavaan <- function(fit, como = "cfa() o sem()") {
+  objeto_existe(fit, "fit")
+  if (!inherits(fit, "lavaan"))
+    stop("Esta funci\u00f3n necesita un modelo estimado con ", como, " de lavaan. ", pista_objeto(fit), call. = FALSE)
+  invisible(TRUE)
 }

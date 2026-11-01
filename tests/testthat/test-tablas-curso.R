@@ -130,7 +130,7 @@ test_that("diagrama no estandarizado muestra varianzas como AMOS", {
   err_M <- dd$G$de_err[["M"]]
   expect_equal(unname(dd$G$r2[err_M]), pe$est[pe$op == "~~" & pe$lhs == "M" & pe$rhs == "M"], tolerance = 1e-8)
   expect_false("M" %in% names(dd$G$r2))
-  expect_silent(guardar_diagrama(dd, tempfile(fileext = ".png")))
+  expect_message(guardar_diagrama(dd, tempfile(fileext = ".png")), "guardada")
 })
 
 test_that("todas las tablas nuevas se guardan en Word", {

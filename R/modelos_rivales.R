@@ -46,7 +46,7 @@
 #' @export
 modelos_rivales <- function(fit, modelos = c("un_factor", "independientes", "segundo_orden", "bifactor"),
                             dibujar = TRUE, archivo = NULL, ...) {
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un AFC estimado con cfa() de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa()")
   entorno <- parent.frame()
   exigir_un_grupo(fit)
   modelos <- match.arg(modelos, several.ok = TRUE)

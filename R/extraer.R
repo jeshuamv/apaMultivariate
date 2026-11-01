@@ -27,8 +27,7 @@ tam_ov <- function(lab, b) c(max(0.42, 0.062 * nchar(lab) + 0.12), b)
 #' @noRd
 extraer_estructura <- function(fit, estandarizado = TRUE, grupo = 1, etiquetas = NULL,
                                prefijo_error = "e", mostrar_errores = TRUE) {
-  if (!inherits(fit, "lavaan"))
-    stop("`fit` debe ser un modelo estimado con lavaan (cfa(), sem() o lavaan()).", call. = FALSE)
+  exigir_lavaan(fit, "cfa(), sem() o lavaan()")
   if (!isTRUE(lavaan::lavInspect(fit, "converged")))
     warning("El modelo no convergi\u00f3; el diagrama puede no ser confiable.", call. = FALSE)
 

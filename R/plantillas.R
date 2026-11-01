@@ -37,7 +37,7 @@ plantilla <- function(tipo = NULL, archivo = NULL, abrir = interactive()) {
     for (k in names(TIPOS_PLANTILLA)) message(sprintf("  %-14s %s", paste0("\"", k, "\""), TIPOS_PLANTILLA[[k]]))
     return(invisible(names(TIPOS_PLANTILLA)))
   }
-  tipo <- tolower(sin_acentos(tipo[1]))
+  tipo <- gsub("[^a-z0-9_]", "", tolower(sin_acentos(trimws(tipo[1]))))
   if (tipo %in% c("path", "trayectoria")) tipo <- "trayectorias"
   if (tipo == "cfa") tipo <- "afc"
   if (tipo == "efa") tipo <- "afe"

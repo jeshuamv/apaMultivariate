@@ -246,7 +246,7 @@ tabla_comparacion <- function(..., referencia = c("anterior", "primero"), anidad
 #' @export
 tabla_metodo_comun <- function(fit, titulo = NULL, archivo = NULL) {
   exigir_un_grupo(fit)
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   fac <- factores_de(fit); items <- unique(unlist(fac))
   if (!length(fac)) stop("El modelo no tiene factores con \u00edtems; esta prueba es para modelos de medici\u00f3n (AFC o SEM).", call. = FALSE)
   if (length(fac) < 2) stop("El modelo ya tiene un solo factor. La prueba compara tu modelo con uno de un factor, as\u00ed que necesita al menos dos factores.", call. = FALSE)

@@ -4,7 +4,7 @@
 \alias{guardar_tablas}
 \title{Guarda varias tablas en un mismo documento de Word}
 \usage{
-guardar_tablas(..., archivo, numero = 1)
+guardar_tablas(..., archivo = "tablas_apa.docx", numero = 1)
 }
 \arguments{
 \item{...}{Tablas creadas con las funciones \verb{tabla_*()}, o una lista de

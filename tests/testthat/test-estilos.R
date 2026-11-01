@@ -9,7 +9,7 @@ test_that("los tres estilos dibujan sin error", {
     f <- tempfile(fileext = ".png")
     d <- diagrama_sem(fit3, estilo = e, dibujar = FALSE)
     expect_equal(d$opciones$estilo, e)
-    expect_silent(guardar_diagrama(d, f))
+    expect_message(guardar_diagrama(d, f), "guardada")
     expect_true(file.exists(f))
   }
 })
@@ -59,10 +59,10 @@ test_that("el estilo color funciona en bifactor, AFE y trayectorias", {
   set.seed(1); n <- 300
   dx <- data.frame(X = rnorm(n)); dx$M <- .5 * dx$X + rnorm(n); dx$Y <- .4 * dx$M + rnorm(n)
   fp <- sem("M ~ X\n Y ~ M + X", data = dx)
-  expect_silent(guardar_diagrama(diagrama_sem(fp, estilo = "color", dibujar = FALSE), tempfile(fileext = ".png")))
+  expect_message(guardar_diagrama(diagrama_sem(fp, estilo = "color", dibujar = FALSE), tempfile(fileext = ".png")), "guardada")
   skip_if_not_installed("psych")
   afe <- suppressWarnings(psych::fa(HolzingerSwineford1939[, paste0("x", 1:9)], nfactors = 3, rotate = "varimax"))
-  expect_silent(guardar_diagrama(diagrama_sem(afe, estilo = "color", dibujar = FALSE), tempfile(fileext = ".png")))
+  expect_message(guardar_diagrama(diagrama_sem(afe, estilo = "color", dibujar = FALSE), tempfile(fileext = ".png")), "guardada")
 })
 
 test_that("no se escribe -.00", {

@@ -28,7 +28,8 @@ names(datos)
 modelo <- "y ~ x1 + x2 + x3 + x4"
 
 revisar_datos(datos, modelo)
-tabla_descriptivos(datos, variables = c("y", "x1", "x2", "x3", "x4"))   # >>> CAMBIA AQUÍ <<<
+variables <- all.vars(as.formula(modelo))     # las variables del modelo (no cambies nada)
+tabla_descriptivos(datos, variables = variables)
 
 
 # --- 3. Estimar la regresión -------------------------------------------------------
@@ -70,7 +71,7 @@ subconjuntos
 
 # --- 7. Guardar en Word ---------------------------------------------------------------
 guardar_tablas(
-  tabla_descriptivos(datos, variables = c("y", "x1", "x2", "x3", "x4")),   # >>> CAMBIA AQUÍ <<<
+  tabla_descriptivos(datos, variables = variables),
   supuestos,
   regresion,
   influencia,

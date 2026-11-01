@@ -32,11 +32,12 @@ con_dispositivo <- function(archivo, ext, ancho, alto, dibujar, res = 300, point
   }
   vectorial <- ext %in% c("pdf", "eps", "svg")
   viejo <- options(apaMultivariate.sin_unicode = FALSE); on.exit(options(viejo), add = TRUE)
-  if (vectorial && capabilities("cairo") && intento(TRUE)) return(invisible(archivo))
+  avisa <- function() { message("\u2714 Figura guardada en ", normalizePath(archivo, winslash = "/")); invisible(archivo) }
+  if (vectorial && capabilities("cairo") && intento(TRUE)) return(avisa())
   if (ext == "svg") stop("No se pudo guardar en SVG en esta computadora; guarda en PDF o PNG.", call. = FALSE)
   if (vectorial) options(apaMultivariate.sin_unicode = TRUE)
   if (!intento(FALSE)) stop("No se pudo guardar '", archivo, "'. Revisa que la carpeta exista y que el archivo no est\u00e9 abierto en otro programa.", call. = FALSE)
-  invisible(archivo)
+  avisa()
 }
 
 # Sin cairo, pdf() y postscript() no tienen el signo menos tipográfico.

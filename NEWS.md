@@ -29,6 +29,17 @@
   supuesto se cumple, y la tabla de sensibilidad de `tabla_influencia()` mide el
   cambio en errores estándar (el porcentaje se disparaba con coeficientes cercanos
   a cero).
+* Usabilidad:
+  * Mensajes que dicen qué hacer cuando se pasa el texto del modelo, los datos o una
+    regresión de `lm()` en lugar del modelo estimado, cuando un objeto tiene el nombre
+    mal escrito (sugiere el parecido), cuando los argumentos de `revisar_datos()` van
+    al revés y cuando falta la extensión del archivo o no se puede leer.
+  * `guardar_tablas()` guarda en `tablas_apa.docx` si no se indica el archivo; las
+    tablas y figuras guardadas muestran la ruta completa; aviso claro si la carpeta no
+    existe o el Word está abierto.
+  * `plantilla()` e `idioma_sem()` aceptan mayúsculas, acentos y espacios
+    (`plantilla("Regresión")`, `idioma_sem("inglés")`).
+  * Al cargar el paquete en RStudio se indica cómo empezar.
 * `leer_datos()` quita la columna de números de fila que agrega
   `write.csv()` sin `row.names = FALSE`, y `revisar_datos()` avisa si una
   columna parece números de fila o un identificador.

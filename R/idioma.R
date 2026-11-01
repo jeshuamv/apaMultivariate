@@ -24,7 +24,9 @@
 idioma_sem <- function(idioma) {
   actual <- getOption("apaMultivariate.idioma", "es")
   if (missing(idioma)) return(actual)
-  idioma <- tolower(idioma)
+  idioma <- tolower(sin_acentos(trimws(idioma[1])))
+  if (idioma %in% c("ingles", "english", "eng", "en-us", "en_us")) idioma <- "en"
+  if (idioma %in% c("espanol", "spanish", "esp", "es-mx", "es_mx")) idioma <- "es"
   if (!idioma %in% c("es", "en")) stop("`idioma` debe ser \"es\" (espa\u00f1ol) o \"en\" (ingl\u00e9s).", call. = FALSE)
   options(apaMultivariate.idioma = idioma)
   invisible(actual)

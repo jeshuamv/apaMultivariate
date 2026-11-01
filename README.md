@@ -40,19 +40,28 @@ análisis.
 
 ### 2. Instala el paquete (solo la primera vez)
 
-Copia estas dos líneas en la consola de RStudio y presiona Enter:
+Copia estas tres líneas en la consola de RStudio y presiona Enter:
 
 ```r
-install.packages("remotes")
+install.packages(c("remotes", "psych", "GPArotation", "semTools"))
 remotes::install_github("jeshuamv/apaMultivariate")
+library(apaMultivariate)
 ```
 
-- Necesitas conexión a internet.
+- Necesitas conexión a internet. Puede tardar unos minutos la primera vez.
 - Si R pregunta si quieres actualizar otros paquetes, **presiona Enter** sin escribir
   nada para continuar.
-- Si no aparecen errores en rojo, quedó instalado.
-- **Solo para análisis exploratorio (AFE)**: instala también
-  `install.packages(c("psych", "GPArotation"))`.
+- En Windows puede aparecer un aviso sobre **Rtools**: ignóralo, este paquete no lo
+  necesita.
+- Si la última línea no muestra un error en rojo, quedó instalado.
+
+**Para actualizar** a la versión más reciente, corre otra vez
+`remotes::install_github("jeshuamv/apaMultivariate")` y reinicia R (*Session → Restart R*).
+Para ver qué versión tienes: `packageVersion("apaMultivariate")`.
+
+**Para una tarea o tesis**, si quieres que los resultados no cambien aunque el paquete se
+actualice, instala una versión fija y repórtala en el método:
+`remotes::install_github("jeshuamv/apaMultivariate@v0.12.0")`.
 
 ### 3. Crea la plantilla de tu análisis
 
@@ -492,8 +501,15 @@ Revisa siempre las instrucciones para autores de tu revista. Más detalles en la
 **`could not find function "diagrama_sem"`** (no se encuentra la función): falta
 cargar el paquete. Escribe `library(apaMultivariate)`.
 
-**`could not find function "leer_datos"` o `"plantilla"`**: tienes una versión vieja del
-paquete. Reinstálalo con `remotes::install_github("jeshuamv/apaMultivariate")`.
+**`could not find function "leer_datos"`, `"plantilla"` o `"tabla_regresion"`**: tienes
+una versión vieja del paquete. Reinstálalo con
+`remotes::install_github("jeshuamv/apaMultivariate")` y reinicia R.
+
+**`No existe un objeto llamado ...`**: el nombre está mal escrito o todavía no corres la
+línea que lo crea. El mensaje sugiere el nombre parecido que sí existe.
+
+**`Le pasaste el texto del modelo`**: las tablas y diagramas necesitan el modelo ya
+estimado (`fit <- cfa(modelo, data = datos)`), no el texto `modelo`. Usa `fit`.
 
 **`object 'datos' not found`** (no se encuentra el objeto): falta correr la línea que
 lee los datos, o la escribiste con otro nombre. Corre los pasos en orden.
@@ -538,11 +554,18 @@ español con `idioma_sem("es")` (al reiniciar R también vuelve al español).
 negativa y sus índices no son confiables; revisa el factor específico con cargas más
 bajas (es común en modelos bifactor).
 
+**`No se puede escribir ...` al guardar**: el Word está abierto; ciérralo y vuelve a
+correr la línea.
+
+**¿Dónde quedaron mis archivos?** Cada vez que se guarda una tabla o una figura, la
+consola muestra la ruta completa (`✔ Tabla guardada en ...`).
+
 **El archivo `.docx` se abre en otro programa (por ejemplo, Pages en Mac)**: haz clic
 derecho → *Abrir con* → *Microsoft Word*.
 
 ¿Encontraste un error? Repórtalo en la pestaña
-[Issues](https://github.com/jeshuamv/apaMultivariate/issues) de esta página.
+[Issues](https://github.com/jeshuamv/apaMultivariate/issues) de esta página o directamente
+al autor, con una captura del mensaje y la línea que corriste.
 
 ## Si tenías diagramaSEM
 
@@ -560,3 +583,8 @@ Puedes desinstalar el anterior con `remove.packages("diagramaSEM")`.
 
 MIT © 2026 Jeshua Moreno Valladares. Puedes usarlo, compartirlo y modificarlo
 libremente.
+
+**Autoría.** Diseño, decisiones metodológicas y validación: Jeshua Moreno Valladares. El
+código se escribió con la asistencia de Claude (Anthropic). Los resultados se verificaron
+contra otros paquetes y contra los ejemplos de clase ([cómo se verificó](guia/VALIDACION.md)),
+pero es software en fase de prueba: revisa tus resultados y repórtanos lo que veas raro.

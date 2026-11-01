@@ -63,7 +63,9 @@ print.tabla_apa <- function(x, ...) {
 #' guardar_tabla(tabla_ajuste(fit), file.path(tempdir(), "ajuste.docx"))
 #' @export
 guardar_tabla <- function(x, archivo, numero = 1) {
-  if (!inherits(x, "tabla_apa")) stop("`x` debe crearse con tabla_cargas(), tabla_ajuste() o tabla_validez().", call. = FALSE)
+  if (!inherits(x, "tabla_apa")) stop("`x` debe ser una tabla creada con una funci\u00f3n tabla_*(), por ejemplo: guardar_tabla(tabla_ajuste(fit), \"ajuste.docx\").", call. = FALSE)
+  if (missing(archivo)) stop("Indica el nombre del archivo, por ejemplo: guardar_tabla(tabla, \"tabla.docx\").", call. = FALSE)
+  revisar_carpeta(archivo)
   ext <- tolower(tools::file_ext(archivo))
   switch(ext,
     docx = escribir_docx(list(x), archivo, numero),
@@ -79,6 +81,7 @@ guardar_tabla <- function(x, archivo, numero = 1) {
       }
     },
     stop("Formato no reconocido: '", ext, "'. Usa .docx (Word), .rtf, .html o .csv.", call. = FALSE))
+  message("\u2714 Tabla guardada en ", normalizePath(archivo, winslash = "/"))
   invisible(archivo)
 }
 
@@ -185,14 +188,16 @@ tabla_html <- function(x, numero) {
 #' guardar_tablas(tabla_ajuste(fit), tabla_cargas(fit), tabla_validez(fit),
 #'                archivo = file.path(tempdir(), "tablas.docx"))
 #' @export
-guardar_tablas <- function(..., archivo, numero = 1) {
+guardar_tablas <- function(..., archivo = "tablas_apa.docx", numero = 1) {
   tablas <- list(...)
   if (length(tablas) == 1 && !inherits(tablas[[1]], "tabla_apa") && is.list(tablas[[1]])) tablas <- tablas[[1]]
   if (!length(tablas) || !all(vapply(tablas, inherits, logical(1), "tabla_apa")))
     stop("Pasa tablas creadas con las funciones tabla_*().", call. = FALSE)
   if (tolower(tools::file_ext(archivo)) != "docx")
     stop("guardar_tablas() guarda en Word: usa un archivo .docx.", call. = FALSE)
+  revisar_carpeta(archivo)
   escribir_docx(tablas, archivo, numero)
+  message("\u2714 ", length(tablas), " tabla", if (length(tablas) > 1) "s", " guardada", if (length(tablas) > 1) "s", " en ", normalizePath(archivo, winslash = "/"))
   invisible(archivo)
 }
 
@@ -341,4 +346,14 @@ empaquetar_docx <- function(cuerpo, archivo, horizontal = FALSE) {
   if (file.exists(destino)) file.remove(destino)
   zip::zipr(destino, file.path(tmp, c("[Content_Types].xml", "_rels", "word")), include_directories = FALSE)
   invisible(archivo)
+}
+
+#' @noRd
+revisar_carpeta <- function(archivo) {
+  carpeta <- dirname(archivo)
+  if (!dir.exists(carpeta))
+    stop("No existe la carpeta '", carpeta, "'. Cr\u00e9ala primero o guarda en la carpeta de trabajo (", getwd(), ") con solo el nombre del archivo.", call. = FALSE)
+  if (file.exists(archivo) && file.access(archivo, 2) != 0)
+    stop("No se puede escribir '", archivo, "'. Si est\u00e1 abierto en Word, ci\u00e9rralo y vuelve a intentar.", call. = FALSE)
+  invisible(TRUE)
 }

@@ -86,7 +86,7 @@ valores_efectos <- function(obj, R, caminos, pares) {
 tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, etiquetas = NULL,
                           decimales = 2, titulo = NULL, archivo = NULL) {
   exigir_un_grupo(fit)
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan (sem()).", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   pe0 <- lavaan::parameterEstimates(fit, level = nivel)
   if ("group" %in% names(pe0)) pe0 <- pe0[pe0$group == 1, ]
   reg <- pe0[pe0$op == "~", ]
@@ -247,7 +247,7 @@ cita_paquete <- function(p, autores, cita, titulo, extra = "") {
 #' parrafo_metodo(fit)
 #' @export
 parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"), atipicos = NULL, archivo = NULL) {
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan.", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   op <- lavaan::lavInspect(fit, "options")
   est <- op$estimator; if (any(op$test %in% "satorra.bentler") && est == "ML") est <- "MLM"
   if (est == "ML" && any(c("yuan.bentler", "yuan.bentler.mplus") %in% op$test)) est <- "MLR"

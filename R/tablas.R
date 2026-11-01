@@ -67,7 +67,7 @@ tabla_cargas <- function(x, umbral = 0.30, ocultar_bajas = TRUE, etiquetas = NUL
                          nfactores = NULL, titulo = NULL, archivo = NULL) {
   t <- if (es_afe(x)) tabla_cargas_afe(x, umbral, ocultar_bajas, etiquetas, decimales, nfactores, titulo)
        else if (inherits(x, "lavaan")) tabla_cargas_lavaan(x, etiquetas, decimales, titulo)
-       else stop("`x` debe ser un modelo de lavaan o un an\u00e1lisis exploratorio de psych::fa() o lavaan::efa().",
+       else stop("`x` debe ser un modelo de lavaan o un an\u00e1lisis exploratorio de psych::fa() o lavaan::efa(). ", pista_objeto(x),
                  call. = FALSE)
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
@@ -160,10 +160,11 @@ tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
 #' tabla_ajuste("Un factor" = m1, "Tres factores" = m3, extra = c("aic", "bic"))
 #' @export
 tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, titulo = NULL, archivo = NULL) {
-  fits <- list(...)
-  if (length(fits) == 1 && is.list(fits[[1]]) && !inherits(fits[[1]], "lavaan")) fits <- fits[[1]]
-  if (!length(fits) || !all(vapply(fits, inherits, logical(1), "lavaan")))
-    stop("Pasa uno o varios modelos de lavaan.", call. = FALSE)
+  fits <- tryCatch(list(...), error = function(e) { objeto_existe(stop(e), "fit") })
+  if (length(fits) == 1 && identical(class(fits[[1]]), "list")) fits <- fits[[1]]
+  malo <- which(!vapply(fits, inherits, logical(1), "lavaan"))
+  if (!length(fits)) stop("Pasa uno o varios modelos estimados con cfa() o sem(), por ejemplo: tabla_ajuste(fit).", call. = FALSE)
+  if (length(malo)) stop("Pasa uno o varios modelos estimados con cfa() o sem(), por ejemplo: tabla_ajuste(fit). ", pista_objeto(fits[[malo[1]]]), call. = FALSE)
   nms <- names(fits); if (is.null(nms)) nms <- rep("", length(fits))
   nms[nms == ""] <- paste(tx("Modelo", "Model"), which(nms == ""))
   extras_ok <- c("gfi", "agfi", "nfi", "pnfi", "aic", "bic")
@@ -238,7 +239,7 @@ tabla_validez <- function(fit, metodo = c("clasico", "semtools"), etiquetas = NU
                           titulo = NULL, archivo = NULL) {
   exigir_un_grupo(fit)
   metodo <- match.arg(metodo)
-  if (!inherits(fit, "lavaan")) stop("`fit` debe ser un modelo de lavaan (cfa() o sem()).", call. = FALSE)
+  exigir_lavaan(fit, "cfa() o sem()")
   s <- lavaan::standardizedSolution(fit)
   if ("group" %in% names(s)) s <- s[s$group == 1, ]
   lv <- lavaan::lavNames(fit, "lv")
