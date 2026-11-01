@@ -99,11 +99,33 @@ tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, et
   est <- valores_efectos(fit, R, caminos, pares)
   q <- (1 - nivel) / 2
 
+  B <- NULL
   if (bootstrap > 0) {
-    message("Calculando intervalos con ", bootstrap, " remuestreos bootstrap; puede tardar un poco...")
-    if (!is.null(semilla)) set.seed(semilla)
-    B <- suppressWarnings(lavaan::bootstrapLavaan(fit, R = bootstrap, FUN = function(x) valores_efectos(x, R, caminos, pares)))
-    B <- B[stats::complete.cases(B), , drop = FALSE]
+    # Algunos modelos no admiten bootstrap en lavaan (por ejemplo, ordinales con
+    # WLSMV y conditional.x = TRUE); entonces se usa el método delta y se avisa
+    if (isTRUE(lavaan::lavInspect(fit, "options")$conditional.x)) {
+      message("Este modelo (variables ordinales o covariables con conditional.x = TRUE) no admite bootstrap en lavaan; ",
+              "los intervalos se calculan con el m\u00e9todo delta.")
+    } else {
+      message("Calculando intervalos con ", bootstrap, " remuestreos bootstrap; puede tardar un poco...")
+      if (!is.null(semilla)) set.seed(semilla)
+      B <- tryCatch(suppressWarnings(lavaan::bootstrapLavaan(fit, R = bootstrap, FUN = function(x) valores_efectos(x, R, caminos, pares))),
+                    error = function(e) {
+                      message("El bootstrap fall\u00f3 (", conditionMessage(e), "); los intervalos se calculan con el m\u00e9todo delta.")
+                      NULL
+                    })
+      if (!is.null(B)) {
+        B <- B[stats::complete.cases(B), , drop = FALSE]
+        if (nrow(B) < 2) {
+          message("Ning\u00fan remuestreo bootstrap convergi\u00f3; los intervalos se calculan con el m\u00e9todo delta.")
+          B <- NULL
+        }
+      }
+    }
+    if (is.null(B)) bootstrap <- 0
+  }
+
+  if (bootstrap > 0) {
     ee <- apply(B, 2, stats::sd)
     li <- apply(B, 2, stats::quantile, probs = q); ls <- apply(B, 2, stats::quantile, probs = 1 - q)
     pval <- rep(NA_real_, 2 * m); pval[seq_len(nd)] <- reg$pvalue
@@ -115,7 +137,9 @@ tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, et
       if (length(id) && nzchar(id[1]) && id[1] %in% names(cf)) id[1] else paste0(a, "~", de) }
     grad <- function(cm) {
       g <- stats::setNames(numeric(length(cf)), names(cf))
-      bs <- vapply(seq_len(length(cm) - 1), function(k) { n <- nombre(cm[k], cm[k + 1]); if (n %in% names(cf)) cf[[n]] else 0 }, numeric(1))
+      # Una trayectoria fijada no está en coef(): se usa su valor fijo
+      fijo <- function(de, a) { v <- reg$est[reg$lhs == a & reg$rhs == de]; if (length(v)) v[1] else 0 }
+      bs <- vapply(seq_len(length(cm) - 1), function(k) { n <- nombre(cm[k], cm[k + 1]); if (n %in% names(cf)) cf[[n]] else fijo(cm[k], cm[k + 1]) }, numeric(1))
       for (k in seq_len(length(cm) - 1)) { n <- nombre(cm[k], cm[k + 1]); if (n %in% names(g)) g[n] <- g[n] + prod(bs[-k]) }
       g
     }
@@ -184,7 +208,10 @@ tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, et
     cbind(defs$lhs, f_num(defs$est, decimales), f_num(defs$se, decimales),
           paste0("[", f_num(defs$ci.lower, decimales), ", ", f_num(defs$ci.upper, decimales), "]"), f_p(defs$pvalue)),
     nota = tx("Valores calculados por lavaan con el m\u00e9todo de errores est\u00e1ndar del modelo.", "Values computed by lavaan with the model's standard-error method."))
-  datos <- data.frame(efecto = nombres, tipo = tipo, B = est[1:m], EE = ee[1:m], ic_inf = li[1:m], ic_sup = ls[1:m],
+  datos <- data.frame(efecto = nombres, tipo = tipo,
+                      de = c(R$de, vapply(caminos, `[`, character(1), 1), pares$de, pares$de),
+                      a = c(R$a, vapply(caminos, function(cm) utils::tail(cm, 1), character(1)), pares$a, pares$a),
+                      B = est[1:m], EE = ee[1:m], ic_inf = li[1:m], ic_sup = ls[1:m],
                       beta = est[(m + 1):(2 * m)], p = pval[1:m], row.names = NULL)
   t <- nueva_tabla(if (is.null(titulo)) tx("Efectos directos, indirectos y totales", "Direct, indirect, and total effects") else titulo,
                    c(tx("Efecto", "Effect"), "B", tx("EE", "SE"), ic_txt, "\u03b2", "p"), cel, neg,

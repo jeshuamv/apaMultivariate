@@ -52,6 +52,54 @@ test_that("hipotesis directas, indirectas y con signo", {
   expect_equal(t2$datos$hipotesis, "H1")
 })
 
+test_that("hipotesis: total, indirecto total y covarianzas", {
+  # Efecto total = directo + indirecto; indirecto total = suma de trayectorias
+  ef <- tabla_efectos(pd, bootstrap = 0)$datos
+  t <- tabla_hipotesis(pd, c(H1 = "ind60 -> dem65 (+) [total]", H2 = "ind60 -> * -> dem65 (+)",
+                             H3 = "ind60 -> dem65 [total] (-)"), bootstrap = 0)
+  expect_equal(t$datos$tipo, c("Total", "Indirecto total", "Total"))
+  expect_equal(t$datos$B[1], ef$B[ef$tipo == "total" & ef$de == "ind60" & ef$a == "dem65"], tolerance = 1e-8)
+  expect_equal(t$datos$B[2], ef$B[ef$tipo == "indirecto_total" & ef$de == "ind60" & ef$a == "dem65"], tolerance = 1e-8)
+  expect_identical(unname(t$datos$sostiene), c(TRUE, TRUE, FALSE))
+  # Sin mediacion, el total es el directo
+  t2 <- tabla_hipotesis(pd, c(H1 = "dem60 -> dem65 [total]"), bootstrap = 0)
+  expect_equal(t2$datos$p, parameterEstimates(pd)$pvalue[parameterEstimates(pd)$lhs == "dem65" & parameterEstimates(pd)$rhs == "dem60" & parameterEstimates(pd)$op == "~"])
+  # Covarianzas: correlacion entre factores en cualquier orden y con ~~
+  t3 <- tabla_hipotesis(fit3, c(H1 = "visual <-> textual (+)", H2 = "textual ~~ visual (-)"))
+  ss <- standardizedSolution(fit3)
+  expect_equal(t3$datos$beta[1], ss$est.std[ss$op == "~~" & ss$lhs == "visual" & ss$rhs == "textual"], tolerance = 1e-8)
+  expect_identical(unname(t3$datos$sostiene), c(TRUE, FALSE))
+  expect_error(tabla_hipotesis(fit3, c(H1 = "visual <-> x1")), "no incluye la covarianza")
+  # Mensajes claros
+  expect_error(tabla_hipotesis(pd, c(H1 = "ind60 -> dem65 (++)")), "no reconozco")
+  expect_error(tabla_hipotesis(pd, c(H1 = "ind60 -> * -> dem60 -> dem65")), "un solo \\*")
+  expect_error(tabla_hipotesis(pd, c(H1 = "dem65 -> ind60 [total]"), bootstrap = 0), "ning")
+})
+
+test_that("hipotesis: exogenas con fixed.x y trayectorias fijadas", {
+  set.seed(2); d <- data.frame(X = rnorm(150), W = rnorm(150)); d$Y <- .4 * d$X + .3 * d$W + rnorm(150)
+  f1 <- sem("Y ~ X + W", data = d)
+  expect_error(tabla_hipotesis(f1, c(H1 = "X <-> W")), "fixed.x = FALSE")
+  f2 <- sem("Y ~ X + W", data = d, fixed.x = FALSE)
+  expect_equal(tabla_hipotesis(f2, c(H1 = "X <-> W"))$datos$tipo, "Covarianza")
+  d$M <- .5 * d$X + rnorm(150); d$Z <- .4 * d$M + rnorm(150)
+  f3 <- sem("M ~ 0.5*X\n Z ~ M + X", data = d)
+  expect_error(tabla_hipotesis(f3, c(H1 = "X -> M (+)"), bootstrap = 0), "fijado")
+  # El indirecto con un tramo fijado si se puede contrastar (delta y bootstrap)
+  t <- tabla_hipotesis(f3, c(H1 = "X -> M -> Z (+)"), bootstrap = 0)
+  expect_true(is.finite(t$datos$ic_inf) && t$datos$ic_inf > 0)
+})
+
+test_that("ordinales (WLSMV): el bootstrap pasa al metodo delta con aviso", {
+  set.seed(3); d <- data.frame(X = rnorm(300)); d$M <- .5 * d$X + rnorm(300); d$Y <- .4 * d$M + rnorm(300)
+  for (v in c("M", "Y")) d[[v]] <- cut(d[[v]], c(-Inf, -1, 0, 1, Inf), labels = FALSE)
+  fo <- sem("M ~ X\n Y ~ M + X", data = d, ordered = c("M", "Y"))
+  expect_message(t <- tabla_hipotesis(fo, c(H1 = "X -> M -> Y (+)"), bootstrap = 50), "delta")
+  expect_true(t$datos$sostiene)
+  expect_match(t$nota, "delta")
+  expect_message(tabla_efectos(fo, bootstrap = 50), "delta")
+})
+
 test_that("indices de modificacion", {
   t <- tabla_modificacion(fit3, n = 4)
   mi <- modindices(fit3, sort. = TRUE)

@@ -21,8 +21,8 @@ tabla_hipotesis(
 \item{hipotesis}{Vector con nombres, p. ej.
 \code{c(H1 = "SelfEfficacy -> Flow (+)", H2 = "LMS -> Flow -> Satisfaction")}.}
 
-\item{bootstrap}{Remuestreos para los efectos indirectos (\code{0} para usar el
-método delta).}
+\item{bootstrap}{Remuestreos para los efectos indirectos y totales (\code{0}
+para usar el método delta).}
 
 \item{alfa}{Nivel de significancia.}
 
@@ -44,23 +44,41 @@ significancia y si la hipótesis se sostiene o no. Un efecto no significativo
 no demuestra que la hipótesis sea falsa: solo que los datos no la respaldan.
 }
 \details{
-Cada hipótesis se escribe como una trayectoria con flechas: \code{"X -> Y"}
-para un efecto directo o \code{"X -> M -> Y"} para un efecto indirecto
-(mediación). Si la hipótesis predice un sentido, agréguelo al final:
-\code{"X -> Y (+)"} o \code{"X -> Y (-)"}; entonces se sostiene solo si el efecto es
-significativo \strong{y} tiene ese signo.
+Cada hipótesis se escribe como texto. Use \verb{->} para las flechas (también se
+acepta \verb{→}, pero \verb{->} funciona en cualquier computadora):\tabular{ll}{
+   Hipótesis \tab Se escribe \cr
+   Efecto directo \tab \code{"X -> Y"} \cr
+   Efecto indirecto por una trayectoria \tab \code{"X -> M -> Y"} (o \code{"X -> M1 -> M2 -> Y"}) \cr
+   Efecto indirecto total (todas las trayectorias de X a Y) \tab \code{"X -> * -> Y"} \cr
+   Efecto total (directo + indirectos) \tab \code{"X -> Y [total]"} \cr
+   Covarianza o correlación \tab \code{"X <-> W"} (o \code{"X ~~ W"}) \cr
+}
 
-Los efectos directos usan el valor \emph{p} de \code{lavaan}. Los indirectos se
-evalúan con el intervalo de confianza de \code{\link[=tabla_efectos]{tabla_efectos()}} (bootstrap o
-método delta): son significativos si el intervalo no incluye el 0.
+
+Si la hipótesis predice un sentido, agréguelo al final: \code{"X -> Y (+)"} o
+\code{"X -> Y (-)"}; entonces se sostiene solo si el efecto es significativo
+\strong{y} tiene ese signo. Con \verb{[total]}, el signo va antes o después:
+\code{"X -> Y (+) [total]"}.
+
+Los efectos directos y las covarianzas usan el valor \emph{p} (bilateral) de
+\code{lavaan}. Los indirectos y los totales se evalúan con el intervalo de
+confianza de \code{\link[=tabla_efectos]{tabla_efectos()}} (bootstrap o método delta): son
+significativos si el intervalo no incluye el 0. Si el modelo no admite
+bootstrap (por ejemplo, variables ordinales con WLSMV), se usa el método
+delta y se avisa.
+
+Una covarianza entre dos variables exógenas observadas solo tiene valor \emph{p}
+si el modelo se estima con \code{fixed.x = FALSE}; de lo contrario \code{lavaan} la
+fija a la de la muestra y la función explica cómo estimarla.
 }
 \examples{
 library(lavaan)
 set.seed(1)
-d <- data.frame(X = rnorm(200)); d$M <- .5 * d$X + rnorm(200)
-d$Y <- .4 * d$M + rnorm(200)
+d <- data.frame(X = rnorm(200), W = rnorm(200))
+d$M <- .5 * d$X + rnorm(200)
+d$Y <- .4 * d$M + .3 * d$W + rnorm(200)
 fit <- sem("M ~ X
-            Y ~ M + X", data = d)
-tabla_hipotesis(fit, c(H1 = "X -> M (+)", H2 = "X -> Y (+)", H3 = "X -> M -> Y"),
-                bootstrap = 0)
+            Y ~ M + X + W", data = d)
+tabla_hipotesis(fit, c(H1 = "X -> M (+)", H2 = "X -> Y (+)", H3 = "X -> M -> Y",
+                       H4 = "X -> Y (+) [total]"), bootstrap = 0)
 }

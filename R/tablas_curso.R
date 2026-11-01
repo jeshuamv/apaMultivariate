@@ -210,86 +210,202 @@ tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales 
 #' significancia y si la hipótesis se sostiene o no. Un efecto no significativo
 #' no demuestra que la hipótesis sea falsa: solo que los datos no la respaldan.
 #'
-#' Cada hipótesis se escribe como una trayectoria con flechas: `"X -> Y"`
-#' para un efecto directo o `"X -> M -> Y"` para un efecto indirecto
-#' (mediación). Si la hipótesis predice un sentido, agréguelo al final:
-#' `"X -> Y (+)"` o `"X -> Y (-)"`; entonces se sostiene solo si el efecto es
-#' significativo **y** tiene ese signo.
+#' Cada hipótesis se escribe como texto. Use `->` para las flechas (también se
+#' acepta `→`, pero `->` funciona en cualquier computadora):
 #'
-#' Los efectos directos usan el valor *p* de `lavaan`. Los indirectos se
-#' evalúan con el intervalo de confianza de [tabla_efectos()] (bootstrap o
-#' método delta): son significativos si el intervalo no incluye el 0.
+#' | Hipótesis | Se escribe |
+#' |---|---|
+#' | Efecto directo | `"X -> Y"` |
+#' | Efecto indirecto por una trayectoria | `"X -> M -> Y"` (o `"X -> M1 -> M2 -> Y"`) |
+#' | Efecto indirecto total (todas las trayectorias de X a Y) | `"X -> * -> Y"` |
+#' | Efecto total (directo + indirectos) | `"X -> Y [total]"` |
+#' | Covarianza o correlación | `"X <-> W"` (o `"X ~~ W"`) |
+#'
+#' Si la hipótesis predice un sentido, agréguelo al final: `"X -> Y (+)"` o
+#' `"X -> Y (-)"`; entonces se sostiene solo si el efecto es significativo
+#' **y** tiene ese signo. Con `[total]`, el signo va antes o después:
+#' `"X -> Y (+) [total]"`.
+#'
+#' Los efectos directos y las covarianzas usan el valor *p* (bilateral) de
+#' `lavaan`. Los indirectos y los totales se evalúan con el intervalo de
+#' confianza de [tabla_efectos()] (bootstrap o método delta): son
+#' significativos si el intervalo no incluye el 0. Si el modelo no admite
+#' bootstrap (por ejemplo, variables ordinales con WLSMV), se usa el método
+#' delta y se avisa.
+#'
+#' Una covarianza entre dos variables exógenas observadas solo tiene valor *p*
+#' si el modelo se estima con `fixed.x = FALSE`; de lo contrario `lavaan` la
+#' fija a la de la muestra y la función explica cómo estimarla.
 #'
 #' @param fit Modelo de `lavaan`.
 #' @param hipotesis Vector con nombres, p. ej.
 #'   `c(H1 = "SelfEfficacy -> Flow (+)", H2 = "LMS -> Flow -> Satisfaction")`.
-#' @param bootstrap Remuestreos para los efectos indirectos (`0` para usar el
-#'   método delta).
+#' @param bootstrap Remuestreos para los efectos indirectos y totales (`0`
+#'   para usar el método delta).
 #' @param alfa Nivel de significancia.
 #' @inheritParams tabla_descriptivos
 #' @return Un objeto `tabla_apa`. Los valores están en `$datos`.
 #' @examples
 #' library(lavaan)
 #' set.seed(1)
-#' d <- data.frame(X = rnorm(200)); d$M <- .5 * d$X + rnorm(200)
-#' d$Y <- .4 * d$M + rnorm(200)
+#' d <- data.frame(X = rnorm(200), W = rnorm(200))
+#' d$M <- .5 * d$X + rnorm(200)
+#' d$Y <- .4 * d$M + .3 * d$W + rnorm(200)
 #' fit <- sem("M ~ X
-#'             Y ~ M + X", data = d)
-#' tabla_hipotesis(fit, c(H1 = "X -> M (+)", H2 = "X -> Y (+)", H3 = "X -> M -> Y"),
-#'                 bootstrap = 0)
+#'             Y ~ M + X + W", data = d)
+#' tabla_hipotesis(fit, c(H1 = "X -> M (+)", H2 = "X -> Y (+)", H3 = "X -> M -> Y",
+#'                        H4 = "X -> Y (+) [total]"), bootstrap = 0)
 #' @export
 tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etiquetas = NULL, decimales = 2,
                             titulo = NULL, archivo = NULL) {
-  if (missing(hipotesis)) stop("Escribe tus hip\u00f3tesis, por ejemplo:\n  tabla_hipotesis(fit, c(H1 = \"X -> Y (+)\", H2 = \"X -> M -> Y\"))\n(+) o (-) si la hip\u00f3tesis predice el signo; con dos flechas, efecto indirecto.", call. = FALSE)
+  if (missing(hipotesis)) stop("Escribe tus hip\u00f3tesis, por ejemplo:\n  tabla_hipotesis(fit, c(H1 = \"X -> Y (+)\", H2 = \"X -> M -> Y\"))\n",
+                               "(+) o (-) si la hip\u00f3tesis predice el signo; con dos flechas, efecto indirecto; ",
+                               "\"X -> * -> Y\", indirecto total; \"X -> Y [total]\", efecto total; \"X <-> W\", covarianza.", call. = FALSE)
   exigir_un_grupo(fit)
   exigir_lavaan(fit, "cfa() o sem()")
   if (is.null(names(hipotesis))) names(hipotesis) <- paste0("H", seq_along(hipotesis))
+  vacios <- !nzchar(names(hipotesis)); names(hipotesis)[vacios] <- paste0("H", which(vacios))
   ss <- lavaan::standardizedSolution(fit); pe <- lavaan::parameterEstimates(fit)
   if ("group" %in% names(pe)) { pe <- pe[pe$group == 1, ]; ss <- ss[ss$group == 1, ] }
-  leer <- function(h) {
-    signo <- if (grepl("\\(\\s*\\+\\s*\\)\\s*$", h)) "+" else if (grepl("\\(\\s*[-\u2212]\\s*\\)\\s*$", h)) "-" else ""
-    h <- sub("\\(\\s*[-+\u2212]\\s*\\)\\s*$", "", h)
+
+  leer <- function(h, nm) {
+    original <- h
+    signo <- ""; total <- FALSE
+    repeat {
+      if (grepl("\\[\\s*total\\s*\\]\\s*$", h, ignore.case = TRUE)) { total <- TRUE; h <- sub("\\[\\s*total\\s*\\]\\s*$", "", h, ignore.case = TRUE); next }
+      if (grepl("\\(\\s*\\+\\s*\\)\\s*$", h)) { signo <- "+"; h <- sub("\\(\\s*\\+\\s*\\)\\s*$", "", h); next }
+      if (grepl("\\(\\s*[-\u2212]\\s*\\)\\s*$", h)) { signo <- "-"; h <- sub("\\(\\s*[-\u2212]\\s*\\)\\s*$", "", h); next }
+      break
+    }
+    h <- trimws(h)
+    if (grepl("\\([^)]*\\)\\s*$", h))
+      stop(nm, ": no reconozco '", sub(".*(\\([^)]*\\))\\s*$", "\\1", h), "' en '", original, "'. Para el signo usa (+) o (-).", call. = FALSE)
+    ayuda <- "Usa \"X -> Y\", \"X -> M -> Y\", \"X -> * -> Y\", \"X -> Y [total]\" o \"X <-> W\"."
+    if (grepl("<->|\u2194|~~", h)) {
+      v <- trimws(strsplit(h, "<->|\u2194|~~")[[1]])
+      if (length(v) != 2 || any(!nzchar(v))) stop(nm, ": hip\u00f3tesis mal escrita: '", original, "'. ", ayuda, call. = FALSE)
+      if (total) stop(nm, ": [total] no aplica a una covarianza.", call. = FALSE)
+      return(list(v = v, signo = signo, clase = "cov"))
+    }
     v <- trimws(strsplit(h, "->|\u2192")[[1]])
-    if (length(v) < 2 || any(!nzchar(v))) stop("Hip\u00f3tesis mal escrita: '", h, "'. Usa \"X -> Y\" o \"X -> M -> Y\".", call. = FALSE)
-    list(v = v, signo = signo)
+    if (length(v) < 2 || any(!nzchar(v))) stop(nm, ": hip\u00f3tesis mal escrita: '", original, "'. ", ayuda, call. = FALSE)
+    if ("*" %in% v) {
+      if (length(v) != 3 || v[2] != "*") stop(nm, ": para el indirecto total escribe \"X -> * -> Y\" (un solo *, en medio).", call. = FALSE)
+      if (total) stop(nm, ": usa \"X -> * -> Y\" (indirecto total) o \"X -> Y [total]\" (efecto total), no los dos.", call. = FALSE)
+      return(list(v = v[c(1, 3)], signo = signo, clase = "indirecto_total"))
+    }
+    if (total) {
+      if (length(v) != 2) stop(nm, ": el efecto total se escribe con una sola flecha: \"", v[1], " -> ", utils::tail(v, 1), " [total]\".", call. = FALSE)
+      return(list(v = v, signo = signo, clase = "total"))
+    }
+    list(v = v, signo = signo, clase = if (length(v) == 2) "directo" else "indirecto")
   }
-  H <- lapply(hipotesis, leer)
-  necesita_ind <- any(vapply(H, function(h) length(h$v) > 2, logical(1)))
-  efectos <- if (necesita_ind) suppressMessages(tabla_efectos(fit, bootstrap = bootstrap))$datos else NULL
+  H <- mapply(leer, hipotesis, names(hipotesis), SIMPLIFY = FALSE)
+
+  necesita_ef <- any(vapply(H, function(h) h$clase %in% c("indirecto", "indirecto_total", "total"), logical(1)))
+  # Si el modelo no admite bootstrap, tabla_efectos() usa el método delta y
+  # avisa; ese aviso se deja pasar y los demás mensajes se omiten
+  delta <- bootstrap == 0
+  efectos <- if (necesita_ef) withCallingHandlers(tabla_efectos(fit, bootstrap = bootstrap), message = function(m) {
+    if (grepl("delta", conditionMessage(m))) { delta <<- TRUE; message(conditionMessage(m)) }
+    invokeRestart("muffleMessage")
+  })$datos else NULL
+
+  fijado <- function(nm, que) stop(nm, ": ", que, " est\u00e1 fijado en el modelo (no se estima), as\u00ed que no tiene valor p ni se puede contrastar.", call. = FALSE)
+  directo <- function(nm, v) {
+    i <- which(pe$op == "~" & pe$lhs == v[2] & pe$rhs == v[1])
+    if (!length(i)) return(NULL)
+    i <- i[1]
+    if (is.na(pe$pvalue[i])) fijado(nm, paste0("el efecto ", v[1], " -> ", v[2]))
+    b <- ss$est.std[ss$op == "~" & ss$lhs == v[2] & ss$rhs == v[1]][1]
+    list(tipo = "Directo", beta = b, p = pe$pvalue[i], ic = c(NA, NA), sig = pe$pvalue[i] < alfa, est = pe$est[i])
+  }
+  de_efectos <- function(e, tipo) list(tipo = tipo, beta = e$beta[1], p = NA_real_, ic = c(e$ic_inf[1], e$ic_sup[1]),
+                                       sig = isTRUE(e$ic_inf[1] > 0 | e$ic_sup[1] < 0), est = e$B[1])
+
   res <- lapply(names(H), function(nm) {
     h <- H[[nm]]; v <- h$v
-    if (length(v) == 2) {
-      i <- which(pe$op == "~" & pe$lhs == v[2] & pe$rhs == v[1])
-      if (!length(i)) stop(nm, ": el modelo no tiene el efecto ", v[1], " -> ", v[2], ".", call. = FALSE)
-      b <- ss$est.std[ss$op == "~" & ss$lhs == v[2] & ss$rhs == v[1]][1]
-      list(tipo = "Directo", beta = b, p = pe$pvalue[i[1]], ic = c(NA, NA), sig = pe$pvalue[i[1]] < alfa, est = pe$est[i[1]])
-    } else {
-      e <- efectos[efectos$efecto == paste(v, collapse = " \u2192 ") & efectos$tipo == "indirecto", ]
-      if (!nrow(e)) stop(nm, ": el modelo no tiene la trayectoria indirecta ", paste(v, collapse = " -> "), ".", call. = FALSE)
-      list(tipo = "Indirecto", beta = e$beta, p = e$p, ic = c(e$ic_inf, e$ic_sup), sig = e$ic_inf > 0 | e$ic_sup < 0, est = e$B)
-    }
+    switch(h$clase,
+      directo = {
+        r <- directo(nm, v)
+        if (is.null(r)) {
+          hay_ind <- !is.null(efectos) || any(pe$op == "~" & pe$lhs == v[2])
+          stop(nm, ": el modelo no tiene el efecto directo ", v[1], " -> ", v[2], ".",
+               if (hay_ind) paste0(" Si te refieres al efecto indirecto total escribe \"", v[1], " -> * -> ", v[2], "\"; si al total, \"", v[1], " -> ", v[2], " [total]\".") else "",
+               call. = FALSE)
+        }
+        r
+      },
+      indirecto = {
+        e <- efectos[efectos$efecto == paste(v, collapse = " \u2192 ") & efectos$tipo == "indirecto", ]
+        if (!nrow(e)) stop(nm, ": el modelo no tiene la trayectoria indirecta ", paste(v, collapse = " -> "), ".", call. = FALSE)
+        de_efectos(e, "Indirecto")
+      },
+      indirecto_total = {
+        e <- efectos[efectos$de == v[1] & efectos$a == v[2] & efectos$tipo == "indirecto_total", ]
+        if (!nrow(e)) stop(nm, ": el modelo no tiene efectos indirectos de ", v[1], " sobre ", v[2], ".", call. = FALSE)
+        de_efectos(e, "Indirecto total")
+      },
+      total = {
+        e <- efectos[efectos$de == v[1] & efectos$a == v[2] & efectos$tipo == "total", ]
+        if (nrow(e)) de_efectos(e, "Total") else {
+          # Sin mediación, el efecto total es el directo
+          r <- directo(nm, v)
+          if (is.null(r)) stop(nm, ": el modelo no tiene ning\u00fan efecto de ", v[1], " sobre ", v[2], ".", call. = FALSE)
+          r$tipo <- "Total"; r
+        }
+      },
+      cov = {
+        i <- which(pe$op == "~~" & ((pe$lhs == v[1] & pe$rhs == v[2]) | (pe$lhs == v[2] & pe$rhs == v[1])))
+        if (!length(i)) stop(nm, ": el modelo no incluye la covarianza ", v[1], " <-> ", v[2], ". Agr\u00e9gala al modelo con ", v[1], " ~~ ", v[2], ".", call. = FALSE)
+        i <- i[1]
+        if (is.na(pe$pvalue[i])) {
+          ex <- lavaan::lavNames(fit, "ov.x")
+          if (all(v %in% ex)) stop(nm, ": lavaan no estima la covarianza entre ", v[1], " y ", v[2], " porque son ex\u00f3genas observadas y la fija a la de la muestra (fixed.x = TRUE). ",
+                                   "Para contrastarla, estima el modelo con sem(..., fixed.x = FALSE).", call. = FALSE)
+          fijado(nm, paste0("la covarianza ", v[1], " <-> ", v[2]))
+        }
+        b <- ss$est.std[ss$op == "~~" & ((ss$lhs == v[1] & ss$rhs == v[2]) | (ss$lhs == v[2] & ss$rhs == v[1]))][1]
+        list(tipo = "Covarianza", beta = b, p = pe$pvalue[i], ic = c(NA, NA), sig = pe$pvalue[i] < alfa, est = pe$est[i])
+      })
   })
   names(res) <- names(H)
   sostiene <- vapply(names(H), function(nm) {
     r <- res[[nm]]; s <- H[[nm]]$signo
-    r$sig && (s == "" || (s == "+" && r$est > 0) || (s == "-" && r$est < 0))
+    isTRUE(r$sig) && (s == "" || (s == "+" && r$est > 0) || (s == "-" && r$est < 0))
   }, logical(1))
+  tipo_txt <- function(t) switch(t, Directo = tx("Directo", "Direct"), Indirecto = tx("Indirecto", "Indirect"),
+                                 "Indirecto total" = tx("Indirecto total", "Total indirect"), Total = tx("Total", "Total"),
+                                 Covarianza = tx("Covarianza", "Covariance"))
+  trayecto <- function(h) {
+    v <- renombrar(h$v, etiquetas)
+    base <- switch(h$clase, cov = paste(v, collapse = " \u2194 "), indirecto_total = paste(v[1], "\u2192 \u2026 \u2192", v[2]),
+                   paste(v, collapse = " \u2192 "))
+    paste0(base, if (nzchar(h$signo)) paste0(" (", h$signo, ")") else "")
+  }
   cel <- t(vapply(names(H), function(nm) {
     r <- res[[nm]]; h <- H[[nm]]
-    c(nm, paste0(paste(renombrar(h$v, etiquetas), collapse = " \u2192 "), if (nzchar(h$signo)) paste0(" (", h$signo, ")") else ""),
-      if (r$tipo == "Directo") tx("Directo", "Direct") else tx("Indirecto", "Indirect"), f_apa(r$beta, decimales),
-      if (r$tipo == "Directo") f_p(r$p) else paste0(tx("IC [", "CI ["), f_num(r$ic[1], decimales), ", ", f_num(r$ic[2], decimales), "]"),
+    c(nm, trayecto(h), tipo_txt(r$tipo), f_apa(r$beta, decimales),
+      if (!is.na(r$p)) f_p(r$p) else paste0(tx("IC [", "CI ["), f_num(r$ic[1], decimales), ", ", f_num(r$ic[2], decimales), "]"),
       if (sostiene[[nm]]) tx("Se sostiene", "Supported") else tx("No se sostiene", "Not supported"))
   }, character(6)))
-  nota <- paste0(tx("\u03b2 = coeficiente estandarizado. Efectos directos: se sostienen si p < ", "\u03b2 = standardized coefficient. Direct effects are supported if p < "), f_apa(alfa, 2),
-                 tx(". Efectos indirectos: se sostienen si el intervalo de confianza al 95 % (", ". Indirect effects are supported if the 95% confidence interval ("),
-                 if (necesita_ind && bootstrap > 0) paste0(tx("bootstrap con ", "bootstrap with "), bootstrap, tx(" remuestreos", " resamples")) else tx("m\u00e9todo delta", "delta method"),
-                 tx(", calculado con el efecto no estandarizado) no incluye el 0. Si la hip\u00f3tesis indica un signo (+ o \u2212), el efecto debe tener ese signo.",
-                    ", computed on the unstandardized effect) excludes 0. If the hypothesis specifies a sign (+ or \u2212), the effect must have that sign."))
-  datos <- data.frame(hipotesis = names(H), trayectoria = vapply(H, function(h) paste(h$v, collapse = " -> "), character(1)),
+  clases <- vapply(H, `[[`, character(1), "clase")
+  hay_cov <- any(clases == "cov"); hay_ef <- any(clases %in% c("indirecto", "indirecto_total", "total"))
+  metodo <- if (hay_ef) { if (delta) tx("m\u00e9todo delta", "delta method") else paste0(tx("bootstrap con ", "bootstrap with "), bootstrap, tx(" remuestreos", " resamples")) }
+  nota <- paste0(tx("\u03b2 = coeficiente estandarizado", "\u03b2 = standardized coefficient"),
+                 if (hay_cov) tx(" (en las covarianzas, la correlaci\u00f3n)", " (for covariances, the correlation)") else "",
+                 tx(". Efectos directos", ". Direct effects"), if (hay_cov) tx(" y covarianzas", " and covariances") else "",
+                 tx(": se sostienen si p < ", " are supported if p < "), f_apa(alfa, 2),
+                 if (hay_ef) paste0(tx(". Efectos indirectos y totales: se sostienen si el intervalo de confianza al 95 % (", ". Indirect and total effects are supported if the 95% confidence interval ("),
+                                    metodo, tx(", calculado con el efecto no estandarizado) no incluye el 0", ", computed on the unstandardized effect) excludes 0")) else "",
+                 tx(". Si la hip\u00f3tesis indica un signo (+ o \u2212), el efecto debe tener ese signo.",
+                    ". If the hypothesis specifies a sign (+ or \u2212), the effect must have that sign."))
+  datos <- data.frame(hipotesis = names(H),
+                      trayectoria = vapply(H, function(h) paste(h$v, collapse = if (h$clase == "cov") " <-> " else if (h$clase == "indirecto_total") " -> * -> " else " -> "), character(1)),
                       signo = vapply(H, `[[`, character(1), "signo"), tipo = vapply(res, `[[`, character(1), "tipo"),
                       B = vapply(res, `[[`, numeric(1), "est"), beta = vapply(res, `[[`, numeric(1), "beta"),
                       p = vapply(res, function(r) if (is.null(r$p)) NA_real_ else r$p, numeric(1)),
+                      ic_inf = vapply(res, function(r) r$ic[1], numeric(1)), ic_sup = vapply(res, function(r) r$ic[2], numeric(1)),
                       sostiene = sostiene, row.names = NULL)
   t <- nueva_tabla(if (is.null(titulo)) tx("Contraste de hip\u00f3tesis", "Hypothesis testing") else titulo,
                    c(tx("Hip\u00f3tesis", "Hypothesis"), tx("Trayectoria", "Path"), tx("Efecto", "Effect"), "\u03b2", tx("p / IC 95 %", "p / 95% CI"), tx("Decisi\u00f3n", "Decision")), cel,

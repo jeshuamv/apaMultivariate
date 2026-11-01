@@ -394,7 +394,7 @@ solo líneas horizontales y nota) y guardan sus valores numéricos en
 |             | `tabla_invarianza()`       | Invarianza configural, métrica, escalar y estricta                                  |
 | Estructural | `tabla_parametros()`       | Estimaciones como en AMOS: B, EE, C.R., p, β, covarianzas y varianzas               |
 |             | `tabla_efectos()`          | Efectos directos, indirectos (bootstrap) y totales                                  |
-|             | `tabla_hipotesis()`        | Cada hipótesis: se sostiene o no se sostiene                                        |
+|             | `tabla_hipotesis()`        | Cada hipótesis (directa, indirecta, total o covarianza): se sostiene o no                                        |
 |             | `tabla_vif()`              | Multicolinealidad entre predictores                                                 |
 | Moderación  | `tabla_moderacion()`       | Moderación y mediación moderada (modelos 1, 7 y 14 de PROCESS)                      |
 |             | `grafica_interaccion()`    | Gráfica de pendientes simples                                                       |

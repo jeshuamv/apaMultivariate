@@ -1,3 +1,24 @@
+# apaMultivariate 0.12.1
+
+* `tabla_hipotesis()` acepta tres tipos nuevos de hipótesis:
+  * Efecto indirecto total (todas las trayectorias de X a Y): `"X -> * -> Y"`.
+  * Efecto total (directo + indirectos): `"X -> Y [total]"`; sin mediación es
+    el efecto directo.
+  * Covarianza o correlación: `"X <-> W"` (o `"X ~~ W"`), en cualquier orden;
+    sirve para la correlación entre factores de un AFC y para covarianzas
+    residuales. Si las dos variables son exógenas observadas, explica que hay
+    que estimar el modelo con `fixed.x = FALSE`.
+* `tabla_hipotesis()` da mensajes claros cuando una trayectoria está fijada
+  (`M ~ 0.5*X`), cuando el signo está mal escrito (`(++)`) o cuando se pide un
+  efecto directo que no existe pero sí hay indirectos (sugiere `-> * ->` o
+  `[total]`). Antes, la trayectoria fijada daba un error incomprensible.
+* `tabla_efectos()` y `tabla_hipotesis()`: si el modelo no admite bootstrap
+  (variables ordinales con WLSMV, `conditional.x = TRUE`) o el bootstrap falla,
+  usan el método delta y lo avisan; antes se detenían con un error de lavaan.
+* `tabla_efectos()`: con el método delta, el error estándar de un indirecto
+  con un tramo fijado usa el valor fijo de ese tramo (antes lo tomaba como 0).
+  `$datos` incluye las columnas `de` y `a` de cada efecto.
+
 # apaMultivariate 0.12.0
 
 * Regresión lineal múltiple (con `lm()`), con su plantilla `plantilla("regresion")`:
