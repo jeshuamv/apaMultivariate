@@ -11,6 +11,7 @@ tabla_efectos(
   semilla = 123,
   etiquetas = NULL,
   decimales = 2,
+  matrices = FALSE,
   titulo = NULL,
   archivo = NULL
 )
@@ -30,6 +31,9 @@ modelo.}
 
 \item{decimales}{Número de decimales.}
 
+\item{matrices}{Si es \code{TRUE}, agrega las matrices de efectos directos,
+indirectos y totales estandarizados (como en AMOS).}
+
 \item{titulo}{Título de la tabla.}
 
 \item{archivo}{Si se indica, guarda la tabla (\code{.docx}, \code{.rtf}, \code{.html} o
@@ -37,7 +41,8 @@ modelo.}
 }
 \value{
 Un objeto \code{tabla_apa}. Los valores están en \verb{$datos}; la segunda
-parte de la tabla tiene la \eqn{R^2} de las variables endógenas.
+parte de la tabla tiene la \eqn{R^2} de las variables endógenas. Las
+matrices de efectos estandarizados están en \verb{$matrices}.
 }
 \description{
 Para un modelo de trayectorias o SEM, reúne todos los efectos:
@@ -64,6 +69,13 @@ multivariada), que es inmediato pero menos preciso.
 
 Si el modelo tiene parámetros definidos con \verb{:=}, se agregan en otra parte
 de la tabla con los valores que calcula \code{lavaan}.
+
+La tabla principal omite las filas que repetirían otra (por ejemplo, el
+efecto total de un par que solo tiene efecto directo). Con
+\code{matrices = TRUE} se agregan las tres matrices de efectos estandarizados
+como las presenta AMOS (directos, indirectos y totales), con \strong{todos} los
+pares de variables de la parte estructural. Las matrices siempre quedan en
+\verb{$matrices}.
 }
 \examples{
 library(lavaan)
@@ -73,6 +85,7 @@ d$Y <- .4 * d$M + .2 * d$X + rnorm(200)
 fit <- sem("M ~ X
             Y ~ M + X", data = d)
 tabla_efectos(fit, bootstrap = 0)
+tabla_efectos(fit, bootstrap = 0, matrices = TRUE)   # todos los totales, como AMOS
 \donttest{
 tabla_efectos(fit, bootstrap = 500)
 }

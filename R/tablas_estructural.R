@@ -38,6 +38,29 @@ valores_efectos <- function(obj, R, caminos, pares) {
   c(un(FALSE), un(TRUE))
 }
 
+# Matrices de efectos estandarizados como las de AMOS ("Standardized Direct /
+# Indirect / Total Effects"): filas = variable que recibe el efecto; columnas
+# = la que lo produce. Total = (I - B)^-1 - I (y (I - B)^-1 Gamma para las
+# exógenas que lavaan pone en Gamma, como con conditional.x = TRUE).
+#' @noRd
+matrices_efectos <- function(fit) {
+  s <- lavaan::lavInspect(fit, "std"); if (is.null(s$lambda) && is.list(s[[1]])) s <- s[[1]]
+  B <- s$beta; G <- s$gamma
+  if (is.null(B) && is.null(G)) return(NULL)
+  if (is.null(B)) { nm <- rownames(G); B <- matrix(0, length(nm), length(nm), dimnames = list(nm, nm)) }
+  B <- unclass(B); I <- diag(nrow(B)); inv <- solve(I - B)
+  dir <- B; tot <- inv - I
+  if (!is.null(G)) { G <- unclass(G); dir <- cbind(dir, G); tot <- cbind(tot, inv %*% G) }
+  dimnames(tot) <- dimnames(dir)
+  ind <- tot - dir
+  endo <- rownames(dir)[rowSums(abs(dir) > 1e-12) > 0]
+  causas <- colnames(dir)[colSums(abs(tot[endo, , drop = FALSE]) > 1e-12) > 0]
+  # orden de AMOS: primero las exógenas, después las endógenas
+  causas <- c(setdiff(causas, endo), intersect(causas, endo))
+  recorta <- function(M) M[endo, causas, drop = FALSE]
+  list(directos = recorta(dir), indirectos = recorta(ind), totales = recorta(tot))
+}
+
 #' Tabla de efectos directos, indirectos y totales
 #'
 #' Para un modelo de trayectorias o SEM, reúne todos los efectos:
@@ -62,15 +85,25 @@ valores_efectos <- function(obj, R, caminos, pares) {
 #' Si el modelo tiene parámetros definidos con `:=`, se agregan en otra parte
 #' de la tabla con los valores que calcula `lavaan`.
 #'
+#' La tabla principal omite las filas que repetirían otra (por ejemplo, el
+#' efecto total de un par que solo tiene efecto directo). Con
+#' `matrices = TRUE` se agregan las tres matrices de efectos estandarizados
+#' como las presenta AMOS (directos, indirectos y totales), con **todos** los
+#' pares de variables de la parte estructural. Las matrices siempre quedan en
+#' `$matrices`.
+#'
 #' @param fit Modelo de [lavaan::sem()] con al menos una regresión (`~`).
 #' @param bootstrap Número de remuestreos bootstrap (`0` para usar el método
 #'   delta). Con 1000 puede tardar de segundos a unos minutos según el
 #'   modelo.
 #' @param nivel Nivel de confianza de los intervalos.
 #' @param semilla Semilla para que el bootstrap sea reproducible.
+#' @param matrices Si es `TRUE`, agrega las matrices de efectos directos,
+#'   indirectos y totales estandarizados (como en AMOS).
 #' @inheritParams tabla_descriptivos
 #' @return Un objeto `tabla_apa`. Los valores están en `$datos`; la segunda
-#'   parte de la tabla tiene la \eqn{R^2} de las variables endógenas.
+#'   parte de la tabla tiene la \eqn{R^2} de las variables endógenas. Las
+#'   matrices de efectos estandarizados están en `$matrices`.
 #' @examples
 #' library(lavaan)
 #' set.seed(1)
@@ -79,12 +112,13 @@ valores_efectos <- function(obj, R, caminos, pares) {
 #' fit <- sem("M ~ X
 #'             Y ~ M + X", data = d)
 #' tabla_efectos(fit, bootstrap = 0)
+#' tabla_efectos(fit, bootstrap = 0, matrices = TRUE)   # todos los totales, como AMOS
 #' \donttest{
 #' tabla_efectos(fit, bootstrap = 500)
 #' }
 #' @export
 tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, etiquetas = NULL,
-                          decimales = 2, titulo = NULL, archivo = NULL) {
+                          decimales = 2, matrices = FALSE, titulo = NULL, archivo = NULL) {
   exigir_un_grupo(fit)
   exigir_lavaan(fit, "cfa() o sem()")
   pe0 <- lavaan::parameterEstimates(fit, level = nivel)
@@ -195,7 +229,9 @@ tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, et
                                        "; indirect and total effects are judged by their confidence interval") else "",
                  tx(". En negritas, efectos indirectos cuyo intervalo no incluye el 0 (significativos).",
                     ". Indirect effects whose interval excludes 0 (significant) are in bold."),
-                 if (!ni) tx(" El modelo no tiene efectos indirectos.", " The model has no indirect effects.") else "")
+                 if (!ni) tx(" El modelo no tiene efectos indirectos.", " The model has no indirect effects.") else "",
+                 if (!matrices && ni) tx(" Se omiten los efectos que repetir\u00edan otra fila; todos los efectos totales, con matrices = TRUE.",
+                                         " Rows that would repeat another are omitted; for all total effects, use matrices = TRUE.") else "")
   r2 <- tryCatch(lavaan::lavInspect(fit, "r2"), error = function(e) numeric(0)); if (is.list(r2)) r2 <- r2[[1]]
   endo <- intersect(unique(R$a), names(r2))
   extra <- list()
@@ -207,6 +243,19 @@ tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, et
     cbind(defs$lhs, f_num(defs$est, decimales), f_num(defs$se, decimales),
           paste0("[", f_num(defs$ci.lower, decimales), ", ", f_num(defs$ci.upper, decimales), "]"), f_p(defs$pvalue)),
     nota = tx("Valores calculados por lavaan con el m\u00e9todo de errores est\u00e1ndar del modelo.", "Values computed by lavaan with the model's standard-error method."))
+  M <- tryCatch(matrices_efectos(fit), error = function(e) NULL)
+  if (matrices && !is.null(M)) {
+    tabla_m <- function(X, tit) {
+      cel_m <- cbind(et(rownames(X)), matrix(f_apa(X, decimales), nrow(X)))
+      cel_m[, -1][abs(X) < 1e-12] <- "\u2014"
+      nueva_tabla(tit, c("", et(colnames(X))), cel_m,
+                  nota = tx("Filas: variable que recibe el efecto; columnas: variable que lo produce. \u2014 = sin efecto.",
+                            "Rows: variable receiving the effect; columns: variable producing it. \u2014 = no effect."))
+    }
+    extra <- c(extra, list(tabla_m(M$directos, tx("Efectos directos estandarizados", "Standardized direct effects")),
+                           tabla_m(M$indirectos, tx("Efectos indirectos estandarizados", "Standardized indirect effects")),
+                           tabla_m(M$totales, tx("Efectos totales estandarizados", "Standardized total effects"))))
+  }
   datos <- data.frame(efecto = nombres, tipo = tipo,
                       de = c(R$de, vapply(caminos, `[`, character(1), 1), pares$de, pares$de),
                       a = c(R$a, vapply(caminos, function(cm) utils::tail(cm, 1), character(1)), pares$a, pares$a),
@@ -215,6 +264,7 @@ tabla_efectos <- function(fit, bootstrap = 1000, nivel = 0.95, semilla = 123, et
   t <- nueva_tabla(if (is.null(titulo)) tx("Efectos directos, indirectos y totales", "Direct, indirect, and total effects") else titulo,
                    c(tx("Efecto", "Effect"), "B", tx("EE", "SE"), ic_txt, "\u03b2", "p"), cel, neg,
                    alinear = c("l", "c", "c", "c", "c", "c"), nota = nota, separadores = sep, datos = datos, extra = extra)
+  t$matrices <- M
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
 }
@@ -267,6 +317,8 @@ cita_paquete <- function(p, autores, cita, titulo, extra = "") {
 #'   [tabla_efectos()]), número de remuestreos para mencionarlo.
 #' @param paquetes Otros paquetes que se usaron y deben citarse: cualquiera de
 #'   `"semTools"`, `"psych"` y `"apaMultivariate"`.
+#' @param ic_rmsea Nivel de confianza del intervalo del RMSEA que reportaste
+#'   (`.90` por omisión; usa `.95` si así lo pidieron).
 #' @param atipicos Si quitaste casos atípicos, el número de casos quitados o
 #'   los datos que devolvió [quitar_atipicos()]; se menciona en el párrafo
 #'   con su criterio.
@@ -279,8 +331,11 @@ cita_paquete <- function(p, autores, cita, titulo, extra = "") {
 #'             textual =~ x4 + x5 + x6", data = HolzingerSwineford1939)
 #' parrafo_metodo(fit)
 #' @export
-parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"), atipicos = NULL, archivo = NULL) {
+parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"), ic_rmsea = .90, atipicos = NULL, archivo = NULL) {
   exigir_lavaan(fit, "cfa() o sem()")
+  if (!is.numeric(ic_rmsea) || length(ic_rmsea) != 1 || ic_rmsea <= 0 || ic_rmsea >= 1)
+    stop("`ic_rmsea` debe ser un nivel de confianza entre 0 y 1, por ejemplo .90 o .95.", call. = FALSE)
+  pct <- round(100 * ic_rmsea)
   op <- lavaan::lavInspect(fit, "options")
   # lavaan guarda el estimador base (ML, DWLS, ULS) y la corrección en `test`
   est <- toupper(op$estimator); prueba <- op$test
@@ -329,7 +384,7 @@ parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"
     " was estimated with a sample of ", n, " participants", if (ng > 1) paste0(" in ", ng, " groups") else "",
     " using ", nombre_estimador(est), wis_txt, ".", at_txt, perd,
     " Model fit was evaluated with the \u03c7\u00b2 test, the comparative fit index (CFI), the Tucker-Lewis index (TLI), ",
-    "the root mean square error of approximation (RMSEA) with its 90% confidence interval, and the standardized ",
+    "the root mean square error of approximation (RMSEA) with its ", pct, "% confidence interval, and the standardized ",
     "root mean square residual (SRMR). CFI and TLI \u2265 .95, RMSEA \u2264 .06, and SRMR \u2264 .08 were considered indicative ",
     "of good fit (Hu & Bentler, 1999).",
     if (!is.null(bootstrap)) paste0(" Indirect effects were tested with 95% percentile bootstrap confidence intervals based on ",
@@ -339,7 +394,7 @@ parrafo_metodo <- function(fit, bootstrap = NULL, paquetes = c("apaMultivariate"
     " se estim\u00f3 con una muestra de ", n, " participantes", if (ng > 1) paste0(" en ", ng, " grupos") else "",
     " por ", nombre_estimador(est), wis_txt, ".", at_txt, perd,
     " El ajuste se evalu\u00f3 con la prueba \u03c7\u00b2, el \u00edndice de ajuste comparativo (CFI), el \u00edndice de Tucker-Lewis (TLI), ",
-    "el error cuadr\u00e1tico medio de aproximaci\u00f3n (RMSEA) con su intervalo de confianza al 90 % y la ra\u00edz del residuo ",
+    "el error cuadr\u00e1tico medio de aproximaci\u00f3n (RMSEA) con su intervalo de confianza al ", pct, " % y la ra\u00edz del residuo ",
     "cuadr\u00e1tico medio estandarizado (SRMR). Se consideraron indicadores de buen ajuste CFI y TLI \u2265 .95, RMSEA \u2264 .06 ",
     "y SRMR \u2264 .08 (Hu y Bentler, 1999).",
     if (!is.null(bootstrap)) paste0(" Los efectos indirectos se evaluaron con intervalos de confianza al 95 % obtenidos por bootstrap de percentiles con ",

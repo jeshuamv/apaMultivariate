@@ -1,3 +1,14 @@
+# apaMultivariate 0.13.0
+
+* `tabla_efectos(matrices = TRUE)` agrega las matrices de efectos directos,
+  indirectos y totales estandarizados como las de AMOS, con todos los pares de
+  variables. La tabla principal omite los efectos que repetirían otra fila (por
+  ejemplo, el total de un par que solo tiene efecto indirecto), así que ahí no
+  estaban todos los efectos totales que suelen pedirse. Las matrices quedan
+  siempre en `$matrices`.
+* `parrafo_metodo(ic_rmsea = .95)`: el párrafo menciona el nivel del intervalo
+  del RMSEA que se reportó (antes decía siempre 90 %).
+
 # apaMultivariate 0.12.1
 
 * `tabla_hipotesis()` acepta tres tipos nuevos de hipótesis:

@@ -55,3 +55,31 @@ test_that("modelo_alternativo sin cambios avisa una sola vez y guardar_tablas ac
   suppressMessages(guardar_tablas(tabla_ajuste(f), tabla_cargas(f), arch))
   expect_true(file.exists(arch))
 })
+
+test_that("tabla_efectos(matrices = TRUE): matrices estandarizadas como AMOS", {
+  set.seed(5); d <- data.frame(X = rnorm(200), W = rnorm(200))
+  d$M <- .5 * d$X + rnorm(200); d$Y <- .4 * d$M + .3 * d$W + rnorm(200)
+  f <- lavaan::sem("M ~ X\n Y ~ M + W", d)
+  t <- tabla_efectos(f, bootstrap = 0, matrices = TRUE)
+  M <- t$matrices
+  s <- lavaan::standardizedSolution(f); b <- function(de, a) s$est.std[s$op == "~" & s$rhs == de & s$lhs == a]
+  expect_equal(M$totales["Y", "X"], b("X", "M") * b("M", "Y"))      # solo indirecto: no sale en la tabla principal
+  expect_equal(M$totales["Y", "W"], b("W", "Y"))                    # solo directo
+  expect_equal(M$indirectos["Y", "X"], M$totales["Y", "X"])
+  expect_equal(M$directos["M", "X"], b("X", "M"))
+  expect_length(t$extra, 4)                                          # R² + 3 matrices
+  expect_length(tabla_efectos(f, bootstrap = 0)$extra, 1)
+  expect_false(is.null(tabla_efectos(f, bootstrap = 0)$matrices))
+  # Latentes: total = directo + indirecto
+  fl <- lavaan::sem("ind60 =~ x1 + x2 + x3\n dem60 =~ y1 + y2 + y3 + y4\n dem65 =~ y5 + y6 + y7 + y8\n dem60 ~ ind60\n dem65 ~ ind60 + dem60",
+                    lavaan::PoliticalDemocracy)
+  te <- tabla_efectos(fl, bootstrap = 0)
+  expect_equal(te$matrices$totales["dem65", "ind60"], te$datos$beta[te$datos$tipo == "total"])
+})
+
+test_that("parrafo_metodo(ic_rmsea) menciona el nivel del intervalo", {
+  f <- lavaan::cfa("a =~ x1 + x2 + x3\n b =~ x4 + x5 + x6", lavaan::HolzingerSwineford1939)
+  expect_match(parrafo_metodo(f)$parrafo, "al 90 %", fixed = TRUE)
+  expect_match(parrafo_metodo(f, ic_rmsea = .95)$parrafo, "al 95 %", fixed = TRUE)
+  expect_error(parrafo_metodo(f, ic_rmsea = 95), "entre 0 y 1")
+})

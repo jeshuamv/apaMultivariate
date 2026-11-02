@@ -94,6 +94,8 @@ parametros                   # pesos de regresión con B, EE, C.R., p y β
 efectos <- tabla_efectos(fit)
 efectos                      # efectos directos, indirectos y totales (β), y R²
 # (los intervalos usan 1000 remuestreos bootstrap: puede tardar un poco)
+# Si te piden TODOS los efectos totales (o las matrices como en AMOS), usa:
+# efectos <- tabla_efectos(fit, matrices = TRUE)
 
 
 # --- 8. Hipótesis ---------------------------------------------------------------
@@ -129,6 +131,7 @@ hipotesis
 guardar_tablas(normalidad, atipicos, ajuste, parametros, efectos, hipotesis,
                archivo = "tablas_trayectorias.docx")
 parrafo_metodo(fit, bootstrap = 1000, archivo = "metodo_trayectorias.docx")
+# Si reportaste el IC del RMSEA al 95 %, agrega:  ic_rmsea = .95
 # Si quitaste atípicos, el párrafo lo menciona si agregas:  atipicos = datos
 getwd()                      # carpeta donde quedaron el Word y los diagramas
 

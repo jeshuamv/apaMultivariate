@@ -8,6 +8,7 @@ parrafo_metodo(
   fit,
   bootstrap = NULL,
   paquetes = c("apaMultivariate"),
+  ic_rmsea = 0.9,
   atipicos = NULL,
   archivo = NULL
 )
@@ -20,6 +21,9 @@ parrafo_metodo(
 
 \item{paquetes}{Otros paquetes que se usaron y deben citarse: cualquiera de
 \code{"semTools"}, \code{"psych"} y \code{"apaMultivariate"}.}
+
+\item{ic_rmsea}{Nivel de confianza del intervalo del RMSEA que reportaste
+(\code{.90} por omisión; usa \code{.95} si así lo pidieron).}
 
 \item{atipicos}{Si quitaste casos atípicos, el número de casos quitados o
 los datos que devolvió \code{\link[=quitar_atipicos]{quitar_atipicos()}}; se menciona en el párrafo
