@@ -1,3 +1,12 @@
+# apaMultivariate 0.13.1
+
+* `diagrama_sem()`: las etiquetas de las flechas ya no quedan tapadas por una
+  figura ni encimadas con otra etiqueta o línea; cada una se desliza a lo largo
+  de su flecha hasta un lugar libre (por ejemplo, la covarianza entre la primera
+  y la última exógena, cuya curva pasa junto a la caja de en medio y antes
+  mostraba "1.3" en lugar de "1.31"). Una R² que no puede calcularse (caso
+  Heywood) ya no se escribe como "NA".
+
 # apaMultivariate 0.13.0
 
 * `tabla_efectos(matrices = TRUE)` agrega las matrices de efectos directos,

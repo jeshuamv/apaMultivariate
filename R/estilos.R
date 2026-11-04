@@ -105,6 +105,7 @@ dibujar_moderno <- function(G, tr, op, f, tipo = "") {
   }
   # Valores sobre una "píldora" blanca (sin los "1" de los errores)
   cx <- TEXTO_ITEM[[op$estilo]] * f
+  tr <- ubicar_etiquetas(G, tr, op, cx, function(w) w / 2 + 0.05, function(h) h / 2 + 0.04)
   for (j in seq_along(tr)) {
     if (tr[[j]]$tipo == "error") next
     lab <- texto_flecha(G, j, op); if (is.na(lab)) next

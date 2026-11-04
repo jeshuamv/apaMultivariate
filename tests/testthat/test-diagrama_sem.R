@@ -103,3 +103,32 @@ test_that("path con parametros etiquetados, efectos definidos y errores correlac
   expect_equal(sum(o2$G$edges$tipo == "covres"), 1)
   expect_true(all(o2$G$edges$from[o2$G$edges$tipo == "covres"] %in% names(o2$G$err_de)))
 })
+
+test_that("las etiquetas de las flechas no quedan debajo de las figuras", {
+  set.seed(7); n <- 300
+  d <- data.frame(SE = rnorm(n), Goals = rnorm(n), Design = rnorm(n))
+  d$Goals <- .7 * d$SE + .7 * d$Goals; d$Design <- .6 * d$SE + .4 * d$Goals + .7 * d$Design
+  d$Task <- .3 * d$SE + .4 * d$Goals + .3 * d$Design + rnorm(n)
+  d$Satisf <- .1 * d$SE + .6 * d$Design + .4 * d$Task + rnorm(n)
+  f <- lavaan::sem("Task ~ SE + Goals + Design\n Satisf ~ SE + Design + Task", d)
+  for (est in c("clasico", "revista")) {
+    dg <- diagrama_sem(f, estandarizado = FALSE, estilo = est, dibujar = FALSE)
+    arch <- tempfile(fileext = ".pdf"); grDevices::pdf(arch, 10, 6)
+    graphics::plot.new(); cj <- apaMultivariate:::caja_total(dg$G, dg$trazos)
+    graphics::plot.window(cj[1:2], cj[3:4], asp = 1)
+    tr <- apaMultivariate:::ubicar_etiquetas(dg$G, dg$trazos, dg$opciones, 0.72)
+    N <- dg$G$nodes
+    for (j in seq_along(tr)) if (tr[[j]]$tipo != "error")
+      expect_false(any(abs(N$x - tr[[j]]$lx) < N$a & abs(N$y - tr[[j]]$ly) < N$b))
+    grDevices::dev.off()
+  }
+})
+
+test_that("una R² no calculable no se dibuja como NA", {
+  HS <- lavaan::HolzingerSwineford1939
+  f <- suppressWarnings(lavaan::cfa("g =~ x1+x2+x3+x4+x5+x6+x7+x8+x9\n v =~ x1+x2+x3\n t =~ x4+x5+x6\n s =~ x7+x8+x9", HS,
+                                    orthogonal = TRUE, std.lv = TRUE))
+  dg <- suppressMessages(suppressWarnings(diagrama_sem(f, dibujar = FALSE)))
+  pos <- apaMultivariate:::posiciones_r2(dg$G, dg$trazos, dg$opciones)
+  expect_false(anyNA(pos$valor))
+})

@@ -45,6 +45,42 @@ texto_flecha <- function(G, j, op) {
   s
 }
 
+# Coloca cada etiqueta de flecha donde no tape una figura ni otra etiqueta y
+# cruce el menor número de líneas. Parte del punto medio de la flecha y se
+# desliza a lo largo de ella. Se llama con la ventana gráfica ya abierta,
+# porque usa el tamaño real del texto (strwidth). `holgura_w` y `holgura_h`
+# convierten el tamaño del texto en el de su fondo blanco, como lo dibuja cada
+# estilo.
+#' @noRd
+ubicar_etiquetas <- function(G, tr, op, cx, holgura_w = function(w) w * 0.6, holgura_h = function(h) h * 0.75) {
+  N <- G$nodes; puestas <- NULL
+  orden <- order(!vapply(tr, function(g) g$tipo %in% c("cov", "covres"), logical(1)))   # primero las curvas
+  for (j in orden) {
+    g <- tr[[j]]
+    if (g$tipo == "error") next
+    lab <- texto_flecha(G, j, op); if (is.na(lab)) next
+    w <- holgura_w(graphics::strwidth(lab, cex = cx)); h <- holgura_h(graphics::strheight(lab, cex = cx))
+    i0 <- which.min((g$x - g$lx)^2 + (g$y - g$ly)^2)
+    cand <- i0 + c(0, rbind(-(1:12), 1:12))
+    cand <- cand[cand >= 6 & cand <= 35]
+    # puntos de las demás flechas (para no encimar la etiqueta con otra línea)
+    ox <- unlist(lapply(tr[-j], `[[`, "x")); oy <- unlist(lapply(tr[-j], `[[`, "y"))
+    mejor <- Inf; sel <- i0
+    for (k in seq_along(cand)) {
+      i <- cand[k]; x <- g$x[i]; y <- g$y[i]
+      tapa_nodo <- any(abs(N$x - x) < N$a + w + 0.02 & abs(N$y - y) < N$b + h + 0.02)
+      tapa_lab <- !is.null(puestas) && any(abs(puestas$x - x) < puestas$w + w + 0.02 & abs(puestas$y - y) < puestas$h + h + 0.02)
+      lineas <- sum(abs(ox - x) < w & abs(oy - y) < h)
+      sc <- 100 * tapa_nodo + 50 * tapa_lab + lineas + 0.15 * (k - 1)
+      if (sc < mejor) { mejor <- sc; sel <- i }
+      if (sc == 0) break
+    }
+    tr[[j]]$lx <- g$x[sel]; tr[[j]]$ly <- g$y[sel]
+    puestas <- rbind(puestas, data.frame(x = g$x[sel], y = g$y[sel], w = w, h = h))
+  }
+  tr
+}
+
 #' @noRd
 dibujar_diagrama <- function(obj) {
   G <- obj$G; tr <- obj$trazos; op <- obj$opciones; pal <- op$paleta
@@ -69,7 +105,8 @@ dibujar_diagrama <- function(obj) {
     punta(g$x[38], g$y[38], g$x[40], g$y[40], pal$linea)
     if (g$doble) punta(g$x[3], g$y[3], g$x[1], g$y[1], pal$linea)
   }
-  # Etiquetas de las flechas (con fondo blanco)
+  # Etiquetas de las flechas (con fondo blanco), donde no tapen nada
+  tr <- ubicar_etiquetas(G, tr, op, 0.72 * f)
   for (j in seq_along(tr)) {
     lab <- texto_flecha(G, j, op); if (is.na(lab)) next
     cx <- (if (tr[[j]]$tipo == "error") 0.55 else 0.72) * f

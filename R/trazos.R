@@ -81,7 +81,7 @@ trazar <- function(G) {
 posiciones_r2 <- function(G, tr, op) {
   N <- G$nodes
   if (!(op$mostrar_r2 && length(G$r2))) return(NULL)
-  ids <- intersect(names(G$r2), N$id)
+  ids <- intersect(names(G$r2)[!is.na(G$r2)], N$id)      # sin R² calculable (p. ej., caso Heywood): no se escribe "NA"
   if (!length(ids)) return(NULL)
   px <- unlist(lapply(tr, `[[`, "x")); py <- unlist(lapply(tr, `[[`, "y"))
   lx <- vapply(tr, `[[`, numeric(1), "lx"); ly <- vapply(tr, `[[`, numeric(1), "ly")
