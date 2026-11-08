@@ -1,3 +1,10 @@
+# apaMultivariate 0.13.2
+
+* `tabla_ajuste(n = TRUE)` agrega la columna N (tamaño de la muestra de cada
+  modelo) después del nombre del modelo, como en las tablas de ajuste que
+  comparan modelos estimados con muestras distintas (por ejemplo, antes y
+  después de quitar atípicos). El N queda siempre en `$datos$n`.
+
 # apaMultivariate 0.13.1
 
 * `diagrama_sem()`: las etiquetas de las flechas ya no quedan tapadas por una

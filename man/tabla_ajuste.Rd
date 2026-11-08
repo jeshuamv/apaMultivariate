@@ -4,7 +4,14 @@
 \alias{tabla_ajuste}
 \title{Tabla de índices de ajuste}
 \usage{
-tabla_ajuste(..., extra = NULL, ic_rmsea = 0.9, titulo = NULL, archivo = NULL)
+tabla_ajuste(
+  ...,
+  extra = NULL,
+  ic_rmsea = 0.9,
+  n = FALSE,
+  titulo = NULL,
+  archivo = NULL
+)
 }
 \arguments{
 \item{...}{Uno o varios modelos de \code{lavaan}. Si se les pone nombre, ese
@@ -16,12 +23,18 @@ nombre aparece en la tabla: \code{tabla_ajuste("Modelo 1" = fit1, "Modelo 2" = f
 \item{ic_rmsea}{Nivel de confianza del intervalo del RMSEA: \code{.90} (el
 habitual, por defecto) o, si te lo piden, \code{.95}.}
 
+\item{n}{Si es \code{TRUE}, agrega la columna N (tamaño de la muestra de cada
+modelo) después del nombre del modelo. Es útil cuando se comparan modelos
+estimados con muestras distintas, por ejemplo antes y después de quitar
+casos atípicos.}
+
 \item{titulo}{Título de la tabla.}
 
 \item{archivo}{Si se indica, guarda la tabla (\code{.rtf}, \code{.html} o \code{.csv}).}
 }
 \value{
-Un objeto \code{tabla_apa}. Los valores numéricos están en \verb{$datos}.
+Un objeto \code{tabla_apa}. Los valores numéricos están en \verb{$datos}
+(incluida la columna \code{n}, aunque no se muestre).
 }
 \description{
 Reúne los índices de ajuste de uno o varios modelos de \code{lavaan} en una
@@ -36,4 +49,5 @@ m3 <- cfa("visual =~ x1 + x2 + x3
             textual =~ x4 + x5 + x6
             speed =~ x7 + x8 + x9", data = HolzingerSwineford1939)
 tabla_ajuste("Un factor" = m1, "Tres factores" = m3, extra = c("aic", "bic"))
+tabla_ajuste("Tres factores" = m3, extra = "pnfi", n = TRUE)
 }

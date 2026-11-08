@@ -161,9 +161,14 @@ tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
 #'   `"nfi"`, `"pnfi"`, `"aic"`, `"bic"`.
 #' @param ic_rmsea Nivel de confianza del intervalo del RMSEA: `.90` (el
 #'   habitual, por defecto) o, si te lo piden, `.95`.
+#' @param n Si es `TRUE`, agrega la columna N (tamaño de la muestra de cada
+#'   modelo) después del nombre del modelo. Es útil cuando se comparan modelos
+#'   estimados con muestras distintas, por ejemplo antes y después de quitar
+#'   casos atípicos.
 #' @param titulo Título de la tabla.
 #' @param archivo Si se indica, guarda la tabla (`.rtf`, `.html` o `.csv`).
-#' @return Un objeto `tabla_apa`. Los valores numéricos están en `$datos`.
+#' @return Un objeto `tabla_apa`. Los valores numéricos están en `$datos`
+#'   (incluida la columna `n`, aunque no se muestre).
 #' @examples
 #' library(lavaan)
 #' m1 <- cfa("g =~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9", data = HolzingerSwineford1939)
@@ -171,8 +176,9 @@ tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
 #'             textual =~ x4 + x5 + x6
 #'             speed =~ x7 + x8 + x9", data = HolzingerSwineford1939)
 #' tabla_ajuste("Un factor" = m1, "Tres factores" = m3, extra = c("aic", "bic"))
+#' tabla_ajuste("Tres factores" = m3, extra = "pnfi", n = TRUE)
 #' @export
-tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, titulo = NULL, archivo = NULL) {
+tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, n = FALSE, titulo = NULL, archivo = NULL) {
   fits <- tryCatch(list(...), error = function(e) { objeto_existe(stop(e), "fit") })
   if (length(fits) == 1 && identical(class(fits[[1]]), "list")) fits <- fits[[1]]
   malo <- which(!vapply(fits, inherits, logical(1), "lavaan"))
@@ -180,6 +186,7 @@ tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, titulo = NULL, archi
   if (length(malo)) stop("Pasa uno o varios modelos estimados con cfa() o sem(), por ejemplo: tabla_ajuste(fit). ", pista_objeto(fits[[malo[1]]]), call. = FALSE)
   nms <- names(fits); if (is.null(nms)) nms <- rep("", length(fits))
   nms[nms == ""] <- paste(tx("Modelo", "Model"), which(nms == ""))
+  if (!is.logical(n) || length(n) != 1 || is.na(n)) stop("`n` debe ser TRUE o FALSE.", call. = FALSE)
   extras_ok <- c("gfi", "agfi", "nfi", "pnfi", "aic", "bic")
   if (!all(extra %in% extras_ok)) stop("`extra` acepta: ", paste(extras_ok, collapse = ", "), ".", call. = FALSE)
 
@@ -200,7 +207,8 @@ tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, titulo = NULL, archi
     for (e in extra) v[e] <- usa(e, NULL)
     v
   })
-  D <- as.data.frame(do.call(rbind, filas)); D <- cbind(modelo = nms, D)
+  tam <- vapply(fits, function(f) sum(lavaan::lavInspect(f, "nobs")), numeric(1))
+  D <- as.data.frame(do.call(rbind, filas)); D <- cbind(modelo = nms, n = unname(tam), D)
   cel <- cbind(nms, f_num(D$chisq, 2), formatC(D$df, format = "d"), f_p(D$pvalue),
                f_num(D$chisq / D$df, 2), f_apa(D$cfi, 3), f_apa(D$tli, 3),
                paste0(f_apa(D$rmsea, 3), " [", f_apa(D$lo, 3), ", ", f_apa(D$hi, 3), "]"), f_apa(D$srmr, 3))
@@ -208,6 +216,10 @@ tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, titulo = NULL, archi
   for (e in extra) {
     cel <- cbind(cel, if (e %in% c("aic", "bic")) f_num(D[[e]], 2) else f_apa(D[[e]], 3))
     cols <- c(cols, toupper(e))
+  }
+  if (n) {
+    cel <- cbind(cel[, 1, drop = FALSE], formatC(D$n, format = "d"), cel[, -1, drop = FALSE])
+    cols <- c(cols[1], "N", cols[-1])
   }
   nota <- paste0(if (robusto) tx("Se usan los \u00edndices corregidos del estimador robusto. ", "Robust (scaled) fit indices are reported. ") else "",
                  tx("Criterios de buen ajuste (Hu y Bentler, 1999): CFI y TLI \u2265 .95 (\u2265 .90 aceptable), RMSEA \u2264 .06 (\u2264 .08 aceptable), SRMR \u2264 .08. Con muestras grandes la prueba \u03c7\u00b2 suele ser significativa aunque el ajuste sea bueno.",

@@ -83,3 +83,19 @@ test_that("parrafo_metodo(ic_rmsea) menciona el nivel del intervalo", {
   expect_match(parrafo_metodo(f, ic_rmsea = .95)$parrafo, "al 95 %", fixed = TRUE)
   expect_error(parrafo_metodo(f, ic_rmsea = 95), "entre 0 y 1")
 })
+
+test_that("tabla_ajuste(n = TRUE) agrega la columna N de cada modelo", {
+  m <- "visual =~ x1 + x2 + x3\n textual =~ x4 + x5 + x6"
+  HS <- lavaan::HolzingerSwineford1939
+  f1 <- lavaan::cfa(m, HS); f2 <- lavaan::cfa(m, HS[1:250, ])
+  t0 <- tabla_ajuste(A = f1, B = f2, extra = "pnfi")
+  t1 <- tabla_ajuste(A = f1, B = f2, extra = "pnfi", n = TRUE)
+  expect_equal(t1$columnas[1:3], c("Modelo", "N", "χ²"))
+  expect_equal(unname(t1$celdas[, 2]), c("301", "250"))
+  expect_equal(ncol(t1$celdas), ncol(t0$celdas) + 1)
+  expect_equal(t0$datos$n, c(301, 250))                 # siempre en $datos
+  expect_equal(unname(t1$celdas[, -2]), unname(t0$celdas))  # lo demás no cambia
+  fg <- lavaan::cfa(m, HS, group = "school")
+  expect_equal(tabla_ajuste(fg, n = TRUE)$datos$n, 301)    # multigrupo: N total
+  expect_error(tabla_ajuste(f1, n = "si"), "TRUE o FALSE")
+})
