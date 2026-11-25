@@ -99,3 +99,47 @@ test_that("tabla_ajuste(n = TRUE) agrega la columna N de cada modelo", {
   expect_equal(tabla_ajuste(fg, n = TRUE)$datos$n, 301)    # multigrupo: N total
   expect_error(tabla_ajuste(f1, n = "si"), "TRUE o FALSE")
 })
+
+test_that("tabla_ajuste(cortes) usa los puntos de corte indicados en la nota", {
+  fit <- lavaan::cfa("visual =~ x1 + x2 + x3\n textual =~ x4 + x5 + x6\n speed =~ x7 + x8 + x9",
+                     data = lavaan::HolzingerSwineford1939)
+  t0 <- tabla_ajuste(fit)
+  expect_match(t0$nota, "Hu y Bentler")
+  t1 <- tabla_ajuste(fit, extra = "pnfi", cortes = list(rmsea = c(.05, .06), srmr = c(.08, .10), pnfi = .50))
+  expect_no_match(t1$nota, "Hu y Bentler")
+  expect_match(t1$nota, "RMSEA ≤ .05 excelente (≤ .06 aceptable)", fixed = TRUE)
+  expect_match(t1$nota, "SRMR ≤ .08 excelente (≤ .10 aceptable)", fixed = TRUE)
+  expect_match(t1$nota, "PNFI ≥ .50 aceptable", fixed = TRUE)
+  expect_error(tabla_ajuste(fit, cortes = list(xyz = .1)), "No reconozco")
+  expect_error(tabla_ajuste(fit, cortes = c(rmsea = .05)), "lista con nombres")
+  # tabla_criterios_ajuste sigue igual
+  k <- tabla_criterios_ajuste(fit, indices = "rmsea", cortes = list(rmsea = c(.05, .06)))
+  expect_true(any(grepl(".05", k$celdas, fixed = TRUE)))
+})
+
+test_that("tabla_normalidad(criterio = 'curtosis', limite = 2) decide solo con la curtosis de Mardia", {
+  d <- lavaan::PoliticalDemocracy
+  t0 <- tabla_normalidad(d, variables = c(paste0("y", 1:8), paste0("x", 1:3)))
+  expect_match(t0$extra[[1]]$nota, "Se rechaza")
+  t1 <- tabla_normalidad(d, variables = c(paste0("y", 1:8), paste0("x", 1:3)), limite = 2, criterio = "curtosis")
+  expect_match(t1$nota, "se cumple el supuesto de normalidad multivariada")
+  expect_match(t1$nota, "|c.r.| > 2,", fixed = TRUE)
+  expect_match(t1$extra[[1]]$nota, "se reporta como referencia")
+  expect_error(tabla_normalidad(d, variables = c("y1", "y2"), limite = -1), "positivo")
+  expect_error(tabla_normalidad(d, variables = c("y1", "y2"), criterio = "otro"))
+})
+
+test_that("diagrama_sem: los R2 de los ítems de un factor van en la misma esquina", {
+  fit <- lavaan::cfa("visual =~ x1 + x2 + x3\n textual =~ x4 + x5 + x6\n speed =~ x7 + x8 + x9",
+                     data = lavaan::HolzingerSwineford1939)
+  pos <- NULL
+  trace("posiciones_r2", exit = quote(assign("pos", returnValue(), envir = globalenv())),
+        print = FALSE, where = asNamespace("apaMultivariate"))
+  on.exit(untrace("posiciones_r2", where = asNamespace("apaMultivariate")))
+  f <- tempfile(fileext = ".png"); diagrama_sem(fit, archivo = f)
+  N <- get("pos", envir = globalenv())
+  expect_true(is.data.frame(N))
+  expect_setequal(N$id, paste0("x", 1:9))
+  for (g in list(paste0("x", 1:3), paste0("x", 4:6), paste0("x", 7:9)))
+    expect_length(unique(round(N$y[N$id %in% g], 6)), 1)
+})

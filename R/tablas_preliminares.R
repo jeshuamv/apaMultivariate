@@ -202,13 +202,23 @@ mardia_mv <- function(X) {
 #' @inheritParams tabla_descriptivos
 #' @param datos Un `data.frame` o un modelo de `lavaan` (se usan las
 #'   variables observadas del modelo).
+#' @param limite Valor de |c.r.| a partir del cual se marca falta de
+#'   normalidad: 1.96 (p < .05, por omisión) o, si así se pide, 2.
+#' @param criterio Cómo se decide la normalidad multivariada en las notas:
+#'   `"mardia"` (por omisión) usa las dos pruebas de Mardia, asimetría y
+#'   curtosis; `"curtosis"` usa solo el c.r. de la curtosis multivariada de
+#'   Mardia, como se hace con la salida de AMOS (la asimetría multivariada se
+#'   sigue reportando).
 #' @return Un objeto `tabla_apa` con dos partes. Los valores están en
 #'   `$datos$univariadas` y `$datos$mardia`.
 #' @examples
 #' library(lavaan)
 #' tabla_normalidad(HolzingerSwineford1939, variables = paste0("x", 1:9))
 #' @export
-tabla_normalidad <- function(datos, variables = NULL, decimales = 2, titulo = NULL, archivo = NULL) {
+tabla_normalidad <- function(datos, variables = NULL, limite = 1.96, criterio = c("mardia", "curtosis"),
+                             decimales = 2, titulo = NULL, archivo = NULL) {
+  criterio <- match.arg(criterio)
+  if (!is.numeric(limite) || length(limite) != 1 || is.na(limite) || limite <= 0) stop("`limite` debe ser un n\u00famero positivo, por ejemplo 1.96 o 2.", call. = FALSE)
   d <- obtener_datos(datos, variables); d <- d[stats::complete.cases(d), , drop = FALSE]
   if (ncol(d) < 2) stop("Se necesitan al menos dos variables.", call. = FALSE)
   n <- nrow(d); m <- mardia_mv(d)
@@ -220,16 +230,28 @@ tabla_normalidad <- function(datos, variables = NULL, decimales = 2, titulo = NU
                f_num(g1, decimales), f_num(z1, 2), f_num(g2, decimales), f_num(z2, 2))
   cel <- rbind(cel, c(tx("Multivariada (Mardia)", "Multivariate (Mardia)"), "", "", "", "", f_num(kmv, decimales), f_num(m$z, 2)))
   neg <- matrix(FALSE, nrow(cel), ncol(cel))
-  neg[seq_len(ncol(d)), 5] <- abs(z1) > 1.96; neg[seq_len(ncol(d)), 7] <- abs(z2) > 1.96; neg[nrow(cel), 7] <- abs(m$z) > 1.96
-  fz1 <- names(d)[abs(z1) > 1.96]; fz2 <- names(d)[abs(z2) > 1.96]
-  nota <- paste0(tx("c.r. = raz\u00f3n cr\u00edtica (z): asimetr\u00eda/\u221a(6/n) y curtosis/\u221a(24/n); la curtosis es el exceso sobre la normal. En negritas, |c.r.| > 1.96 (p < .05), que indica falta de normalidad; con p < .01 el l\u00edmite es 2.58. Multivariada: coeficiente de curtosis de Mardia y su c.r. N = ",
-                    "c.r. = critical ratio (z): skewness/\u221a(6/n) and kurtosis/\u221a(24/n); kurtosis is excess kurtosis. Values with |c.r.| > 1.96 (p < .05), indicating non-normality, are in bold; at p < .01 the cutoff is 2.58. Multivariate: Mardia's kurtosis coefficient and its c.r. N = "),
+  neg[seq_len(ncol(d)), 5] <- abs(z1) > limite; neg[seq_len(ncol(d)), 7] <- abs(z2) > limite; neg[nrow(cel), 7] <- abs(m$z) > limite
+  fz1 <- names(d)[abs(z1) > limite]; fz2 <- names(d)[abs(z2) > limite]
+  lim_txt <- formatC(limite, format = "f", digits = if (limite == round(limite)) 0 else 2)
+  def_txt <- if (limite == 1.96) tx("En negritas, |c.r.| > 1.96 (p < .05), que indica falta de normalidad; con p < .01 el l\u00edmite es 2.58. ",
+                                    "Values with |c.r.| > 1.96 (p < .05), indicating non-normality, are in bold; at p < .01 the cutoff is 2.58. ")
+             else paste0(tx("En negritas, |c.r.| > ", "Values with |c.r.| > "), lim_txt, tx(", que indica falta de normalidad. ", ", indicating non-normality, are in bold. "))
+  nota <- paste0(tx("c.r. = raz\u00f3n cr\u00edtica (z): asimetr\u00eda/\u221a(6/n) y curtosis/\u221a(24/n); la curtosis es el exceso sobre la normal. ",
+                    "c.r. = critical ratio (z): skewness/\u221a(6/n) and kurtosis/\u221a(24/n); kurtosis is excess kurtosis. "), def_txt,
+                 tx("Multivariada: coeficiente de curtosis de Mardia y su c.r. N = ", "Multivariate: Mardia's kurtosis coefficient and its c.r. N = "),
                  n, tx(" casos completos. ", " complete cases. "),
                  if (length(fz1)) paste0(tx("Asimetr\u00eda significativa en ", "Significant skewness: "), paste(fz1, collapse = ", "), ". ") else "",
                  if (length(fz2)) paste0(tx("Curtosis significativa en ", "Significant kurtosis: "), paste(fz2, collapse = ", "), ". ") else "",
-                 if (abs(m$z) < 1.96 && m$p_asim < .05) tx("El c.r. multivariado (curtosis) no indica problemas, pero la asimetr\u00eda multivariada s\u00ed es significativa (segunda parte de la tabla).",
+                 if (criterio == "curtosis") {
+                   if (abs(m$z) < limite) paste0(tx("El c.r. de la curtosis multivariada de Mardia es menor que ", "Mardia's multivariate kurtosis c.r. is below "), lim_txt,
+                                                 tx(" en valor absoluto: se cumple el supuesto de normalidad multivariada.", " in absolute value: the multivariate normality assumption holds."))
+                   else paste0(tx("El c.r. de la curtosis multivariada de Mardia es mayor que ", "Mardia's multivariate kurtosis c.r. exceeds "), lim_txt,
+                               tx(" en valor absoluto: no se cumple el supuesto de normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.",
+                                  " in absolute value: the multivariate normality assumption does not hold; a robust estimator (MLR or MLM) or bootstrapping is recommended."))
+                 }
+                 else if (abs(m$z) < limite && m$p_asim < .05) tx("El c.r. multivariado (curtosis) no indica problemas, pero la asimetr\u00eda multivariada s\u00ed es significativa (segunda parte de la tabla).",
                                                           "The multivariate c.r. (kurtosis) shows no problem, but multivariate skewness is significant (second part of the table).")
-                 else if (abs(m$z) < 1.96) tx("El c.r. multivariado sugiere normalidad multivariada.", "The multivariate c.r. suggests multivariate normality.")
+                 else if (abs(m$z) < limite) tx("El c.r. multivariado sugiere normalidad multivariada.", "The multivariate c.r. suggests multivariate normality.")
                  else tx("El c.r. multivariado indica que no hay normalidad multivariada; se recomienda un estimador robusto (MLR o MLM) o bootstrap.",
                          "The multivariate c.r. indicates multivariate non-normality; a robust estimator (MLR or MLM) or bootstrapping is recommended."))
   cel2 <- rbind(c(tx("Asimetr\u00eda multivariada", "Multivariate skewness"), f_num(m$b1, decimales), paste0("\u03c7\u00b2 = ", f_num(m$chi, 2)),
@@ -237,7 +259,9 @@ tabla_normalidad <- function(datos, variables = NULL, decimales = 2, titulo = NU
                 c(tx("Curtosis multivariada", "Multivariate kurtosis"), f_num(m$b2, decimales), paste0("z = ", f_num(m$z, 2)), "", f_p(m$p_curt)))
   normal <- m$p_asim >= .05 && m$p_curt >= .05
   nota2 <- paste0(tx("Pruebas de Mardia (1970) con ", "Mardia's (1970) tests with "), m$n, tx(" casos y ", " cases and "), m$p, " variables. ",
-                  if (normal) tx("No se rechaza la normalidad multivariada.", "Multivariate normality is not rejected.")
+                  if (criterio == "curtosis") tx("La decisi\u00f3n sobre la normalidad multivariada se toma con el c.r. de la curtosis (primera parte de la tabla); la prueba de asimetr\u00eda se reporta como referencia.",
+                                                 "The multivariate normality decision is based on the kurtosis c.r. (first part of the table); the skewness test is reported for reference.")
+                  else if (normal) tx("No se rechaza la normalidad multivariada.", "Multivariate normality is not rejected.")
                   else paste0(tx("Se rechaza la normalidad multivariada (", "Multivariate normality is rejected ("),
                               if (m$p_asim < .05 && m$p_curt < .05) tx("asimetr\u00eda y curtosis", "skewness and kurtosis")
                               else if (m$p_asim < .05) tx("por la asimetr\u00eda", "due to skewness") else tx("por la curtosis", "due to kurtosis"),

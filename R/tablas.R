@@ -165,6 +165,13 @@ tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
 #'   modelo) después del nombre del modelo. Es útil cuando se comparan modelos
 #'   estimados con muestras distintas, por ejemplo antes y después de quitar
 #'   casos atípicos.
+#' @param cortes Lista con los puntos de corte que se describen en la nota de
+#'   la tabla, en el mismo formato que en [tabla_criterios_ajuste()]: para
+#'   cada índice, dos números (excelente, aceptable) o uno (solo aceptable),
+#'   p. ej. `list(rmsea = c(.05, .06), srmr = c(.08, .10))`. Los índices que no
+#'   se indiquen usan los valores por omisión de [tabla_criterios_ajuste()].
+#'   Si es `NULL` (por omisión), la nota usa los criterios de Hu y Bentler
+#'   (1999).
 #' @param titulo Título de la tabla.
 #' @param archivo Si se indica, guarda la tabla (`.rtf`, `.html` o `.csv`).
 #' @return Un objeto `tabla_apa`. Los valores numéricos están en `$datos`
@@ -177,8 +184,9 @@ tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
 #'             speed =~ x7 + x8 + x9", data = HolzingerSwineford1939)
 #' tabla_ajuste("Un factor" = m1, "Tres factores" = m3, extra = c("aic", "bic"))
 #' tabla_ajuste("Tres factores" = m3, extra = "pnfi", n = TRUE)
+#' tabla_ajuste(m3, cortes = list(rmsea = c(.05, .06), srmr = c(.08, .10)))
 #' @export
-tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, n = FALSE, titulo = NULL, archivo = NULL) {
+tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, n = FALSE, cortes = NULL, titulo = NULL, archivo = NULL) {
   fits <- tryCatch(list(...), error = function(e) { objeto_existe(stop(e), "fit") })
   if (length(fits) == 1 && identical(class(fits[[1]]), "list")) fits <- fits[[1]]
   malo <- which(!vapply(fits, inherits, logical(1), "lavaan"))
@@ -222,11 +230,29 @@ tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, n = FALSE, titulo = 
     cols <- c(cols[1], "N", cols[-1])
   }
   nota <- paste0(if (robusto) tx("Se usan los \u00edndices corregidos del estimador robusto. ", "Robust (scaled) fit indices are reported. ") else "",
+                 if (!is.null(cortes)) nota_cortes(cortes_ajuste(cortes), extra) else
                  tx("Criterios de buen ajuste (Hu y Bentler, 1999): CFI y TLI \u2265 .95 (\u2265 .90 aceptable), RMSEA \u2264 .06 (\u2264 .08 aceptable), SRMR \u2264 .08. Con muestras grandes la prueba \u03c7\u00b2 suele ser significativa aunque el ajuste sea bueno.",
                     "Good-fit criteria (Hu & Bentler, 1999): CFI and TLI \u2265 .95 (\u2265 .90 acceptable), RMSEA \u2264 .06 (\u2264 .08 acceptable), SRMR \u2264 .08. With large samples the \u03c7\u00b2 test is usually significant even when fit is good."))
   t <- nueva_tabla(if (is.null(titulo)) tx("\u00cdndices de ajuste", "Fit indices") else titulo, cols, cel, nota = nota, datos = D)
   if (!is.null(archivo)) guardar_tabla(t, archivo)
   t
+}
+
+# Nota de tabla_ajuste() con los puntos de corte indicados por el usuario
+#' @noRd
+nota_cortes <- function(K, extra = NULL) {
+  f <- function(x) sub("^0", "", formatC(x, format = "f", digits = max(2, nchar(sub("^0\\.", "", format(x))))))
+  uno <- function(nom, k, signo) {
+    v <- K[[k]]
+    if (is.na(v[1])) paste0(nom, " ", signo, " ", f(v[2]), tx(" aceptable", " acceptable"))
+    else paste0(nom, " ", signo, " ", f(v[1]), tx(" excelente (", " excellent ("), signo, " ", f(v[2]), tx(" aceptable)", " acceptable)"))
+  }
+  partes <- c(tx("\u03c7\u00b2 con p > .05", "\u03c7\u00b2 with p > .05"), uno("CFI", "cfi", "\u2265"), uno("TLI", "tli", "\u2265"),
+              uno("RMSEA", "rmsea", "\u2264"), uno("SRMR", "srmr", "\u2264"))
+  for (e in intersect(extra, c("gfi", "pnfi"))) partes <- c(partes, uno(toupper(e), e, "\u2265"))
+  paste0(tx("Criterios de ajuste: ", "Fit criteria: "), paste(partes, collapse = "; "),
+         tx(". Con muestras grandes la prueba \u03c7\u00b2 suele ser significativa aunque el ajuste sea bueno.",
+            ". With large samples the \u03c7\u00b2 test is usually significant even when fit is good."))
 }
 
 #' Tabla de confiabilidad y validez (CR, AVE y Fornell-Larcker)

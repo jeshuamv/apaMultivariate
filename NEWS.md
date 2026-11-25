@@ -1,3 +1,17 @@
+# apaMultivariate 0.13.3
+
+* `tabla_ajuste(cortes = ...)`: la nota de la tabla describe los puntos de
+  corte que se indiquen (en el mismo formato que `tabla_criterios_ajuste()`),
+  en lugar de los de Hu y Bentler (1999), para que coincida con los criterios
+  que se piden en un curso o en una revista.
+* `tabla_normalidad()` tiene dos argumentos nuevos: `limite` (el |c.r.| a
+  partir del cual se marca falta de normalidad; 1.96 por omisión, o 2) y
+  `criterio = "curtosis"`, que decide la normalidad multivariada solo con el
+  c.r. de la curtosis de Mardia, como se hace con la salida de AMOS.
+* `diagrama_sem()`: los R² de los ítems de un mismo factor se escriben todos
+  en la misma esquina, para que cada valor se lea junto a su ítem y no se
+  confunda con el del vecino.
+
 # apaMultivariate 0.13.2
 
 * `tabla_ajuste(n = TRUE)` agrega la columna N (tamaño de la muestra de cada

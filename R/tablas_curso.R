@@ -11,6 +11,25 @@ evalua <- function(v, exc, acep, mayor = TRUE) {
   if (!is.na(exc) && ok(exc)) tx("Excelente", "Excellent") else if (ok(acep)) tx("Aceptable", "Acceptable") else tx("No aceptable", "Not acceptable")
 }
 
+# Puntos de corte de los índices de ajuste (excelente, aceptable); `cortes`
+# reemplaza los que se indiquen. Un solo número = solo el límite aceptable.
+#' @noRd
+cortes_ajuste <- function(cortes = NULL) {
+  K <- list(chi2gl = c(2, 3), rmsea = c(.06, .08), srmr = c(.08, .10), cfi = c(.95, .90), tli = c(.95, .90),
+            gfi = c(.95, .90), pnfi = c(NA, .50), pratio = c(NA, .50))
+  if (is.null(cortes)) return(K)
+  if (!is.list(cortes) || is.null(names(cortes)) || any(names(cortes) == ""))
+    stop("`cortes` debe ser una lista con nombres, por ejemplo: cortes = list(rmsea = c(.05, .06), srmr = c(.08, .10)).", call. = FALSE)
+  mal <- setdiff(names(cortes), names(K))
+  if (length(mal)) stop("No reconozco estos \u00edndices en `cortes`: ", paste(mal, collapse = ", "), ". Usa: ", paste(names(K), collapse = ", "), ".", call. = FALSE)
+  for (k in names(cortes)) {
+    v <- cortes[[k]]
+    if (!is.numeric(v) || !length(v) %in% 1:2) stop("Cada elemento de `cortes` debe ser un n\u00famero (l\u00edmite aceptable) o dos (excelente, aceptable).", call. = FALSE)
+    if (length(v) == 1) v <- c(NA, v); K[[k]] <- v
+  }
+  K
+}
+
 #' Tabla de criterios de ajuste e identificación del modelo
 #'
 #' Evalúa cada índice de ajuste contra dos puntos de corte (excelente y
@@ -63,13 +82,7 @@ tabla_criterios_ajuste <- function(fit, indices = c("chi2", "chi2gl", "rmsea", "
                                    cortes = NULL, evaluacion = TRUE, ic_rmsea = .90, titulo = NULL, archivo = NULL) {
   exigir_lavaan(fit, "cfa() o sem()")
   indices <- match.arg(indices, several.ok = TRUE)
-  K <- list(chi2gl = c(2, 3), rmsea = c(.06, .08), srmr = c(.08, .10), cfi = c(.95, .90), tli = c(.95, .90),
-            gfi = c(.95, .90), pnfi = c(NA, .50), pratio = c(NA, .50))
-  if (!is.null(cortes)) {
-    mal <- setdiff(names(cortes), names(K))
-    if (length(mal)) stop("No reconozco estos \u00edndices en `cortes`: ", paste(mal, collapse = ", "), ". Usa: ", paste(names(K), collapse = ", "), ".", call. = FALSE)
-    for (k in names(cortes)) { v <- cortes[[k]]; if (length(v) == 1) v <- c(NA, v); K[[k]] <- v }
-  }
+  K <- cortes_ajuste(cortes)
   lim <- function(k, i, signo) if (is.na(K[[k]][i])) "" else paste(signo, if (K[[k]][i] < 1) sub("^0", "", formatC(K[[k]][i], format = "f", digits = max(2, nchar(sub("^0\\.", "", format(K[[k]][i])))))) else format(K[[k]][i]))
   I <- indices(fit, ic_rmsea); fm <- medidas_ajuste(fit, ic_rmsea)
   gfi <- if ("gfi" %in% names(fm)) fm[["gfi"]] else NA

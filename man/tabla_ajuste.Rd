@@ -9,6 +9,7 @@ tabla_ajuste(
   extra = NULL,
   ic_rmsea = 0.9,
   n = FALSE,
+  cortes = NULL,
   titulo = NULL,
   archivo = NULL
 )
@@ -27,6 +28,14 @@ habitual, por defecto) o, si te lo piden, \code{.95}.}
 modelo) después del nombre del modelo. Es útil cuando se comparan modelos
 estimados con muestras distintas, por ejemplo antes y después de quitar
 casos atípicos.}
+
+\item{cortes}{Lista con los puntos de corte que se describen en la nota de
+la tabla, en el mismo formato que en \code{\link[=tabla_criterios_ajuste]{tabla_criterios_ajuste()}}: para
+cada índice, dos números (excelente, aceptable) o uno (solo aceptable),
+p. ej. \code{list(rmsea = c(.05, .06), srmr = c(.08, .10))}. Los índices que no
+se indiquen usan los valores por omisión de \code{\link[=tabla_criterios_ajuste]{tabla_criterios_ajuste()}}.
+Si es \code{NULL} (por omisión), la nota usa los criterios de Hu y Bentler
+(1999).}
 
 \item{titulo}{Título de la tabla.}
 
@@ -50,4 +59,5 @@ m3 <- cfa("visual =~ x1 + x2 + x3
             speed =~ x7 + x8 + x9", data = HolzingerSwineford1939)
 tabla_ajuste("Un factor" = m1, "Tres factores" = m3, extra = c("aic", "bic"))
 tabla_ajuste("Tres factores" = m3, extra = "pnfi", n = TRUE)
+tabla_ajuste(m3, cortes = list(rmsea = c(.05, .06), srmr = c(.08, .10)))
 }

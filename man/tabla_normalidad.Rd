@@ -7,6 +7,8 @@
 tabla_normalidad(
   datos,
   variables = NULL,
+  limite = 1.96,
+  criterio = c("mardia", "curtosis"),
   decimales = 2,
   titulo = NULL,
   archivo = NULL
@@ -17,6 +19,15 @@ tabla_normalidad(
 variables observadas del modelo).}
 
 \item{variables}{Nombres de las variables (por omisión, todas las numéricas).}
+
+\item{limite}{Valor de |c.r.| a partir del cual se marca falta de
+normalidad: 1.96 (p < .05, por omisión) o, si así se pide, 2.}
+
+\item{criterio}{Cómo se decide la normalidad multivariada en las notas:
+\code{"mardia"} (por omisión) usa las dos pruebas de Mardia, asimetría y
+curtosis; \code{"curtosis"} usa solo el c.r. de la curtosis multivariada de
+Mardia, como se hace con la salida de AMOS (la asimetría multivariada se
+sigue reportando).}
 
 \item{decimales}{Número de decimales.}
 
