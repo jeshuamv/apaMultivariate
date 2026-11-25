@@ -210,7 +210,7 @@ test_that("IC del RMSEA configurable, exogenas/endogenas y p y q como en AMOS", 
   fm <- lavaan::fitMeasures(f, c("rmsea.ci.lower", "rmsea.ci.upper"), fm.args = list(rmsea.ci.level = .95))
   expect_equal(as.numeric(a$datos$indices[c("lo", "hi")]), as.numeric(fm), tolerance = 1e-8)
   expect_match(a$columnas[1], "Índice"); expect_match(a$celdas["rmsea", 1], "IC 95")
-  expect_match(tabla_ajuste(f, ic_rmsea = .95)$columnas[8], "95")
+  expect_match(grep("RMSEA", tabla_ajuste(f, ic_rmsea = .95)$columnas, value = TRUE), "95")
   expect_setequal(a$datos$exogenas, c("Education", "Catholic"))
   expect_setequal(a$datos$endogenas, c("Examination", "Fertility"))
   # 4 variables observadas: p = 10 elementos; q incluye las 3 (co)varianzas de las exógenas

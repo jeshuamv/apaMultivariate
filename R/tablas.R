@@ -157,8 +157,10 @@ tabla_cargas_lavaan <- function(fit, etiquetas, decimales, titulo) {
 #'
 #' @param ... Uno o varios modelos de `lavaan`. Si se les pone nombre, ese
 #'   nombre aparece en la tabla: `tabla_ajuste("Modelo 1" = fit1, "Modelo 2" = fit2)`.
-#' @param extra Índices adicionales: cualquiera de `"gfi"`, `"agfi"`,
-#'   `"nfi"`, `"pnfi"`, `"aic"`, `"bic"`.
+#' @param extra Índices adicionales: cualquiera de `"chi2gl"` (χ²/gl, que
+#'   va después de p), `"gfi"`, `"agfi"`, `"nfi"`, `"pnfi"`, `"aic"`, `"bic"`.
+#'   El χ²/gl no se muestra por omisión porque Kline (2016) desaconseja
+#'   usarlo; agrégalo solo si te lo piden.
 #' @param ic_rmsea Nivel de confianza del intervalo del RMSEA: `.90` (el
 #'   habitual, por defecto) o, si te lo piden, `.95`.
 #' @param n Si es `TRUE`, agrega la columna N (tamaño de la muestra de cada
@@ -195,7 +197,7 @@ tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, n = FALSE, cortes = 
   nms <- names(fits); if (is.null(nms)) nms <- rep("", length(fits))
   nms[nms == ""] <- paste(tx("Modelo", "Model"), which(nms == ""))
   if (!is.logical(n) || length(n) != 1 || is.na(n)) stop("`n` debe ser TRUE o FALSE.", call. = FALSE)
-  extras_ok <- c("gfi", "agfi", "nfi", "pnfi", "aic", "bic")
+  extras_ok <- c("chi2gl", "gfi", "agfi", "nfi", "pnfi", "aic", "bic")
   if (!all(extra %in% extras_ok)) stop("`extra` acepta: ", paste(extras_ok, collapse = ", "), ".", call. = FALSE)
 
   robusto <- FALSE
@@ -212,16 +214,21 @@ tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, n = FALSE, cortes = 
            lo = usa("rmsea.ci.lower", if (rob) c("rmsea.ci.lower.robust", "rmsea.ci.lower.scaled")),
            hi = usa("rmsea.ci.upper", if (rob) c("rmsea.ci.upper.robust", "rmsea.ci.upper.scaled")),
            srmr = usa("srmr", NULL))
-    for (e in extra) v[e] <- usa(e, NULL)
+    for (e in setdiff(extra, "chi2gl")) v[e] <- usa(e, NULL)
     v
   })
   tam <- vapply(fits, function(f) sum(lavaan::lavInspect(f, "nobs")), numeric(1))
   D <- as.data.frame(do.call(rbind, filas)); D <- cbind(modelo = nms, n = unname(tam), D)
   cel <- cbind(nms, f_num(D$chisq, 2), formatC(D$df, format = "d"), f_p(D$pvalue),
-               f_num(D$chisq / D$df, 2), f_apa(D$cfi, 3), f_apa(D$tli, 3),
+               f_apa(D$cfi, 3), f_apa(D$tli, 3),
                paste0(f_apa(D$rmsea, 3), " [", f_apa(D$lo, 3), ", ", f_apa(D$hi, 3), "]"), f_apa(D$srmr, 3))
-  cols <- c(tx("Modelo", "Model"), "\u03c7\u00b2", tx("gl", "df"), "p", tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), "CFI", "TLI", cab_rmsea(ic_rmsea), "SRMR")
-  for (e in extra) {
+  cols <- c(tx("Modelo", "Model"), "\u03c7\u00b2", tx("gl", "df"), "p", "CFI", "TLI", cab_rmsea(ic_rmsea), "SRMR")
+  if ("chi2gl" %in% extra) {
+    D$chi2gl <- D$chisq / D$df
+    cel <- cbind(cel[, 1:4, drop = FALSE], f_num(D$chi2gl, 2), cel[, -(1:4), drop = FALSE])
+    cols <- c(cols[1:4], tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), cols[-(1:4)])
+  }
+  for (e in setdiff(extra, "chi2gl")) {
     cel <- cbind(cel, if (e %in% c("aic", "bic")) f_num(D[[e]], 2) else f_apa(D[[e]], 3))
     cols <- c(cols, toupper(e))
   }
@@ -241,7 +248,7 @@ tabla_ajuste <- function(..., extra = NULL, ic_rmsea = .90, n = FALSE, cortes = 
 # Nota de tabla_ajuste() con los puntos de corte indicados por el usuario
 #' @noRd
 nota_cortes <- function(K, extra = NULL) {
-  f <- function(x) sub("^0", "", formatC(x, format = "f", digits = max(2, nchar(sub("^0\\.", "", format(x))))))
+  f <- function(x) if (x >= 1) format(x) else sub("^0", "", formatC(x, format = "f", digits = max(2, nchar(sub("^0\\.", "", format(x))))))
   uno <- function(nom, k, signo) {
     v <- K[[k]]
     if (is.na(v[1])) paste0(nom, " ", signo, " ", f(v[2]), tx(" aceptable", " acceptable"))
@@ -249,6 +256,7 @@ nota_cortes <- function(K, extra = NULL) {
   }
   partes <- c(tx("\u03c7\u00b2 con p > .05", "\u03c7\u00b2 with p > .05"), uno("CFI", "cfi", "\u2265"), uno("TLI", "tli", "\u2265"),
               uno("RMSEA", "rmsea", "\u2264"), uno("SRMR", "srmr", "\u2264"))
+  if ("chi2gl" %in% extra) partes <- c(partes[1], uno(tx("\u03c7\u00b2/gl", "\u03c7\u00b2/df"), "chi2gl", "\u2264"), partes[-1])
   for (e in intersect(extra, c("gfi", "pnfi"))) partes <- c(partes, uno(toupper(e), e, "\u2265"))
   paste0(tx("Criterios de ajuste: ", "Fit criteria: "), paste(partes, collapse = "; "),
          tx(". Con muestras grandes la prueba \u03c7\u00b2 suele ser significativa aunque el ajuste sea bueno.",

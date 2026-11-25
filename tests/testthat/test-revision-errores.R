@@ -143,3 +143,17 @@ test_that("diagrama_sem: los R2 de los ítems de un factor van en la misma esqui
   for (g in list(paste0("x", 1:3), paste0("x", 4:6), paste0("x", 7:9)))
     expect_length(unique(round(N$y[N$id %in% g], 6)), 1)
 })
+
+test_that("tabla_ajuste: chi2/gl solo con extra = 'chi2gl'", {
+  fit <- lavaan::cfa("visual =~ x1 + x2 + x3\n textual =~ x4 + x5 + x6\n speed =~ x7 + x8 + x9",
+                     data = lavaan::HolzingerSwineford1939)
+  t0 <- tabla_ajuste(fit)
+  expect_false(any(grepl("/gl", t0$columnas)))
+  expect_equal(t0$columnas[1:5], c("Modelo", "χ²", "gl", "p", "CFI"))
+  t1 <- tabla_ajuste(fit, extra = c("pnfi", "chi2gl"), n = TRUE)
+  expect_equal(t1$columnas[1:6], c("Modelo", "N", "χ²", "gl", "p", "χ²/gl"))
+  expect_equal(tail(t1$columnas, 1), "PNFI")
+  expect_equal(t1$datos$chi2gl, t1$datos$chisq / t1$datos$df)
+  t2 <- tabla_ajuste(fit, extra = "chi2gl", cortes = list(chi2gl = c(2, 3)))
+  expect_match(t2$nota, "χ²/gl ≤ 2 excelente (≤ 3 aceptable)", fixed = TRUE)
+})

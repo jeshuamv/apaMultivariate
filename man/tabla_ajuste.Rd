@@ -18,8 +18,10 @@ tabla_ajuste(
 \item{...}{Uno o varios modelos de \code{lavaan}. Si se les pone nombre, ese
 nombre aparece en la tabla: \code{tabla_ajuste("Modelo 1" = fit1, "Modelo 2" = fit2)}.}
 
-\item{extra}{Índices adicionales: cualquiera de \code{"gfi"}, \code{"agfi"},
-\code{"nfi"}, \code{"pnfi"}, \code{"aic"}, \code{"bic"}.}
+\item{extra}{Índices adicionales: cualquiera de \code{"chi2gl"} (χ²/gl, que
+va después de p), \code{"gfi"}, \code{"agfi"}, \code{"nfi"}, \code{"pnfi"}, \code{"aic"}, \code{"bic"}.
+El χ²/gl no se muestra por omisión porque Kline (2016) desaconseja
+usarlo; agrégalo solo si te lo piden.}
 
 \item{ic_rmsea}{Nivel de confianza del intervalo del RMSEA: \code{.90} (el
 habitual, por defecto) o, si te lo piden, \code{.95}.}

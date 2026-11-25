@@ -4,6 +4,9 @@
   corte que se indiquen (en el mismo formato que `tabla_criterios_ajuste()`),
   en lugar de los de Hu y Bentler (1999), para que coincida con los criterios
   que se piden en un curso o en una revista.
+* `tabla_ajuste()` ya no muestra la columna χ²/gl por omisión, porque Kline
+  (2016) desaconseja usarlo y las revistas no lo piden; se agrega con
+  `extra = "chi2gl"` (va después de p).
 * `tabla_normalidad()` tiene dos argumentos nuevos: `limite` (el |c.r.| a
   partir del cual se marca falta de normalidad; 1.96 por omisión, o 2) y
   `criterio = "curtosis"`, que decide la normalidad multivariada solo con el
