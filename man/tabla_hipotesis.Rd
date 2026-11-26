@@ -12,7 +12,8 @@ tabla_hipotesis(
   etiquetas = NULL,
   decimales = 2,
   titulo = NULL,
-  archivo = NULL
+  archivo = NULL,
+  decision = "sostiene"
 )
 }
 \arguments{
@@ -34,6 +35,12 @@ para usar el método delta).}
 
 \item{archivo}{Si se indica, guarda la tabla (\code{.docx}, \code{.rtf}, \code{.html} o
 \code{.csv}).}
+
+\item{decision}{Palabras de la columna Decisión: \code{"sostiene"} (por
+omisión: Se sostiene / No se sostiene), \code{"aceptada"} (Aceptada /
+Rechazada), \code{"apoyada"} (Apoyada / No apoyada) o un vector con dos
+textos propios, p. ej. \code{c("Soportada", "No soportada")}. La nota de la
+tabla usa las mismas palabras.}
 }
 \value{
 Un objeto \code{tabla_apa}. Los valores están en \verb{$datos}.
@@ -81,4 +88,5 @@ fit <- sem("M ~ X
             Y ~ M + X + W", data = d)
 tabla_hipotesis(fit, c(H1 = "X -> M (+)", H2 = "X -> Y (+)", H3 = "X -> M -> Y",
                        H4 = "X -> Y (+) [total]"), bootstrap = 0)
+tabla_hipotesis(fit, c(H1 = "X -> M (+)", H2 = "X -> Y (+)"), decision = "aceptada")
 }

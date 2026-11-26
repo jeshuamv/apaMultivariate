@@ -217,6 +217,23 @@ tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales 
 
 # --- Hipótesis -------------------------------------------------------------------------
 
+# Palabras de la decisión de tabla_hipotesis()
+#' @noRd
+palabras_decision <- function(decision) {
+  if (is.character(decision) && length(decision) == 1 && !is.na(decision)) {
+    d <- switch(tolower(decision),
+                sostiene = list(si = tx("Se sostiene", "Supported"), no = tx("No se sostiene", "Not supported"), verbo = tx(": se sostienen", " are supported")),
+                aceptada = list(si = tx("Aceptada", "Accepted"), no = tx("Rechazada", "Rejected"), verbo = tx(": se aceptan", " are accepted")),
+                apoyada = list(si = tx("Apoyada", "Supported"), no = tx("No apoyada", "Not supported"), verbo = tx(": se apoyan", " are supported")),
+                NULL)
+    if (is.null(d)) stop("`decision` debe ser \"sostiene\", \"aceptada\", \"apoyada\" o dos textos, p. ej. c(\"Soportada\", \"No soportada\").", call. = FALSE)
+    return(d)
+  }
+  if (!is.character(decision) || length(decision) != 2 || anyNA(decision) || any(!nzchar(decision)))
+    stop("`decision` debe ser \"sostiene\", \"aceptada\", \"apoyada\" o dos textos, p. ej. c(\"Soportada\", \"No soportada\").", call. = FALSE)
+  list(si = decision[1], no = decision[2], verbo = paste0(": \u00ab", decision[1], "\u00bb"))
+}
+
 #' Tabla de contraste de hipótesis
 #'
 #' Resume la decisión sobre cada hipótesis del modelo: el coeficiente, su
@@ -256,6 +273,11 @@ tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales 
 #' @param bootstrap Remuestreos para los efectos indirectos y totales (`0`
 #'   para usar el método delta).
 #' @param alfa Nivel de significancia.
+#' @param decision Palabras de la columna Decisión: `"sostiene"` (por
+#'   omisión: Se sostiene / No se sostiene), `"aceptada"` (Aceptada /
+#'   Rechazada), `"apoyada"` (Apoyada / No apoyada) o un vector con dos
+#'   textos propios, p. ej. `c("Soportada", "No soportada")`. La nota de la
+#'   tabla usa las mismas palabras.
 #' @inheritParams tabla_descriptivos
 #' @return Un objeto `tabla_apa`. Los valores están en `$datos`.
 #' @examples
@@ -268,9 +290,11 @@ tabla_parametros <- function(fit, varianzas = TRUE, etiquetas = NULL, decimales 
 #'             Y ~ M + X + W", data = d)
 #' tabla_hipotesis(fit, c(H1 = "X -> M (+)", H2 = "X -> Y (+)", H3 = "X -> M -> Y",
 #'                        H4 = "X -> Y (+) [total]"), bootstrap = 0)
+#' tabla_hipotesis(fit, c(H1 = "X -> M (+)", H2 = "X -> Y (+)"), decision = "aceptada")
 #' @export
 tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etiquetas = NULL, decimales = 2,
-                            titulo = NULL, archivo = NULL) {
+                            titulo = NULL, archivo = NULL, decision = "sostiene") {
+  dec <- palabras_decision(decision)
   if (missing(hipotesis)) stop("Escribe tus hip\u00f3tesis, por ejemplo:\n  tabla_hipotesis(fit, c(H1 = \"X -> Y (+)\", H2 = \"X -> M -> Y\"))\n",
                                "(+) o (-) si la hip\u00f3tesis predice el signo; con dos flechas, efecto indirecto; ",
                                "\"X -> * -> Y\", indirecto total; \"X -> Y [total]\", efecto total; \"X <-> W\", covarianza.", call. = FALSE)
@@ -400,7 +424,7 @@ tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etique
     r <- res[[nm]]; h <- H[[nm]]
     c(nm, trayecto(h), tipo_txt(r$tipo), f_apa(r$beta, decimales),
       if (!is.na(r$p)) f_p(r$p) else paste0(tx("IC [", "CI ["), f_num(r$ic[1], decimales), ", ", f_num(r$ic[2], decimales), "]"),
-      if (sostiene[[nm]]) tx("Se sostiene", "Supported") else tx("No se sostiene", "Not supported"))
+      if (sostiene[[nm]]) dec$si else dec$no)
   }, character(6)))
   clases <- vapply(H, `[[`, character(1), "clase")
   hay_cov <- any(clases == "cov"); hay_ef <- any(clases %in% c("indirecto", "indirecto_total", "total"))
@@ -408,8 +432,8 @@ tabla_hipotesis <- function(fit, hipotesis, bootstrap = 1000, alfa = .05, etique
   nota <- paste0(tx("\u03b2 = coeficiente estandarizado", "\u03b2 = standardized coefficient"),
                  if (hay_cov) tx(" (en las covarianzas, la correlaci\u00f3n)", " (for covariances, the correlation)") else "",
                  tx(". Efectos directos", ". Direct effects"), if (hay_cov) tx(" y covarianzas", " and covariances") else "",
-                 tx(": se sostienen si p < ", " are supported if p < "), f_apa(alfa, 2),
-                 if (hay_ef) paste0(tx(". Efectos indirectos y totales: se sostienen si el intervalo de confianza al 95 % (", ". Indirect and total effects are supported if the 95% confidence interval ("),
+                 dec$verbo, tx(" si p < ", " if p < "), f_apa(alfa, 2),
+                 if (hay_ef) paste0(tx(". Efectos indirectos y totales", ". Indirect and total effects"), dec$verbo, tx(" si el intervalo de confianza al 95 % (", " if the 95% confidence interval ("),
                                     metodo, tx(", calculado con el efecto no estandarizado) no incluye el 0", ", computed on the unstandardized effect) excludes 0")) else "",
                  tx(". Si la hip\u00f3tesis indica un signo (+ o \u2212), el efecto debe tener ese signo.",
                     ". If the hypothesis specifies a sign (+ or \u2212), the effect must have that sign."))

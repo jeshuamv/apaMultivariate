@@ -1,3 +1,10 @@
+# apaMultivariate 0.13.4
+
+* `tabla_hipotesis(decision = ...)`: elige las palabras de la columna
+  Decisión y de la nota: `"sostiene"` (por omisión), `"aceptada"`
+  (Aceptada / Rechazada), `"apoyada"` (Apoyada / No apoyada) o dos textos
+  propios.
+
 # apaMultivariate 0.13.3
 
 * `tabla_ajuste(cortes = ...)`: la nota de la tabla describe los puntos de
